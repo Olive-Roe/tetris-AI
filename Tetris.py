@@ -156,7 +156,7 @@ class piece(object):
   rows = 20
   colms = 10
   
-  def __init__(self, colms, row, shape):
+  def __init__(self, colms, rows, shape):
     self.x = colms
     self.y = rows
     self.shape = shape
