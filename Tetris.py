@@ -118,23 +118,5 @@ T = [['.....',
       '..0..',
       '.....']]
 
-class Tetris(object):
-      def __init__(self):
-        pygame.init()
-        pygame.key.set_repeat(250, 25)
-        self.width = cell_size * (cols + 6)
-        self.height = cell_size * rows
-        self.rlim = cell_size * cols
-        self.bground_grid = [[ 0 for x in range(cols)] for y in range(rows)]
 
-        self.default_font = pygame.font.Font(
-            pygame.font.get_default_font(), 12)
-
-        self.screen = pygame.display.set_mode((self.width, self.height))
-        pygame.event.set_blocked(pygame.MOUSEMOTION)  # We do not need
-        # mouse movement
-        # events, so we
-        # block them.
-        self.next_stone = shapes[rand(len(shapes))]
-        self.init_game()
         
