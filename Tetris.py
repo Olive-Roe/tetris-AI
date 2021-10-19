@@ -151,12 +151,12 @@ colours = [
   (255, 0, 0),
   (255, 0, 255)
 ]
-
+shapes = ["I", "J", "L", "O", "S", "Z", "T"]
 class piece(object):
   rows = 20
   colms = 10
   
-  def __init__(self, cloms, row, shape):
+  def __init__(self, colms, row, shape):
     self.x = colms
     self.y = rows
     self.shape = shape
