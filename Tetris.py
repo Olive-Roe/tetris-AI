@@ -6,16 +6,6 @@ cols = 10
 rows = 20
 maxfps = 30
 
-colours = [
-  (0, 255, 255),
-  (0, 0, 255),
-  (255, 165, 0),
-  (255, 255, 0),
-  (0, 255, 0),
-  (255, 0, 0),
-  (255, 0, 255)
-]
-
 S = [['.....',
       '..00..',
       '.00...',
@@ -152,5 +142,23 @@ T = [['.....',
       '..0..',
       '.....']]
 
+colours = [
+  (0, 255, 255),
+  (0, 0, 255),
+  (255, 165, 0),
+  (255, 255, 0),
+  (0, 255, 0),
+  (255, 0, 0),
+  (255, 0, 255)
+]
 
-        
+class piece(object):
+  rows = 20
+  colms = 10
+  
+  def __init__(self, cloms, row, shape):
+    self.x = colms
+    self.y = rows
+    self.shape = shape
+    self.color = colours[shapes.index(shape)]
+    self.rotation = 0
