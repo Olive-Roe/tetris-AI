@@ -184,7 +184,9 @@ def create_grid(locked_positions={}):
 
 '20/20/20/20/20/20/20/20/20/20/20' #example board notation
 '16TJOL/20/20/20/20/20/20/20/20/20' #another example
-'9O5I4/16I/17I/18I/19I/19I/18I/17I/16I/9O5I4' #smileyface test
+'09O05I04/16I03/17I02/18I01/19I/19I/18I01/17I02/16I03/09O05I04' #smileyface test
+#remember to use 03 for single-digit numbers
+
 def board_notation_to_dict(notation): #this should work, might need more testing
       global colours_dict
       output_list = []
@@ -207,8 +209,8 @@ def board_notation_to_dict(notation): #this should work, might need more testing
             raise ValueError(f"Invalid board notation. Length of output_list: {len(output_list)}")
       return {k:v for (k, v) in items_list}
 
-#testing commands, these DO NOT work
-#dict1 = board_notation_to_dict('09O05I04/16I3/17I2/18I1/19I/19I/18I1/17I2/16I3/09O05I04')
+#testing commands, these work
+#dict1 = board_notation_to_dict('09O05I04/16I03/17I02/18I01/19I/19I/18I01/17I02/16I03/09O05I04')
 #print(create_grid(locked_positions=dict1))
             
 
