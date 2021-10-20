@@ -151,6 +151,16 @@ colours = [
   (255, 0, 0),
   (255, 0, 255)
 ]
+colours_dict = {
+  "I": (0, 255, 255),
+  "J": (0, 0, 255),
+  "L": (255, 165, 0),
+  "O": (255, 255, 0),
+  "S": (0, 255, 0),
+  "Z": (255, 0, 0),
+  "T": (255, 0, 255)
+}
+
 shapes = ["I", "J", "L", "O", "S", "Z", "T"]
 class piece(object):
   rows = 20
@@ -165,11 +175,30 @@ class piece(object):
 
 def create_grid(locked_positions={}):
       grid = [[(0,0,0) for x in range(10)] for x in range(20)]
-      
-      for i in range(len(grid)):
-          for j in range(len(grid[1])):
-              if (j,i) in locked_positions:
-                  c = locked_positions[(j,i)]
-                  grid[i][j] = c
+      for row in range(len(grid)):
+          for col in range(len(grid[1])):
+              if (row,col) in locked_positions:
+                  c = locked_positions[(row,col)]
+                  grid[row][col] = c
       return grid
+
+'20/20/20/20/20/20/20/20/20/20' #example board notation
+'16TJOL/20/20/20/20/20/20/20/20' #another example
+def board_notation_to_dict(notation): #is buggy, I will fix later
+      global colours_dict
+      output_list = []
+      for row in notation.split("/"):
+            for index in range(len(row)):
+                  item = row[index]
+                  if item.isnumeric() == False:
+                        output_list.append(colours_dict[item])
+                  else:
+                        if row[index+1].isnumeric() == True:
+                              num_of_empty_cells = int(row[index] + row[index+1])
+                              for i in range(num_of_empty_cells):
+                                    output_list.append((0, 0, 0))
+      indices = [[(x, y) for x in range(10)] for y in range(20)]
+      return {k:v for k in indices for v in output_list}
+print(board_notation_to_dict('16TJOL/20/20/20/20/20/20/20/20'))
+            
 
