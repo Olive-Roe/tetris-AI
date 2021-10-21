@@ -225,11 +225,16 @@ def boardstate_to_extended_boardstate(boardstate:str):
                         output_list2.append(item)
             assert len(output_list2) == 10
             output_list.append("".join(output_list2))
-      return "/".join(output_list) #to get rid of final slash
+      notation = "/".join(output_list) 
+      rows = len(notation.split("/"))
+      for i in range(20-rows):
+            notation = notation + "/.........."
+      return notation
 
 def extended_boardstate_to_boardstate(extended_boardstate:str):
       output_list = []
       for row in extended_boardstate.split("/"):
+            if row == "..........": continue
             output_list2 = []
             counter = 0
             for item in row:
@@ -290,7 +295,6 @@ def update_boardstate(current_boardstate:str, piece_notation:str): #works 3/4 of
       cdif = 2-bl_col
       center = (row+rdif, column+cdif)
       #Checking whether the piece will fit in the given boardstate
-      board = [i for i in current_boardstate.split("/")]
       nbs = boardstate_to_extended_boardstate(current_boardstate) #new board state
       oList = []
       for r in range(5):
@@ -309,9 +313,6 @@ def update_boardstate(current_boardstate:str, piece_notation:str): #works 3/4 of
 
 def display_as_text(notation):
       notation = boardstate_to_extended_boardstate(notation)
-      rows = len(notation.split("/"))
-      for i in range(20-rows):
-            notation = notation + "/.........."
       for row in (notation.split("/"))[::-1]: #reverse list
             print(row)
 
@@ -329,9 +330,9 @@ def display_as_text(notation):
 #print(change_cell('LIOZ4IL/JS5TSZ/SZSZ6/O9/J9', 1, 5, "S"))
 
 #not working test functions
-#a = update_boardstate('LIOZ4IL/JS5TSZ/SZSZ6/O9/J9', 'L053')
-#print(a)
-#print(display_as_text('LIOZ4IL/JS5TSZ/SZSZ6/O9/J9'))
-#print(display_as_text(a))
+# a = update_boardstate('LIOZ4IL/JS5TSZ/SZSZ6/O9/J9', 'I253')
+# print(a)
+# display_as_text('LIOZ4IL/JS5TSZ/SZSZ6/O9/J9')
+# display_as_text(a)
 
 #'LIOZ4IL/JS5TSZ/SZSZ6/O9/J9'
