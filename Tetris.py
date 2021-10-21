@@ -6,7 +6,7 @@ cols = 10
 rows = 20
 maxfps = 30
 
-S = [['.....',
+Z = [['.....',
       '..00..',
       '.00...',
       '......',
@@ -28,7 +28,7 @@ S = [['.....',
       '.....'],
      ]
 
-Z = [
+S = [
      ['.....',
       '.00..',
       '..00.',
@@ -79,7 +79,7 @@ O = [['.....',
       '.00..',
       '.....']]
 
-J = [['.....',
+L = [['.....',
       '.0...',
       '.000.',
       '.....',
@@ -100,7 +100,7 @@ J = [['.....',
       '.00..',
       '.....']]
 
-L = [['.....',
+J = [['.....',
       '...0.',
       '.000.',
       '.....',
@@ -188,22 +188,24 @@ def create_grid(locked_positions={}):
 '09O05I04/16I03/17I02/18I01/19I/19I/18I01/17I02/16I03/09O05I04' #smileyface test
 #remember to use 03 format for single-digit numbers
 
+'LIOZ4IL/JS5TSZ/SZSZ6/O9/J9' #board notation number 2
+      
 def board_notation_to_dict(notation): #this should work, might need more testing
       global colours_dict
       output_list = []
+      rows = len(notation.split("/"))
       for row in notation.split("/"):
             for index in range(len(row)):
                   item = row[index]
                   if item.isnumeric() == False:
                         output_list.append(colours_dict[item])
-                  elif index < len(row) - 1:
-                        if row[index+1].isnumeric() == True:
-                              num_of_empty_cells = int(row[index] + row[index+1])                                    
-                              for i in range(num_of_empty_cells):
+                  else:
+                        num_of_empty_cells = int(row[index])                                    
+                        for i in range(num_of_empty_cells):
                                     output_list.append((0, 0, 0))
-      indices = [(x, y) for x in range(20) for y in range(10)]
+      indices = [(x, y) for x in range(rows) for y in range(10)]
       try:
-            items_list = [(indices[i], output_list[i]) for i in range(200)]
+            items_list = [(indices[i], output_list[i]) for i in range(rows * 10)]
       except:
             print(output_list)
             raise ValueError(f"Invalid board notation. Length of output_list: {len(output_list)}")
@@ -212,57 +214,59 @@ def board_notation_to_dict(notation): #this should work, might need more testing
 def boardstate_to_extended_boardstate(boardstate:str):
       output_list = []
       for row in boardstate.split("/"):
+            output_list2 = []
             for index in range(len(row)):
                   item = row[index]
-                  if index < len(row) - 1:
-                        if row[index].isnumeric() == True:
-                              if row[index+1].isnumeric() == True:
-                                    num_of_empty_cells = int(row[index] + row[index+1])                                    
-                                    for i in range(num_of_empty_cells):
-                                          output_list.append(".")
-                        else:
-                              output_list.append(item)
-            output_list.append("/")
-      return "".join(output_list)[:-1] #to get rid of final slash
+                  if item.isnumeric() == True: 
+                        num_of_empty_cells = int(row[index])               
+                        for i in range(num_of_empty_cells):
+                              output_list2.append(".")
+                  else:
+                        output_list2.append(item)
+            assert len(output_list2) == 10
+            output_list.append("".join(output_list2))
+      return "/".join(output_list) #to get rid of final slash
 
 def extended_boardstate_to_boardstate(extended_boardstate:str):
       output_list = []
       for row in extended_boardstate.split("/"):
+            output_list2 = []
             counter = 0
             for item in row:
-                  if item == ".":
-                        counter += 1
+                  if item == ".": counter += 1
                   else:
                         if counter != 0:
-                              if counter < 10: output_list.append("0" + str(counter))
-                              else: output_list.append(str(counter))
+                              output_list2.append(str(counter))
                               counter = 0
-                        output_list.append(item)
+                        output_list2.append(item)
             if counter != 0:
-                  if counter < 10: output_list.append("0" + str(counter))
-                  else: output_list.append(str(counter))
-            output_list.append('/')
-      return "".join(output_list)[:-1] #to get rid of final slash
-      
+                  output_list2.append(str(counter))
+            output_list.append("".join(output_list2))
+      return "/".join(output_list)
+
+def boardstate_to_list_form(boardstate:str):
+      return [[i for i in item] for item in boardstate_to_extended_boardstate(str(boardstate)).split("/")]
+
+def list_form_to_boardstate(list_form:list):
+      return "/".join(["".join(item) for item in (list_form)])
 
 def access_cell(boardstate:str, row:int, column:int):
       'Given a boardstate, row, and column of a cell (starting from index 0), return the value of the cell in the boardstate.'
       b = boardstate_to_extended_boardstate(boardstate)
-      return boardstate.split("/")[row][column]
+      return b.split("/")[row][column]
 
-def change_cell(boardstate:str, row:int, column:int, val:str): #needs work, does not work
+def change_cell(boardstate:str, row:int, column:int, val:str):
       'Given a boardstate, row, column of a cell (starting from index 0), and a value, update the boardstate and return it.'
       row = int(row)
       column = int(column)
-      new_boardstate = str(boardstate)
-      print(new_boardstate.split("/"))
-      [i for i in new_boardstate.split("/")[row]][column] = val
-      return "/".join(new_boardstate)
+      new_boardstate = boardstate_to_list_form(boardstate)
+      new_boardstate[row][column] = val
+      return list_form_to_boardstate(new_boardstate)
 
 #Example piece notation
 'S038' #S piece in spawn orientation (0) in column 3, row 8 
 
-def update_boardstate(current_boardstate:str, piece_notation:str):
+def update_boardstate(current_boardstate:str, piece_notation:str): #works 3/4 of the way, still buggy
       'Given a boardstate and a piece notation, return the updated boardstate.'
       def findBLC(shape): #finding bottom left corner of a shape
             for r in range(5):
@@ -284,11 +288,10 @@ def update_boardstate(current_boardstate:str, piece_notation:str):
       assert bl_row != None and bl_col != None
       rdif = 2-bl_row
       cdif = 2-bl_col
-      center = (row+rdif, column+rdif)
+      center = (row+rdif, column+cdif)
       #Checking whether the piece will fit in the given boardstate
       board = [i for i in current_boardstate.split("/")]
       nbs = boardstate_to_extended_boardstate(current_boardstate) #new board state
-      print(nbs)
       oList = []
       for r in range(5):
             for cell in range(5):
@@ -298,21 +301,37 @@ def update_boardstate(current_boardstate:str, piece_notation:str):
             cx, cy = center
             x = cx+change_in_x
             y = cy+change_in_y
-            if access_cell(nbs, x, y) == ".": 
-                  change_cell(nbs, x, y, piece)
+            if access_cell(nbs, x, y) == ".":
+                  nbs = change_cell(nbs, x, y, piece)
             else:
                   raise ValueError("This piece cannot be placed in this location")
       return (extended_boardstate_to_boardstate(nbs))
 
+def display_as_text(notation):
+      notation = boardstate_to_extended_boardstate(notation)
+      rows = len(notation.split("/"))
+      for i in range(20-rows):
+            notation = notation + "/.........."
+      for row in (notation.split("/"))[::-1]: #reverse list
+            print(row)
+
 #testing commands, these work
-#dict1 = board_notation_to_dict('09O05I04/16I03/17I02/18I01/19I/19I/18I01/17I02/16I03/09O05I04')
+#dict1 = board_notation_to_dict('LIOZ4IL/JS5TSZ/SZSZ6/O9/J9')
 #print(create_grid(locked_positions=dict1))
-            
+
 #working test function
-#a = boardstate_to_extended_boardstate('09O05I04/16I03/17I02/18I01/19I/19I/18I01/17I02/16I03/09O05I04')
-#print(a)
-#print(extended_boardstate_to_boardstate(a))
+# a = boardstate_to_extended_boardstate('LIOZ4IL/JS5TSZ/SZSZ6/O9/J9')
+# print(a)
+# print(extended_boardstate_to_boardstate(a))
+
+#working test function
+#print(access_cell('LIOZ4IL/JS5TSZ/SZSZ6/O9/J9', 2, 1))
+#print(change_cell('LIOZ4IL/JS5TSZ/SZSZ6/O9/J9', 1, 5, "S"))
 
 #not working test functions
-print(update_boardstate('16TJOL/20/20/20/20/20/20/20/20/20', 'S361'))
+#a = update_boardstate('LIOZ4IL/JS5TSZ/SZSZ6/O9/J9', 'L053')
+#print(a)
+#print(display_as_text('LIOZ4IL/JS5TSZ/SZSZ6/O9/J9'))
+#print(display_as_text(a))
 
+#'LIOZ4IL/JS5TSZ/SZSZ6/O9/J9'
