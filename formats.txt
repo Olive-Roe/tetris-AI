@@ -1,0 +1,22 @@
+
+Piece notation (str)
+Notation to describe a piece
+Type of piece, orientation, column, row
+(column and row start from index 0)
+"S024"
+
+Board notation (str)
+
+"JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS"
+
+Extended board notation (str)
+
+"LIOZ....IL/JS.....TSZ/SZSZ....../O........./J........./........../........../........../........../........../........../........../........../........../........../........../........../........../........../.........."
+
+Piece-board notation (str)
+Consists of piece notation and board notation separated by a colon
+"I253:LIOZ4IL/JS5TSZ/SZSZ6/O9/J9"
+
+Bag (str)
+Consists of 14 pieces represented by letters
+"OLIZTSJSLZTJOI"
