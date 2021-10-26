@@ -289,6 +289,7 @@ def update_boardstate(current_boardstate:str, piece_notation:str): #works 3/4 of
       'Given a boardstate and a piece notation, return the updated boardstate.'
       global pieces
       #initalize local variables
+      assert len(piece_notation) <= 4
       piece = piece_notation[0]
       orientation = int(piece_notation[1])
       #column, row refer to leftmost, bottommost cell of piece
@@ -315,6 +316,8 @@ def update_boardstate(current_boardstate:str, piece_notation:str): #works 3/4 of
             cx, cy = center
             x = cx+change_in_x
             y = cy+change_in_y
+            if x < 0 or x > 9 or y < 0:
+                  raise ValueError("This piece cannot be placed in this location")
             if access_cell(nbs, x, y) == ".":
                   nbs = change_cell(nbs, x, y, piece)
             else:
@@ -354,37 +357,40 @@ def generate_bag(current_bag):
                   pieces.remove(item)
       return current_bag + random.choice(pieces)
 
-def check_kick_tables(piece, direction, test_number):
+
+def check_kick_tables(piece, initial_direction, final_direction, test_number):
       'Takes a piece and the test number, returns the respective offset, or False if there are no more tests'
-      #print(piece, direction, test_number)
-      if direction == "CW": direction = 0
-      elif direction == "CCW": direction = 1
+      direction = str(initial_direction) + str(final_direction)
       if piece == "O": return False
       elif piece == "I": table = kicktables.i_table
       elif piece in [p for p in "JLSZT"]: table = kicktables.jlszt_table
-      kicktable = table[[k for k in table.keys()][direction]] #accessing kick table
+      if abs(final_direction - initial_direction) == 2: table = kicktables.flip_table #if 180 rotation
+      kicktable = table[direction] #accessing kick table
       if test_number >= len(kicktable): #no more kicks
             return False
       a = kicktable[test_number][1:-1].split(", ") #converting from 
       x_offset = int(a[0])
       y_offset = int(a[1])
-      return x_offset, y_offset
+      # if x_offset < 0 or x_offset > 9 or y_offset < 0:
+      #       return False
+      return y_offset, x_offset
       
 
-def rotate_piece(piece_board_notation, direction):
-      'Takes a piece-board notation and direction'
+def rotate_piece(piece_board_notation, direction, debug=False):
+      'Takes a piece-board notation and direction (CW, CCW, or 180)'
       global pieces
       piece_notation = piece_board_notation.split(":")[0]
       piece = piece_notation[0]
       orientation = int(piece_notation[1])
-      row = int(piece_notation[3])
       column = int(piece_notation[2])
+      row = int(piece_notation[3])
       boardstate = piece_board_notation.split(":")[1]
       shape = pieces[piece][orientation]
 
       if direction == "CW": new_orientation = (orientation+1)%4
-      if direction == "CCW": new_orientation = (orientation+3)%4 #+3 = -1
-      if direction == "180": new_orientation = (orientation+2)%4
+      elif direction == "CCW": new_orientation = (orientation+3)%4 #+3 = -1
+      elif direction == "180": new_orientation = (orientation+2)%4
+      else: raise ValueError("Incorrect direction of rotation")
       bl_row, bl_col = findBLC(shape)
       assert bl_row != None and bl_col != None
       rdif = 2-bl_row
@@ -399,20 +405,24 @@ def rotate_piece(piece_board_notation, direction):
       location = [center[0]-rdif, center[1]-cdif]
       new_x_loc, new_y_loc = location[0], location[1]
       while True:
-            #print(location)
-            output = piece + str(new_orientation) + str(new_x_loc) + str(new_y_loc) + ":" + boardstate
+            output = piece + str(new_orientation) + str(new_y_loc) + str(new_x_loc) + ":" + boardstate
             try:
-                  update_boardstate_from_piece_board_notation(output)
-                  break
+                  if (int(new_x_loc) < 0) or (int(new_x_loc) > 9) or (int(new_y_loc) < 0):
+                        raise ValueError("impossible piece location")
+                  else:
+                        update_boardstate_from_piece_board_notation(output)
+                        break #if no error is thrown
             except:
-                  var = check_kick_tables(piece, direction, counter)
-                  if var == False:
-                        break
+                  var = check_kick_tables(piece, orientation, new_orientation, counter)
+                  if var == False: #no tests work
+                        if debug == True: print(5)
+                        return piece_board_notation
                   x_off, y_off = var
                   new_x_loc = location[0] + x_off
                   new_y_loc = location[1] + y_off
-                  #print(x_off, y_off, location)
                   counter += 1
+      if debug == True: print(counter)
+      output = piece + str(new_orientation) + str(new_y_loc) + str(new_x_loc) + ":" + boardstate
       return output
 
 
@@ -473,8 +483,11 @@ class Bag():
 #print(generate_bag("JIZISLZJOTOJZ"))
 
 #not working test functions
-# a = "T140:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS"
+# a = "T344:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS"
 # display_as_text(update_boardstate_from_piece_board_notation(a))
-# a = rotate_piece(a, "CW")
+# a = rotate_piece(a, "CW", True)
 # b = update_boardstate_from_piece_board_notation(a)
 # display_as_text(b)
+
+#test function
+#print(check_kick_tables("T", 0, 1, 1))

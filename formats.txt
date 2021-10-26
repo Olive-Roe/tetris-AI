@@ -6,11 +6,16 @@ Type of piece, orientation, column, row
 "S024"
 
 Board notation (str)
-
+Condensed description of a board
+Letters to represent pieces
+Numbers to represent empty spaces
+Rows are in between slashes (/)
 "JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS"
 
 Extended board notation (str)
-
+Extended description of a board
+Replaces numbers with (.) so that each row is 10 long
+Used for formatting purposes
 "LIOZ....IL/JS.....TSZ/SZSZ....../O........./J........./........../........../........../........../........../........../........../........../........../........../........../........../........../........../.........."
 
 Piece-board notation (str)
