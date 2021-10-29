@@ -54,3 +54,4 @@ if game_on == True:
     screen.onkey(turn(random_shape), "Up")
 
 screen.exitonclick()
+
