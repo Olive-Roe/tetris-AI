@@ -408,54 +408,6 @@ def check_kick_tables_repeatedly(final_piece_board_notation, initial_direction, 
           continue #keep trying
       return final_piece_board_notation #if no breaks have occured
 
-# def rotate_piece(piece_board_notation, direction, debug=False):
-#       'Takes a piece-board notation and direction (CW, CCW, or 180)'
-#       global pieces
-#       piece_notation = piece_board_notation.split(":")[0]
-#       piece = piece_notation[0]
-#       orientation = int(piece_notation[1])
-#       column = int(piece_notation[2])
-#       row = int(piece_notation[3])
-#       boardstate = piece_board_notation.split(":")[1]
-#       shape = pieces[piece][orientation]
-
-#       if direction == "CW": new_orientation = (orientation+1)%4
-#       elif direction == "CCW": new_orientation = (orientation+3)%4 #+3 = -1
-#       elif direction == "180": new_orientation = (orientation+2)%4
-#       else: raise ValueError("Incorrect direction of rotation")
-#       bl_row, bl_col = findBLC(shape)
-#       assert bl_row != None and bl_col != None
-#       rdif = 2-bl_row
-#       cdif = 2-bl_col
-#       center = (row+rdif, column+cdif)
-#       new_shape = pieces[piece][new_orientation]
-#       bl_row, bl_col = findBLC(new_shape)
-#       assert bl_row != None and bl_col != None
-#       rdif = 2-bl_row
-#       cdif = 2-bl_col
-#       counter = 0
-#       location = [center[0]-rdif, center[1]-cdif]
-#       new_x_loc, new_y_loc = location[0], location[1]
-#       while True:
-#             output = piece + str(new_orientation) + str(new_y_loc) + str(new_x_loc) + ":" + boardstate
-#             try:
-#                   if (int(new_x_loc) < 0) or (int(new_x_loc) > 9) or (int(new_y_loc) < 0):
-#                         raise ValueError("impossible piece location")
-#                   else:
-#                         update_boardstate_from_piece_board_notation(output)
-#                         break #if no error is thrown
-#             except:
-#                   var = check_kick_tables(piece, orientation, new_orientation, counter)
-#                   if var == False: #no tests work
-#                         if debug == True: print(5)
-#                         return piece_board_notation
-#                   x_off, y_off = var
-#                   new_x_loc = location[0] + x_off
-#                   new_y_loc = location[1] + y_off
-#                   counter += 1
-#       if debug == True: print(counter)
-#       output = piece + str(new_orientation) + str(new_y_loc) + str(new_x_loc) + ":" + boardstate
-#       return output
 def find_difference(shape, new_shape):
       'Helper function for rotate_piece'
       bl_row, bl_col = findBLC(shape)
@@ -475,8 +427,8 @@ def rotate_piece(piece_board_notation, direction, debug=False, without_kick_test
       row = int(piece_notation[3])
       boardstate = piece_board_notation.split(":")[1]
       shape = pieces[piece][orientation]
-      if direction == "CW": new_orientation = (orientation+3)%4
-      elif direction == "CCW": new_orientation = (orientation+1)%4 #+3 = -1
+      if direction == "CW": new_orientation = (orientation+1)%4
+      elif direction == "CCW": new_orientation = (orientation+3)%4 #+3 = -1
       elif direction == "180": new_orientation = (orientation+2)%4
       else: raise ValueError(f"Incorrect direction of rotation: '{direction}'")
       print(f"DIRECTION: {new_orientation}")
@@ -533,7 +485,7 @@ class Bag():
             return piece
 
 #testing commands, these work
-#dict1 = board_notation_to_dict('LIOZ4IL/JS5TSZ/SZSZ6/O9/J9')
+#dict1 = board_notation_to_dict('JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS')
 #print(create_grid(locked_positions=dict1))
 
 #working test function
@@ -573,7 +525,7 @@ class Bag():
 # display_as_text(b)
 
 #kick test functions
-a = "S132:JJJ2JJJJJ/JJJJ2JJJJ"
+# a = "S132:JJJ2JJJJJ/JJJJ2JJJJ"
 # print(boardstate_to_extended_boardstate(a.split(":")[1]))
 # display_as_text(update_boardstate_from_piece_board_notation(a))
 # a = rotate_piece(a, "CW", True)
