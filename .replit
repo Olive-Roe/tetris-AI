@@ -1,2 +1,2 @@
-run="python3 Tetris.py"
+run="python3 Tetris_Turtle.py"
 language="python3"
