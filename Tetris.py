@@ -476,6 +476,28 @@ def display_as_text(notation):
       for row in (notation.split("/"))[::-1]: #reverse list
             print(row)
 
+def check_type_notation(notation):
+      'Takes a (valid) notation and returns its type, or False if it\'s unrecognizable.'
+      n_list = [i for i in notation]
+      if len(n_list) == 4:
+            return "piece notation"
+      elif "/" in n_list:
+            if ":" in n_list:
+                  return "piece-board notation"
+            elif "." in n_list:
+                  return "extended board notation"
+            else:
+                  for item in n_list:
+                        if item.isnumeric() == True:
+                              return "board notation"
+                  return False
+      else:
+            if len(n_list) == 14 or len(n_list) == 13:
+                  return "bag notation"
+            else:
+                  return False
+
+
 class Board():
       def __init__(self, boardstate="", bag=""):
             self.boardstate = boardstate
@@ -555,6 +577,18 @@ def init_screen():
 def draw_grid(board_notation, t, screen):
   draft.draw_grid(create_grid(board_notation_to_dict(board_notation)), t, screen)
 
+def smart_display(notation, t, screen):
+      type_of_notation = check_type_notation(notation)
+      if type_of_notation == "board notation":
+            notation = notation
+      elif type_of_notation == "piece-board notation":
+            notation = update_boardstate_from_piece_board_notation(notation)
+      elif type_of_notation == "extended board notation":
+            notation = extended_boardstate_to_boardstate(notation)
+      else:
+            raise ValueError (f"Incorrect notation: '{notation}'")
+      draw_grid(notation, t, screen)
+      
 t, screen = init_screen()
-draw_grid("JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS", t, screen)
+smart_display("T040:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS", t, screen)
 screen.mainloop()
