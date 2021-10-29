@@ -525,7 +525,7 @@ class Bag():
 # display_as_text(b)
 
 #kick test functions
-# a = "S132:JJJ2JJJJJ/JJJJ2JJJJ"
+#a = "S132:JJJ2JJJJJ/JJJJ2JJJJ"
 # print(boardstate_to_extended_boardstate(a.split(":")[1]))
 # display_as_text(update_boardstate_from_piece_board_notation(a))
 # a = rotate_piece(a, "CW", True)
