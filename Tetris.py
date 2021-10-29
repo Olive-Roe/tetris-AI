@@ -1,6 +1,8 @@
 import pygame, sys
 import random
 import kicktables
+from turtle import Screen, Turtle
+import draft
 
 cell_size = 18
 cols = 10
@@ -163,6 +165,15 @@ colours_dict = {
   "Z": (255, 0, 0),
   "T": (255, 0, 255)
 }
+colours_dict2 = { #turtle-compatible colors
+  "I": "cyan",
+  "J": "blue",
+  "L": "orange",
+  "O": "yellow",
+  "S": "lime",
+  "Z": "red",
+  "T": "magenta"
+}
 
 shapes = ["I", "J", "L", "O", "S", "Z", "T"]
 class piece(object):
@@ -177,7 +188,7 @@ class piece(object):
     self.rotation = 0
 
 def create_grid(locked_positions={}):
-      grid = [[(0,0,0) for x in range(10)] for x in range(20)]
+      grid = [["black" for x in range(10)] for x in range(20)]
       for row in range(len(grid)):
           for col in range(len(grid[1])):
               if (row,col) in locked_positions:
@@ -185,26 +196,21 @@ def create_grid(locked_positions={}):
                   grid[row][col] = c
       return grid
 
-'20/20/20/20/20/20/20/20/20/20/20' #example board notation
-'16TJOL/20/20/20/20/20/20/20/20/20' #another example
-'09O05I04/16I03/17I02/18I01/19I/19I/18I01/17I02/16I03/09O05I04' #smileyface test
-#remember to use 03 format for single-digit numbers
-
 'LIOZ4IL/JS5TSZ/SZSZ6/O9/J9' #board notation number 2
 
 def board_notation_to_dict(notation): #this should work, might need more testing
-      global colours_dict
+      global colours_dict2
       output_list = []
       rows = len(notation.split("/"))
       for row in notation.split("/"):
             for index in range(len(row)):
                   item = row[index]
                   if item.isnumeric() == False:
-                        output_list.append(colours_dict[item])
+                        output_list.append(colours_dict2[item])
                   else:
                         num_of_empty_cells = int(row[index])
                         for i in range(num_of_empty_cells):
-                                    output_list.append((0, 0, 0))
+                                    output_list.append("black")
       indices = [(x, y) for x in range(rows) for y in range(10)]
       try:
             items_list = [(indices[i], output_list[i]) for i in range(rows * 10)]
@@ -536,3 +542,19 @@ class Bag():
 # print(c)
 # print(display_as_text(update_boardstate_from_piece_board_notation(c)))
 #print(check_kick_tables("T", 0, 1, 1))
+
+def init_screen():
+  screen = Screen()
+  screen.bgcolor("black")
+  screen.setup(width=300, height=600)
+  screen.title("Tetris")
+  t = Turtle()
+  screen.tracer(0)
+  return t, screen
+
+def draw_grid(board_notation, t, screen):
+  draft.draw_grid(create_grid(board_notation_to_dict(board_notation)), t, screen)
+
+t, screen = init_screen()
+draw_grid("JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS", t, screen)
+screen.mainloop()
