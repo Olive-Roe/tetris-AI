@@ -305,7 +305,8 @@ def update_boardstate(current_boardstate:str, piece_notation:str): #works 3/4 of
       'Given a boardstate and a piece notation, return the updated boardstate.'
       global pieces
       #initalize local variables
-      assert len(piece_notation) <= 4
+      if len(piece_notation) > 5:
+            raise ValueError(f"Piece notation too long: {piece_notation}")
       piece = piece_notation[0]
       orientation = int(piece_notation[1])
       #column, row refer to leftmost, bottommost cell of piece
@@ -339,7 +340,7 @@ def update_boardstate(current_boardstate:str, piece_notation:str): #works 3/4 of
             if access_cell(current_boardstate, x, y) == ".":
                   nbs = change_cell(nbs, x, y, piece)
             else:
-                  raise ValueError("This piece cannot be placed in this location")
+                  raise ValueError(f"This piece: '({piece_notation})' cannot be placed in this location. Board: {current_boardstate}.")
       return (extended_boardstate_to_boardstate(nbs))
 
 def update_boardstate_from_piece_board_notation(piece_board_notation):
@@ -396,33 +397,44 @@ def check_kick_tables(piece, initial_direction, final_direction, test_number):
 def check_kick_tables_repeatedly(final_piece_board_notation, initial_direction, final_direction, debug=True):
       'Takes a piece and the rotation, checks all tests and returns the final offset, or False if there are no more tests'
       full_piece = final_piece_board_notation.split(":")[0]
+      if "-" in full_piece:
+            return False
       piece = full_piece[0] #type of piece 
       final_direction = int(full_piece[1]) #final orientation
       direction = str(initial_direction) + str(final_direction) #key in kicktable
-      board = final_piece_board_notation.split(":")[0]
-      if debug == True: print(full_piece, piece, final_direction, direction, board)
+      board = final_piece_board_notation.split(":")[1]
       pieceList = [letter for letter in full_piece]
       if piece == "O": return final_piece_board_notation
       elif piece == "I": table = kicktables.i_table
       elif piece in [p for p in "JLSZT"]: table = kicktables.jlszt_table
       if abs(final_direction - initial_direction) == 2: table = kicktables.flip_table #if 180 rotation
       kicktable = table[direction] #accessing kick table
+      if debug == True: print(f"Testing piece '{full_piece}', in direction {direction}.")
       for test_number in range(5):
         if test_number >= len(kicktable): #no more kicks
               return final_piece_board_notation #return original
         a = kicktable[test_number][1:-1].split(", ") #converting from 
         x_offset = int(a[0])
         y_offset = int(a[1])
-        if (x_offset < 0) or (x_offset > 9) or (y_offset < 0):
-          continue
+        x_loc = pieceList[3]
+        y_loc = pieceList[2]
+        print(x_loc, y_loc)
+        if debug == True: print(f"x-offset: {x_offset}, y-offset: {y_offset}")
+        if debug == True: print(f"Test {test_number}: ({int(x_loc) + x_offset}, {int(y_loc) + y_offset})")
+        if (int(x_loc) + x_offset) < 0 or (int(x_loc) + x_offset) > 9 or (int(y_loc) + y_offset < 0):
+              if debug == True: print(f"Coords failed initial check: {int(x_loc) + x_offset,int(y_loc) + y_offset}")
+              continue
         try: 
-          pieceList[2] = pieceList[2] + y_offset
-          pieceList[3] = pieceList[3] + x_offset
-          piece_message = "".join(pieceList)
-          update_boardstate(piece_message, board)
-          return ":".join(piece_message, board)
+              y_loc = str(int(y_loc) + int(y_offset))
+              x_loc = str(int(x_loc) + int(x_offset))
+              piece_message = piece + str(final_direction) + x_loc + y_loc
+              if debug == True: print(f"Testing {piece_message}, {board}.")
+              update_boardstate(board, piece_message)
+              return piece_message + ":" + board
         except: #if an error is thrown (piece doesn't fit)
-          continue #keep trying
+              if debug == True: print(f"Piece does not fit.")
+              continue #keep trying
+      if debug == True: print("All checks have been tried. Returning original boardstate.")
       return final_piece_board_notation #if no breaks have occured
 
 def find_difference(shape, new_shape):
@@ -451,34 +463,20 @@ def rotate_piece(piece_board_notation, direction, debug=False, without_kick_test
       else: raise ValueError(f"Incorrect direction of rotation: '{direction}'")
       new_shape = pieces[piece][new_orientation]
       y_diff, x_diff = find_difference(shape, new_shape)
-      counter = 0
-      location = [column-x_diff, row-y_diff]
+      location = [column+x_diff, row+y_diff]
       new_x_loc, new_y_loc = location[0], location[1]
+      if debug == True: print(f"Original loc: ({column}, {row}). New loc: ({new_x_loc}, {new_y_loc}). Diff: ({x_diff}, {y_diff})")
       if without_kick_testing == True:
         return piece + str(new_orientation) + str(new_y_loc) + str(new_x_loc) + ":" + boardstate
-      while True:
-            output = piece + str(new_orientation) + str(new_y_loc) + str(new_x_loc) + ":" + boardstate
-            try:
-                  if (int(new_x_loc) < 0) or (int(new_x_loc) > 9) or (int(new_y_loc) < 0):
-                        raise ValueError("impossible piece location")
-                  else:
-                        update_boardstate_from_piece_board_notation(output)
-                        break #if no error is thrown
-            except:
-                  var = check_kick_tables(piece, orientation, new_orientation, counter)
-                  if var == False: #no tests work
-                        if debug == True: print(5)
-                        return piece_board_notation
-                  x_off, y_off = var
-                  new_x_loc = location[0] + x_off
-                  new_y_loc = location[1] + y_off
-                  counter += 1
-      if debug == True: print(counter)
       output = piece + str(new_orientation) + str(new_y_loc) + str(new_x_loc) + ":" + boardstate
-      return output
+      final_output = check_kick_tables_repeatedly(output, orientation, new_orientation, debug)
+      if final_output == False:
+            return output
+      else:
+            return final_output
 
-def rotate_and_update(piece_board_notation, direction):
-      return update_boardstate_from_piece_board_notation(rotate_piece(piece_board_notation, direction))
+def rotate_and_update(piece_board_notation, direction, debug=False):
+      return update_boardstate_from_piece_board_notation(rotate_piece(piece_board_notation, direction, debug))
 
 def move_piece_down(piece_board_notation):
       #TODO
@@ -494,10 +492,10 @@ def check_type_notation(notation):
       n_list = [i for i in notation]
       if len(n_list) == 4:
             return "piece notation"
-      elif "/" in n_list:
-            if ":" in n_list:
+      elif ":" in n_list:
                   return "piece-board notation"
-            elif "." in n_list:
+      elif "/" in n_list:
+            if "." in n_list:
                   return "extended board notation"
             else:
                   for item in n_list:
@@ -525,58 +523,59 @@ class Bag():
             Bag.value = generate_bag(Bag.value)
             return piece
 
-#testing commands, these work
-#dict1 = board_notation_to_dict('JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS')
-#print(create_grid(locked_positions=dict1))
+"""testing commands, these work
+dict1 = board_notation_to_dict('JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS')
+print(create_grid(locked_positions=dict1))
 
-#working test function
-# a = boardstate_to_extended_boardstate('LIOZ4IL/JS5TSZ/SZSZ6/O9/J9')
-#a = boardstate_to_extended_boardstate('')
-# print(a)
-# print(extended_boardstate_to_boardstate(a))
+working test function
+a = boardstate_to_extended_boardstate('LIOZ4IL/JS5TSZ/SZSZ6/O9/J9')
+a = boardstate_to_extended_boardstate('')
+print(a)
+print(extended_boardstate_to_boardstate(a))
 
-#working test function
-#print(access_cell('LIOZ4IL/JS5TSZ/SZSZ6/O9/J9', 2, 1))
-#print(change_cell('LIOZ4IL/JS5TSZ/SZSZ6/O9/J9', 1, 5, "S"))
+working test function
+print(access_cell('LIOZ4IL/JS5TSZ/SZSZ6/O9/J9', 2, 1))
+print(change_cell('LIOZ4IL/JS5TSZ/SZSZ6/O9/J9', 1, 5, "S"))
 
-#working test functionsz
-#a = update_boardstate_from_piece_board_notation("S054:JJI4ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS")
-# a = update_boardstate('LIOZ4IL/JS5TSZ/SZSZ6/O9/J9', 'I253')
-# display_as_text('LIOZ4IL/JS5TSZ/SZSZ6/O9/J9')
-#display_as_text('JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS')
-# display_as_text(a)
+working test functionsz
+a = update_boardstate_from_piece_board_notation("S054:JJI4ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS")
+a = update_boardstate('LIOZ4IL/JS5TSZ/SZSZ6/O9/J9', 'I253')
+display_as_text('LIOZ4IL/JS5TSZ/SZSZ6/O9/J9')
+display_as_text('JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS')
+display_as_text(a)
 
-#test function
-#print(generate_bag("JIZISLZJOTOJZ"))
-# a = "I140:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS"
-# display_as_text(update_boardstate_from_piece_board_notation(a))
-# for x in range(4):
-#       a = rotate_piece(a, "CW")
-#       b = update_boardstate_from_piece_board_notation(a)
-#       display_as_text(b)
+test function
+print(generate_bag("JIZISLZJOTOJZ"))
+a = "I140:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS"
+display_as_text(update_boardstate_from_piece_board_notation(a))
+for x in range(4):
+      a = rotate_piece(a, "CW")
+      b = update_boardstate_from_piece_board_notation(a)
+      display_as_text(b)
 
-#test function
-#print(generate_bag("JIZISLZJOTOJZ"))
+test function
+print(generate_bag("JIZISLZJOTOJZ"))
 
-#not working rotation test functions
-# a = "S345:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS"
-# display_as_text(update_boardstate_from_piece_board_notation(a))
-# a = rotate_piece(a, "CCW", True)
-# b = update_boardstate_from_piece_board_notation(a)
-# display_as_text(b)
+not working rotation test functions
+a = "S345:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS"
+display_as_text(update_boardstate_from_piece_board_notation(a))
+a = rotate_piece(a, "CCW", True)
+b = update_boardstate_from_piece_board_notation(a)
+display_as_text(b)
 
-#kick test functions
-#a = "S132:JJJ2JJJJJ/JJJJ2JJJJ"
-# print(boardstate_to_extended_boardstate(a.split(":")[1]))
-# display_as_text(update_boardstate_from_piece_board_notation(a))
-# a = rotate_piece(a, "CW", True)
-# display_as_text(update_boardstate_from_piece_board_notation(a))
-# b = rotate_piece(a, "CW", False, True)
-# print(b)
-# c = check_kick_tables_repeatedly(b, 1, 2, True)
-# print(c)
-# print(display_as_text(update_boardstate_from_piece_board_notation(c)))
-#print(check_kick_tables("T", 0, 1, 1))
+kick test functions
+a = "S132:JJJ2JJJJJ/JJJJ2JJJJ"
+print(boardstate_to_extended_boardstate(a.split(":")[1]))
+display_as_text(update_boardstate_from_piece_board_notation(a))
+a = rotate_piece(a, "CW", True)
+display_as_text(update_boardstate_from_piece_board_notation(a))
+b = rotate_piece(a, "CW", False, True)
+print(b)
+c = check_kick_tables_repeatedly(b, 1, 2, True)
+print(c)
+print(display_as_text(update_boardstate_from_piece_board_notation(c)))
+print(check_kick_tables("T", 0, 1, 1))
+"""
 
 def init_screen():
   screen = Screen()
@@ -623,16 +622,17 @@ def slideshow(slides, t, screen):
       screen.onkey(go_back, "Left")
       screen.listen()
 
-# t, screen = init_screen()
-# smart_display("T040:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS", t, screen)
-# print(rotate_and_update("T340:9J/", "CCW"))
-# slides = ["T340:9J/", 
-#           rotate_and_update("T340:9J/", "CCW"),
-#           "T340:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS",
-#           rotate_and_update("T340:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS", "CCW"),
-#           "T040:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS",
-#           ]
-# slideshow(slides, t, screen)
-# screen.mainloop()
+"""t, screen = init_screen()
+smart_display("T040:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS", t, screen)
+slides = ["T341:9J/", 
+          rotate_and_update("T341:9J/", "CCW", True),
+          #check_kick_tables_repeatedly("T232:9J", 3, 2, True),
+          "T340:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS",
+          "JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS",
+          #rotate_and_update("T340:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS", "CCW", True),
+          "T040:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS",
+          ]
+slideshow(slides, t, screen)
+screen.mainloop()"""
 
 
