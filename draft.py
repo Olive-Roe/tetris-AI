@@ -14,6 +14,8 @@ def draw_square(width, color, t):
   global color_dict
   if type(color) == tuple:
     color = color_dict[color]
+  if color == "black":
+    return None
   t.fillcolor(color)
   t.begin_fill()
   for i in range(4):
@@ -22,11 +24,15 @@ def draw_square(width, color, t):
   t.end_fill()
 
 def draw_grid(rgb, t, screen):
+  t.hideturtle()
+  t.clear()
+  t.pencolor("black")
   startX = -100
   startY = -200
-  t.pendown()
   t.speed(0)
   t.goto(startX, startY)
+  t.pendown()
+  t.setheading(0)
   for i in range(20):
     t.goto(startX, startY+((i+1)*20))
     for j in range(10):
@@ -44,7 +50,6 @@ def draw_grid(rgb, t, screen):
   t.left(90)
   t.forward(400)
   t.penup()
-  t.hideturtle()
   screen.update()
 
 def main():
@@ -56,6 +61,7 @@ def main():
   screen.tracer(0) 
   rgb = [['blue', 'blue', 'blue', 'cyan', 'black', 'black', 'black', 'red', 'red', 'magenta'], ['yellow', 'yellow', 'blue', 'cyan', 'black', 'black', 'red', 'red', 'magenta', 'magenta'], ['yellow', 'yellow', 'orange', 'cyan', 'black', 'black', 'black', 'lime', 'lime', 'magenta'], ['orange', 'orange', 'orange', 'cyan', 'black', 'black', 'black', 'black', 'lime', 'lime'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black']]
 
+  draw_grid(rgb, t, screen)
   draw_grid(rgb, t, screen)
 
   #screen.tracer(0)

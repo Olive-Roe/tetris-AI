@@ -3,6 +3,7 @@ import random
 import kicktables
 from turtle import Screen, Turtle
 import draft
+from time import sleep
 
 cell_size = 18
 cols = 10
@@ -223,7 +224,15 @@ def boardstate_to_extended_boardstate(boardstate:str):
       if boardstate == "":
             return "/.........."*20
       output_list = []
-      for row in boardstate.split("/"):
+      for i in range(len(boardstate.split("/"))):
+            row = boardstate.split("/")[i]
+            if row == "":
+                  if i == 0:
+                        continue
+                  else:
+                        output_list2 = [".........."]
+                        output_list.append("".join(output_list2))
+                        continue
             output_list2 = []
             for index in range(len(row)):
                   item = row[index]
@@ -303,8 +312,10 @@ def update_boardstate(current_boardstate:str, piece_notation:str): #works 3/4 of
       column = int(piece_notation[2])
       if len(piece_notation) == 4:
             row = int(piece_notation[3])
+      elif len(piece_notation == 5):
+            row = int(piece_notation[3]+piece_notation[4])
       else:
-            print(piece_notation)
+            raise ValueError(f"Incorrect piece notation: {piece_notation}")
       #Finding the center of the 'bounding box'
       shape = pieces[piece][orientation]
       bl_row, bl_col = findBLC(shape) #bottom left row and column
@@ -424,7 +435,7 @@ def find_difference(shape, new_shape):
       return y_diff, x_diff
 
 def rotate_piece(piece_board_notation, direction, debug=False, without_kick_testing=False):
-      'Takes a piece-board notation and direction (CW, CCW, or 180)'
+      'Takes a piece-board notation and direction (CW, CCW, or 180), returns updated piece-board notation'
       global pieces
       piece_notation = piece_board_notation.split(":")[0]
       piece = piece_notation[0]
@@ -432,17 +443,16 @@ def rotate_piece(piece_board_notation, direction, debug=False, without_kick_test
       column = int(piece_notation[2])
       row = int(piece_notation[3])
       boardstate = piece_board_notation.split(":")[1]
+      boardstate = extended_boardstate_to_boardstate(boardstate_to_extended_boardstate(boardstate))
       shape = pieces[piece][orientation]
       if direction == "CW": new_orientation = (orientation+1)%4
       elif direction == "CCW": new_orientation = (orientation+3)%4 #+3 = -1
       elif direction == "180": new_orientation = (orientation+2)%4
       else: raise ValueError(f"Incorrect direction of rotation: '{direction}'")
-      print(f"DIRECTION: {new_orientation}")
       new_shape = pieces[piece][new_orientation]
       y_diff, x_diff = find_difference(shape, new_shape)
       counter = 0
       location = [column-x_diff, row-y_diff]
-      print(location, [row, column])
       new_x_loc, new_y_loc = location[0], location[1]
       if without_kick_testing == True:
         return piece + str(new_orientation) + str(new_y_loc) + str(new_x_loc) + ":" + boardstate
@@ -466,6 +476,9 @@ def rotate_piece(piece_board_notation, direction, debug=False, without_kick_test
       if debug == True: print(counter)
       output = piece + str(new_orientation) + str(new_y_loc) + str(new_x_loc) + ":" + boardstate
       return output
+
+def rotate_and_update(piece_board_notation, direction):
+      return update_boardstate_from_piece_board_notation(rotate_piece(piece_board_notation, direction))
 
 def move_piece_down(piece_board_notation):
       #TODO
@@ -586,9 +599,40 @@ def smart_display(notation, t, screen):
       elif type_of_notation == "extended board notation":
             notation = extended_boardstate_to_boardstate(notation)
       else:
-            raise ValueError (f"Incorrect notation: '{notation}'")
+            raise ValueError (f"Incorrect notation: '{notation}''. This was interpreted as a '{type_of_notation}'")
       draw_grid(notation, t, screen)
-      
-t, screen = init_screen()
-smart_display("T040:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS", t, screen)
-screen.mainloop()
+
+def slideshow(slides, t, screen):
+      current_slide = 0
+      smart_display(slides[0], t, screen)
+      def go_back():
+            nonlocal current_slide, t, screen
+            if current_slide - 1 >= 0:
+                  smart_display(slides[current_slide - 1], t, screen)
+                  current_slide += -1
+            else:
+                  smart_display(slides[current_slide], t, screen)
+      def go_forward():
+            nonlocal current_slide, t, screen
+            if current_slide + 1 < len(slides):
+                  smart_display(slides[current_slide + 1], t, screen)
+                  current_slide += 1
+            else:
+                  smart_display(slides[current_slide], t, screen)
+      screen.onkey(go_forward, "Right")
+      screen.onkey(go_back, "Left")
+      screen.listen()
+
+# t, screen = init_screen()
+# smart_display("T040:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS", t, screen)
+# print(rotate_and_update("T340:9J/", "CCW"))
+# slides = ["T340:9J/", 
+#           rotate_and_update("T340:9J/", "CCW"),
+#           "T340:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS",
+#           rotate_and_update("T340:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS", "CCW"),
+#           "T040:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS",
+#           ]
+# slideshow(slides, t, screen)
+# screen.mainloop()
+
+
