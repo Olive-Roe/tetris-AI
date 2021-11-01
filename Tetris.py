@@ -126,7 +126,8 @@ J = [[
       '.....',
       '.....'],]
 
-T = [['.....',
+T = [
+      ['.....',
       '..0..',
       '..00.',
       '..0..',
@@ -148,6 +149,9 @@ T = [['.....',
       '.....'],]
 
 pieces = {"I":I, "J": J, "L": L, "O": O, "S": S, "Z": Z, "T": T}
+#for key in [k for k in pieces.keys()]:
+#      pieces[key] = pieces[key][::-1]
+
 colours = [
   (0, 255, 255),
   (0, 0, 255),
@@ -393,12 +397,21 @@ def check_kick_tables(piece, initial_direction, final_direction, test_number):
       # if x_offset < 0 or x_offset > 9 or y_offset < 0:
       #       return False
       return y_offset, x_offset
-      
+
+def return_x_y(piece_notation):
+      if piece_notation[2] == "-": #handling negative x/y values and 2 digit x values
+              x_loc = int(str(piece_notation[2]) + str(piece_notation[3]))
+              y_loc = int(piece_notation[4:])
+      else:
+              x_loc = piece_notation[2]
+              y_loc = int(piece_notation[3:])
+      return x_loc, y_loc
+
 def check_kick_tables_repeatedly(final_piece_board_notation, initial_direction, final_direction, debug=True):
       'Takes a piece and the rotation, checks all tests and returns the final offset, or False if there are no more tests'
       full_piece = final_piece_board_notation.split(":")[0]
-      if "-" in full_piece:
-            return False
+      #if "-" in full_piece: #i don't see why this is here
+      #      return False
       piece = full_piece[0] #type of piece 
       final_direction = int(full_piece[1]) #final orientation
       direction = str(initial_direction) + str(final_direction) #key in kicktable
@@ -407,7 +420,9 @@ def check_kick_tables_repeatedly(final_piece_board_notation, initial_direction, 
       if piece == "O": return final_piece_board_notation
       elif piece == "I": table = kicktables.i_table
       elif piece in [p for p in "JLSZT"]: table = kicktables.jlszt_table
-      if abs(final_direction - initial_direction) == 2: table = kicktables.flip_table #if 180 rotation
+      if abs(final_direction - initial_direction) == 2: 
+            table = kicktables.flip_table #if 180 rotation
+            if debug == True: print("180 tables accessed.")
       kicktable = table[direction] #accessing kick table
       if debug == True: print(f"Testing piece '{full_piece}', in direction {direction}.")
       for test_number in range(5):
@@ -416,9 +431,7 @@ def check_kick_tables_repeatedly(final_piece_board_notation, initial_direction, 
         a = kicktable[test_number][1:-1].split(", ") #converting from 
         x_offset = int(a[0])
         y_offset = int(a[1])
-        x_loc = pieceList[3]
-        y_loc = pieceList[2]
-        print(x_loc, y_loc)
+        x_loc, y_loc = return_x_y(full_piece)
         if debug == True: print(f"x-offset: {x_offset}, y-offset: {y_offset}")
         if debug == True: print(f"Test {test_number}: ({int(x_loc) + x_offset}, {int(y_loc) + y_offset})")
         if (int(x_loc) + x_offset) < 0 or (int(x_loc) + x_offset) > 9 or (int(y_loc) + y_offset < 0):
@@ -457,8 +470,8 @@ def rotate_piece(piece_board_notation, direction, debug=False, without_kick_test
       boardstate = piece_board_notation.split(":")[1]
       boardstate = extended_boardstate_to_boardstate(boardstate_to_extended_boardstate(boardstate))
       shape = pieces[piece][orientation]
-      if direction == "CW": new_orientation = (orientation+1)%4
-      elif direction == "CCW": new_orientation = (orientation+3)%4 #+3 = -1
+      if direction == "CW": new_orientation = (orientation+3)%4
+      elif direction == "CCW": new_orientation = (orientation+1)%4 #+3 = -1
       elif direction == "180": new_orientation = (orientation+2)%4
       else: raise ValueError(f"Incorrect direction of rotation: '{direction}'")
       new_shape = pieces[piece][new_orientation]
@@ -470,13 +483,16 @@ def rotate_piece(piece_board_notation, direction, debug=False, without_kick_test
         return piece + str(new_orientation) + str(new_y_loc) + str(new_x_loc) + ":" + boardstate
       output = piece + str(new_orientation) + str(new_y_loc) + str(new_x_loc) + ":" + boardstate
       final_output = check_kick_tables_repeatedly(output, orientation, new_orientation, debug)
+      print(f"Output from check_kick_tables_repeatedly: {final_output}")
       if final_output == False:
             return output
       else:
             return final_output
 
 def rotate_and_update(piece_board_notation, direction, debug=False):
-      return update_boardstate_from_piece_board_notation(rotate_piece(piece_board_notation, direction, debug))
+      output = rotate_piece(piece_board_notation, direction, debug)
+      if debug == True: print(f"Output from rotate ({piece_board_notation}, {direction}): {output}.")
+      return update_boardstate_from_piece_board_notation(output)
 
 def move_piece_down(piece_board_notation):
       #TODO
@@ -624,13 +640,15 @@ def slideshow(slides, t, screen):
 
 """t, screen = init_screen()
 smart_display("T040:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS", t, screen)
-slides = ["T341:9J/", 
-          rotate_and_update("T341:9J/", "CCW", True),
-          #check_kick_tables_repeatedly("T232:9J", 3, 2, True),
+slides = ["T040:9J/", 
+          rotate_and_update("T040:9J/", "CCW", True),
+          rotate_and_update("T040:9J/", "180", True),
+          rotate_and_update("T040:9J/", "CW", True),
           "T340:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS",
           "JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS",
           #rotate_and_update("T340:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS", "CCW", True),
           "T040:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS",
+          #rotate_and_update("T040:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS", "CW"),
           ]
 slideshow(slides, t, screen)
 screen.mainloop()"""
