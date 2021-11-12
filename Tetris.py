@@ -3,7 +3,7 @@ import sys
 import random
 import kicktables
 from turtle import Screen, Turtle
-import draft
+import display
 from time import sleep
 
 cell_size = 18
@@ -720,7 +720,7 @@ def init_screen():
 
 
 def draw_grid(board_notation, t, screen):
-    draft.draw_grid(create_grid(
+    display.draw_grid(create_grid(
         board_notation_to_dict(board_notation)), t, screen)
 
 
