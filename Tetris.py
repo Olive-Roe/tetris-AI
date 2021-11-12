@@ -184,18 +184,6 @@ colours_dict2 = {  # turtle-compatible colors
 shapes = ["I", "J", "L", "O", "S", "Z", "T"]
 
 
-class piece(object):
-    rows = 20
-    colms = 10
-
-    def __init__(self, colms, rows, shape):
-        self.x = colms
-        self.y = rows
-        self.shape = shape
-        self.color = colours[shapes.index(shape)]
-        self.rotation = 0
-
-
 def create_grid(locked_positions={}):
     grid = [["black" for x in range(10)] for x in range(20)]
     for row in range(len(grid)):
@@ -592,12 +580,20 @@ def check_type_notation(notation):
             return False
 
 
-class Board():
-    def __init__(self, boardstate="", bag=""):
-        self.boardstate = boardstate
-        self.extended_boardstate = boardstate_to_extended_boardstate(
-            self.boardstate)
-        self.bag = Bag(bag)
+class Piece():
+    def __init__(self, piece_notation: str = ""):
+        self.value = piece_notation
+        self.x, self.y = return_x_y(piece_notation)
+        self.x, self.y = int(self.x), int(self.y)
+        self.type = piece_notation[0]
+        self.orientation = int(piece_notation[1])
+
+    def update(self, new_piece: str):
+        self.value = new_piece
+        self.x, self.y = return_x_y(new_piece)
+        self.x, self.y = int(self.x), int(self.y)
+        self.type = new_piece[0]
+        self.orientation = int(new_piece[1])
 
 
 class Bag():
@@ -608,6 +604,54 @@ class Bag():
         piece = Bag.value.pop(0)
         Bag.value = generate_bag(Bag.value)
         return piece
+
+
+class Board():
+    def __init__(self, piece_notation="", boardstate="", bag="", hold=""):
+        self.boardstate = boardstate
+        self.extended_boardstate = boardstate_to_extended_boardstate(
+            self.boardstate)
+        self.bag = Bag(bag)
+        self.hold = hold
+        self.piece = Piece(piece_notation)
+        self.piece_board_notation = self.piece.value + ":/" + self.boardstate
+
+    def spawn_next_piece(self):
+        new_piece_type = self.bag.update()
+        orientation = "0"  # spawn orientation
+        x = "4"
+        y = "19"
+        self.piece.update(new_piece_type + orientation + x + y)
+
+    def move_piece_down(self):
+        y_value = self.piece.y
+        rest_of_piece_value = self.piece.type + \
+            self.piece.orientation + str(self.piece.x)
+        self.piece.update(rest_of_piece_value + str(y_value-1))
+
+    def move_piece_left(self):
+        x_value = self.piece.x
+        rest_of_piece_value = self.piece.type + \
+            self.piece.orientation
+        self.piece.update(rest_of_piece_value +
+                          str(x_value-1) + str(self.piece.y))
+
+    def move_piece_right(self):
+        x_value = self.piece.x
+        rest_of_piece_value = self.piece.type + \
+            self.piece.orientation
+        self.piece.update(rest_of_piece_value +
+                          str(x_value+1) + str(self.piece.y))
+
+    def lock_piece(self):
+        self.boardstate = update_boardstate(self.boardstate, self.piece.value)
+        self.spawn_next_piece()
+    
+    def rotate_piece(self, direction):
+        self.boardstate = rotate_and_update(self.piece_board_notation, direction)
+
+    def display_board(self, t, screen):
+        smart_display(self.piece_board_notation, t, screen)
 
 
 """testing commands, these work
@@ -695,7 +739,7 @@ def smart_display(notation, t, screen):
     draw_grid(notation, t, screen)
 
 
-def slideshow(slides, t, screen):
+def slideshow(slides, t, screen: Screen):
     current_slide = 0
     smart_display(slides[0], t, screen)
 
@@ -720,19 +764,23 @@ def slideshow(slides, t, screen):
 
 
 t, screen = init_screen()
-smart_display("T040:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS", t, screen)
-slides = ["T040:9J/",
-          "T35-1:9J/",
-          "T240:9J/",
-          "T140:9J/",
-          rotate_and_update("T040:9J/", "CCW", True),
-          rotate_and_update("T040:9J/", "180", True),
-          rotate_and_update("T040:9J/", "CW", True),
-          "T340:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS",
-          "JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS",
-          #rotate_and_update("T340:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS", "CCW", True),
-          "T040:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS",
-          #rotate_and_update("T040:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS", "CW"),
-          ]
-slideshow(slides, t, screen)
-screen.mainloop()
+b = Board("T0417")
+b.display_board(t, screen)
+
+# t, screen = init_screen()
+# smart_display("T040:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS", t, screen)
+# slides = ["T040:9J/",
+#           "T35-1:9J/",
+#           "T240:9J/",
+#           "T140:9J/",
+#           rotate_and_update("T040:9J/", "CCW", True),
+#           rotate_and_update("T040:9J/", "180", True),
+#           rotate_and_update("T040:9J/", "CW", True),
+#           "T340:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS",
+#           "JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS",
+#           #rotate_and_update("T340:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS", "CCW", True),
+#           "T040:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS",
+#           #rotate_and_update("T040:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS", "CW"),
+#           ]
+# slideshow(slides, t, screen)
+# screen.mainloop()
