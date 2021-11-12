@@ -197,30 +197,6 @@ def create_grid(locked_positions={}):
 'LIOZ4IL/JS5TSZ/SZSZ6/O9/J9'  # board notation number 2
 
 
-# this should work, might need more testing
-def board_notation_to_dict(notation):
-    global colours_dict2
-    output_list = []
-    rows = len(notation.split("/"))
-    for row in notation.split("/"):
-        for index in range(len(row)):
-            item = row[index]
-            if item.isnumeric() == False:
-                output_list.append(colours_dict2[item])
-            else:
-                num_of_empty_cells = int(row[index])
-                for i in range(num_of_empty_cells):
-                    output_list.append("black")
-    indices = [(x, y) for x in range(rows) for y in range(10)]
-    try:
-        items_list = [(indices[i], output_list[i]) for i in range(rows * 10)]
-    except:
-        print(output_list)
-        raise ValueError(
-            f"Invalid board notation. Length of output_list: {len(output_list)}")
-    return {k: v for (k, v) in items_list}
-
-
 def boardstate_to_extended_boardstate(boardstate: str):
     if boardstate == "":
         return "/.........."*20
@@ -258,6 +234,7 @@ def extended_boardstate_to_boardstate(extended_boardstate: str):
     output_list = []
     for row in extended_boardstate.split("/"):
         if row == "..........":
+            output_list.append("")
             continue
         output_list2 = []
         counter = 0
@@ -273,6 +250,35 @@ def extended_boardstate_to_boardstate(extended_boardstate: str):
             output_list2.append(str(counter))
         output_list.append("".join(output_list2))
     return "/".join(output_list)
+
+# this should work, might need more testing
+
+
+def board_notation_to_dict(notation):
+    global colours_dict2
+    #notation = boardstate_to_extended_boardstate(notation)
+    output_list = []
+    rows = len(notation.split("/"))
+    for row in notation.split("/"):
+        if row == "":
+            for x in range(10):
+                output_list.append("black")
+        for index in range(len(row)):
+            item = row[index]
+            if item.isnumeric() == False:
+                output_list.append(colours_dict2[item])
+            else:
+                num_of_empty_cells = int(row[index])
+                for i in range(num_of_empty_cells):
+                    output_list.append("black")
+    indices = [(x, y) for x in range(rows) for y in range(10)]
+    try:
+        items_list = [(indices[i], output_list[i]) for i in range(rows * 10)]
+    except:
+        print(output_list)
+        raise ValueError(
+            f"Invalid board notation. Length of output_list: {len(output_list)}")
+    return {k: v for (k, v) in items_list}
 
 
 def boardstate_to_list_form(boardstate: str):
@@ -643,15 +649,51 @@ class Board():
         self.piece.update(rest_of_piece_value +
                           str(x_value+1) + str(self.piece.y))
 
-    def lock_piece(self):
-        self.boardstate = update_boardstate(self.boardstate, self.piece.value)
-        self.spawn_next_piece()
-    
     def rotate_piece(self, direction):
-        self.boardstate = rotate_and_update(self.piece_board_notation, direction)
+        self.boardstate = rotate_and_update2(
+            self.piece_board_notation, direction)
+
+    def lock_piece(self):
+        self.boardstate = update_boardstate2(self.boardstate, self.piece)
+        self.spawn_next_piece()
 
     def display_board(self, t, screen):
-        smart_display(self.piece_board_notation, t, screen)
+        self.boardstate = update_boardstate2(self.boardstate, self.piece)
+        draw_grid(self.boardstate, t, screen)
+
+
+def update_boardstate2(boardstate, piecestate: Piece):
+    global pieces
+    x, y = piecestate.x, piecestate.y
+    # Reversed because list is reversed for some reason
+    shape = pieces[piecestate.type][::-1][piecestate.orientation]
+    blx, bly = findBLC(shape)
+    assert blx != None and bly != None
+    xdif = 2-blx
+    ydif = 2-bly
+    center = (x+xdif, y+ydif)
+    oList = []
+    for r in range(5):
+        for cell in range(5):
+            if shape[r][cell] == "0":
+                oList.append((cell-2, 2-r))
+    nbs = boardstate_to_extended_boardstate(boardstate)
+    for change_in_x, change_in_y in oList:
+        cx, cy = center
+        x_loc = cx+change_in_x
+        y_loc = cy+change_in_y
+        if x_loc < 0 or x_loc > 9 or y_loc < 0 or y_loc > 19:
+            raise ValueError("This piece cannot be placed in this location")
+        if access_cell(boardstate, y_loc, x_loc) == ".":
+            nbs = change_cell(nbs, y_loc, x_loc, piecestate.type)
+        else:
+            raise ValueError(
+                f"This piece: '({piecestate})' cannot be placed in this location. Board: {boardstate}.")
+    return extended_boardstate_to_boardstate(nbs)
+
+
+def rotate_and_update2(pb_notation, direction):
+    pass
 
 
 """testing commands, these work
@@ -764,8 +806,11 @@ def slideshow(slides, t, screen: Screen):
 
 
 t, screen = init_screen()
-b = Board("T0417")
+s = "///TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/"
+s = "/////////////////3TTT4/4T5"
+b = Board("T0318")
 b.display_board(t, screen)
+screen.mainloop()
 
 # t, screen = init_screen()
 # smart_display("T040:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS", t, screen)
