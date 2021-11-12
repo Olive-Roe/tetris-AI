@@ -185,7 +185,8 @@ shapes = ["I", "J", "L", "O", "S", "Z", "T"]
 
 
 def create_grid(locked_positions={}):
-    grid = [["black" for x in range(10)] for x in range(20)]
+    # FIXME: Changed height to 40, hopefully doesn't break things
+    grid = [["black" for x in range(10)] for x in range(40)]
     for row in range(len(grid)):
         for col in range(len(grid[1])):
             if (row, col) in locked_positions:
@@ -199,7 +200,8 @@ def create_grid(locked_positions={}):
 
 def boardstate_to_extended_boardstate(boardstate: str):
     if boardstate == "":
-        return "/.........."*20
+        # FIXME: Changed rows to 40, might cause breaking change
+        return "/.........."*40
     output_list = []
     for i in range(len(boardstate.split("/"))):
         row = boardstate.split("/")[i]
@@ -225,7 +227,8 @@ def boardstate_to_extended_boardstate(boardstate: str):
         output_list.append("".join(output_list2))
     notation = "/".join(output_list)
     rows = len(notation.split("/"))
-    for i in range(20-rows):
+    # FIXME: Changed to 40 max rows
+    for i in range(40-rows):
         notation = notation + "/.........."
     return notation
 
@@ -389,12 +392,17 @@ def generate_bag(current_bag):
     'Takes a 13-long bag and adds a new piece to the end of it'
     if len(current_bag) == 14:
         return current_bag
+    # Make list of all the types of pieces
     pieces = [p for p in "IJLOSZT"]
     output_list = []
     if current_bag == "":
         for x in range(2):
             pieces = [p for p in "IJLOSZT"]
             for x in range(7):
+                # FIXME: Hacky solution, check for bugs later
+                if len(pieces) == 1:
+                    output_list.append(pieces[0])
+                    continue
                 a = random.randint(0, len(pieces) - 1)
                 output_list.append(pieces[a])
                 pieces.pop(a)
@@ -411,7 +419,11 @@ def generate_bag(current_bag):
     for item in latest_bag:
         if item in pieces:
             pieces.remove(item)
-    return current_bag + random.choice(pieces)
+    # FIXME: Hacky solution, check for bugs
+    if pieces == []:
+        return random.choice([p for p in "IJLOSZT"])
+    else:
+        return current_bag + random.choice(pieces)
 
 
 def check_kick_tables(piece, initial_direction, final_direction, test_number):
@@ -606,9 +618,9 @@ class Bag():
     def __init__(self, bag=""):
         self.value = generate_bag(bag)
 
-    def update():
-        piece = Bag.value.pop(0)
-        Bag.value = generate_bag(Bag.value)
+    def update(self):
+        piece = self.value[0]
+        self.value = generate_bag(self.value[1:])
         return piece
 
 
@@ -619,35 +631,72 @@ class Board():
             self.boardstate)
         self.bag = Bag(bag)
         self.hold = hold
-        self.piece = Piece(piece_notation)
+        # Weird how you can call functions written after __init__
+        if piece_notation == "":
+            self.piece = Piece(self.spawn_next_piece(init=True))
+        else:
+            self.piece = Piece(piece_notation)
         self.piece_board_notation = self.piece.value + ":/" + self.boardstate
 
-    def spawn_next_piece(self):
+    def display_board(self, t, screen):
+        # Creates a temporary variable to display the current piece/boardstate
+        boardstate = update_boardstate2(self.boardstate, self.piece)
+        draw_grid(boardstate, t, screen)
+
+    def spawn_next_piece(self, init=""):
         new_piece_type = self.bag.update()
         orientation = "0"  # spawn orientation
-        x = "4"
-        y = "19"
-        self.piece.update(new_piece_type + orientation + x + y)
+        # Adjusting spawn coordinates based on piece
+        if new_piece_type == "L":
+            x, y = 3, 22
+        if new_piece_type == "J":
+            x, y = 3, 22
+        if new_piece_type == "S":
+            x, y = 3, 22
+        if new_piece_type == "Z":
+            x, y = 4, 22
+        if new_piece_type == "O":
+            x, y = 4, 22
+        if new_piece_type == "T":
+            x, y = 3, 22
+        if new_piece_type == "I":
+            x, y = 3, 22
+        if init != "":
+            return new_piece_type + orientation + str(x) + str(y)
+        else:
+            self.piece.update(new_piece_type + orientation + str(x) + str(y))
 
     def move_piece_down(self):
         y_value = self.piece.y
         rest_of_piece_value = self.piece.type + \
-            self.piece.orientation + str(self.piece.x)
+            str(self.piece.orientation) + str(self.piece.x)
         self.piece.update(rest_of_piece_value + str(y_value-1))
 
     def move_piece_left(self):
         x_value = self.piece.x
-        rest_of_piece_value = self.piece.type + \
-            self.piece.orientation
-        self.piece.update(rest_of_piece_value +
-                          str(x_value-1) + str(self.piece.y))
+        # Checking if piece is all the way to the left
+        try:
+            update_boardstate2(self.boardstate, self.piece)
+            rest_of_piece_value = self.piece.type + \
+                str(self.piece.orientation)
+            self.piece.update(rest_of_piece_value +
+                              str(x_value-1) + str(self.piece.y))
+        except:
+            # if there is an error, don't do anything
+            pass
 
     def move_piece_right(self):
         x_value = self.piece.x
-        rest_of_piece_value = self.piece.type + \
-            self.piece.orientation
-        self.piece.update(rest_of_piece_value +
-                          str(x_value+1) + str(self.piece.y))
+        # Checking if piece is all the way to the left
+        try:
+            update_boardstate2(self.boardstate, self.piece)
+            rest_of_piece_value = self.piece.type + \
+                str(self.piece.orientation)
+            self.piece.update(rest_of_piece_value +
+                              str(x_value+1) + str(self.piece.y))
+        except:
+            # if there is an error, don't do anything
+            pass
 
     def rotate_piece(self, direction):
         self.boardstate = rotate_and_update2(
@@ -657,9 +706,11 @@ class Board():
         self.boardstate = update_boardstate2(self.boardstate, self.piece)
         self.spawn_next_piece()
 
-    def display_board(self, t, screen):
-        self.boardstate = update_boardstate2(self.boardstate, self.piece)
-        draw_grid(self.boardstate, t, screen)
+
+class Game():
+    def __init__(self):
+        # TODO: Write some stuff
+        pass
 
 
 def update_boardstate2(boardstate, piecestate: Piece):
@@ -682,13 +733,14 @@ def update_boardstate2(boardstate, piecestate: Piece):
         cx, cy = center
         x_loc = cx+change_in_x
         y_loc = cy+change_in_y
-        if x_loc < 0 or x_loc > 9 or y_loc < 0 or y_loc > 19:
+        # FIXME: Changed y_loc upper bound to 39, might cause breaking change
+        if x_loc < 0 or x_loc > 9 or y_loc < 0 or y_loc > 39:
             raise ValueError("This piece cannot be placed in this location")
         if access_cell(boardstate, y_loc, x_loc) == ".":
             nbs = change_cell(nbs, y_loc, x_loc, piecestate.type)
         else:
             raise ValueError(
-                f"This piece: '({piecestate})' cannot be placed in this location. Board: {boardstate}.")
+                f"This piece: '({piecestate.value})' cannot be placed in this location. Board: {boardstate}.")
     return extended_boardstate_to_boardstate(nbs)
 
 
@@ -808,8 +860,12 @@ def slideshow(slides, t, screen: Screen):
 t, screen = init_screen()
 s = "///TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/"
 s = "/////////////////3TTT4/4T5"
-b = Board("T0318")
-b.display_board(t, screen)
+for x in range(10):
+    b = Board()
+    print(b.bag.value)
+    print(b.piece.value)
+    b.display_board(t, screen)
+    sleep(1.5)
 screen.mainloop()
 
 # t, screen = init_screen()
