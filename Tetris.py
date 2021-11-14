@@ -11,7 +11,7 @@ cols = 10
 rows = 20
 maxfps = 30
 
-Z = [['.....',
+S = [['.....',
       '..0..',
       '..00.',
       '...0.',
@@ -33,7 +33,7 @@ Z = [['.....',
       '.....'],
      ]
 
-S = [['.....',
+Z = [['.....',
       '..0..',
       '.00..',
       '.0...',
@@ -311,15 +311,6 @@ def change_cell(boardstate: str, row: int, column: int, val: str):
 'S038'  # S piece in spawn orientation (0) in column 3, row 8
 
 
-def findBLC(shape):  # finding bottom left corner of a shape
-    'Given a shape, finds its bottom left corner (helper function to update_boardstate)'
-    for r in range(5):
-        for c in range(5):
-            if shape[4-r][c] == "0":
-                return (c, r)
-    return (None, None)
-
-
 def return_x_y(piece_notation):
     if piece_notation[2] == "-":  # handling negative x/y values and 2 digit x values
         x_loc = int(str(piece_notation[2]) + str(piece_notation[3]))
@@ -328,64 +319,6 @@ def return_x_y(piece_notation):
         x_loc = piece_notation[2]
         y_loc = int(piece_notation[3:])
     return str(x_loc), str(y_loc)
-
-
-# works 3/4 of the way, still buggy
-def update_boardstate(current_boardstate: str, piece_notation: str, display_partial_pieces=False):
-    'Given a boardstate and a piece notation, return the updated boardstate.'
-    global pieces
-    # initalize local variables
-    if len(piece_notation) > 5:
-        raise ValueError(f"Piece notation too long: {piece_notation}")
-    piece = piece_notation[0]
-    orientation = int(piece_notation[1])
-    # column, row refer to leftmost, bottommost cell of piece
-    column, row = return_x_y(piece_notation)
-    column = int(column)
-    row = int(row)
-    # column = int(piece_notation[2])
-#     if len(piece_notation) == 4:
-#         row = int(piece_notation[3])
-#     elif len(piece_notation == 5):
-#         row = int(piece_notation[3]+piece_notation[4])
-#     else:
-#         raise ValueError(f"Incorrect piece notation: {piece_notation}")
-# this is probably going to cause some bugs
-    # Finding the center of the 'bounding box'
-    shape = pieces[piece][orientation]
-    bl_row, bl_col = findBLC(shape)  # bottom left row and column
-    assert bl_row != None and bl_col != None
-    rdif = 2-bl_row
-    cdif = 2-bl_col
-    center = (row+rdif, column+cdif)
-    # Checking whether the piece will fit in the given boardstate
-    nbs = boardstate_to_extended_boardstate(
-        current_boardstate)  # new board state
-    oList = []
-    for r in range(5):
-        for cell in range(5):
-            if shape[r][cell] == "0":
-                oList.append((cell-2, 2-r))
-    for change_in_x, change_in_y in oList:
-        cx, cy = center
-        x = cx+change_in_x
-        y = cy+change_in_y
-        if x < 0 or x > 9 or y < 0:
-            raise ValueError("This piece cannot be placed in this location")
-        if access_cell(current_boardstate, x, y) == ".":
-            nbs = change_cell(nbs, x, y, piece)
-        else:
-            if display_partial_pieces == False:
-                raise ValueError(
-                    f"This piece: '({piece_notation})' cannot be placed in this location. Board: {current_boardstate}.")
-            # otherwise don't display that cell and display a partial piece
-    return (extended_boardstate_to_boardstate(nbs))
-
-
-def update_boardstate_from_piece_board_notation(piece_board_notation, display_partial_pieces=True):
-    piece = piece_board_notation.split(":")[0]
-    board = piece_board_notation.split(":")[1]
-    return update_boardstate(board, piece, display_partial_pieces=display_partial_pieces)
 
 
 def generate_bag(current_bag):
@@ -494,7 +427,7 @@ def check_kick_tables_repeatedly(final_piece_board_notation, initial_direction, 
             piece_message = piece + str(final_direction) + x_loc + y_loc
             if debug == True:
                 print(f"Testing {piece_message}, {board}.")
-            update_boardstate(board, piece_message)
+            update_boardstate2(board, piece_message)
             return piece_message + ":" + board
         except:  # if an error is thrown (piece doesn't fit)
             if debug == True:
@@ -503,16 +436,6 @@ def check_kick_tables_repeatedly(final_piece_board_notation, initial_direction, 
     if debug == True:
         print("All checks have been tried. Returning original boardstate.")
     return final_piece_board_notation  # if no breaks have occured
-
-
-def find_difference(shape, new_shape):
-    'Helper function for rotate_piece'
-    bl_row, bl_col = findBLC(shape)
-    assert bl_row != None and bl_col != None
-    bl_row2, bl_col2 = findBLC(new_shape)
-    assert bl_row2 != None and bl_col2 != None
-    y_diff, x_diff = bl_row2 - bl_row, bl_col2 - bl_col
-    return y_diff, x_diff
 
 
 def rotate_piece(piece_board_notation, direction, debug=False, without_kick_testing=False):
@@ -553,14 +476,6 @@ def rotate_piece(piece_board_notation, direction, debug=False, without_kick_test
         return output
     else:
         return final_output
-
-
-def rotate_and_update(piece_board_notation, direction, debug=False):
-    output = rotate_piece(piece_board_notation, direction, debug)
-    if debug == True:
-        print(
-            f"Output from rotate ({piece_board_notation}, {direction}): {output}.")
-    return update_boardstate_from_piece_board_notation(output)
 
 
 def move_piece_down(piece_board_notation):
@@ -636,12 +551,18 @@ class Board():
             self.piece = Piece(self.spawn_next_piece(init=True))
         else:
             self.piece = Piece(piece_notation)
+        # Non-dynamic init piece board notation
         self.piece_board_notation = self.piece.value + ":/" + self.boardstate
 
     def display_board(self, t, screen):
         # Creates a temporary variable to display the current piece/boardstate
         boardstate = update_boardstate2(self.boardstate, self.piece)
-        draw_grid(boardstate, t, screen)
+        if boardstate == "out of bounds" or boardstate == "occupied cell":
+            raise ValueError(
+                f"Impossible piece lock, piece: '{self.piece.value}', board: '{self.boardstate}'")
+        else:
+            self.boardstate = boardstate
+            draw_grid(boardstate, t, screen)
 
     def spawn_next_piece(self, init=""):
         new_piece_type = self.bag.update()
@@ -674,37 +595,44 @@ class Board():
 
     def move_piece_left(self):
         x_value = self.piece.x
-        # Checking if piece is all the way to the left
-        try:
-            update_boardstate2(self.boardstate, self.piece)
-            rest_of_piece_value = self.piece.type + \
-                str(self.piece.orientation)
-            self.piece.update(rest_of_piece_value +
-                              str(x_value-1) + str(self.piece.y))
-        except:
-            # if there is an error, don't do anything
-            pass
+        b = update_boardstate2(self.boardstate, self.piece)
+        # Checking if piece is all the way to the left or will hit something
+        if b == "out of bounds" or b == "occupied cell":
+            # Exit function
+            return None
+        rest_of_piece_value = self.piece.type + \
+            str(self.piece.orientation)
+        self.piece.update(rest_of_piece_value +
+                          str(x_value-1) + str(self.piece.y))
 
     def move_piece_right(self):
         x_value = self.piece.x
-        # Checking if piece is all the way to the left
-        try:
-            update_boardstate2(self.boardstate, self.piece)
-            rest_of_piece_value = self.piece.type + \
-                str(self.piece.orientation)
-            self.piece.update(rest_of_piece_value +
-                              str(x_value+1) + str(self.piece.y))
-        except:
-            # if there is an error, don't do anything
-            pass
+        b = update_boardstate2(self.boardstate, self.piece)
+        # Checking if piece is all the way to the left or will hit something
+        if b == "out of bounds" or b == "occupied cell":
+            # Exit function
+            return None
+        rest_of_piece_value = self.piece.type + \
+            str(self.piece.orientation)
+        self.piece.update(rest_of_piece_value +
+                          str(x_value+1) + str(self.piece.y))
 
     def rotate_piece(self, direction):
-        self.boardstate = rotate_and_update2(
+        #FIXME: Piece-board notation shenanigans
+        #self.piece_board_notation = self.piece.value + ":/" + self.boardstate
+        p, b = rotate_and_update2(
             self.piece_board_notation, direction)
+        self.piece.update(p)
+        self.boardstate = b
 
     def lock_piece(self):
-        self.boardstate = update_boardstate2(self.boardstate, self.piece)
-        self.spawn_next_piece()
+        b = update_boardstate2(self.boardstate, self.piece)
+        if b == "out of bounds" or b == "occupied cell":
+            raise ValueError(
+                f"Impossible piece lock, piece: '{self.piece.value}', board: '{self.boardstate}'")
+        else:
+            self.boardstate = b
+            self.spawn_next_piece()
 
 
 class Game():
@@ -714,6 +642,7 @@ class Game():
 
 
 def update_boardstate2(boardstate, piecestate: Piece):
+    'Takes a boardstate and a Piece, and returns the boardstate with the piece in it, or False if it is impossible'
     global pieces
     x, y = piecestate.x, piecestate.y
     # Reversed because list is reversed for some reason
@@ -735,17 +664,101 @@ def update_boardstate2(boardstate, piecestate: Piece):
         y_loc = cy+change_in_y
         # FIXME: Changed y_loc upper bound to 39, might cause breaking change
         if x_loc < 0 or x_loc > 9 or y_loc < 0 or y_loc > 39:
-            raise ValueError("This piece cannot be placed in this location")
+            return "out of bounds"
         if access_cell(boardstate, y_loc, x_loc) == ".":
             nbs = change_cell(nbs, y_loc, x_loc, piecestate.type)
         else:
-            raise ValueError(
-                f"This piece: '({piecestate.value})' cannot be placed in this location. Board: {boardstate}.")
+            return "occupied cell"
     return extended_boardstate_to_boardstate(nbs)
 
 
+def findBLC(shape):  # finding bottom left corner of a shape
+    'Given a shape, finds its bottom left corner (helper function to update_boardstate)'
+    for r in range(5):
+        for c in range(5):
+            if shape[4-r][c] == "0":
+                return (c, r)
+    return (None, None)
+
+
+def find_difference(shape, new_shape):
+    'Helper function for rotate_piece'
+    bl_row, bl_col = findBLC(shape)
+    assert bl_row != None and bl_col != None
+    bl_row2, bl_col2 = findBLC(new_shape)
+    assert bl_row2 != None and bl_col2 != None
+    y_diff, x_diff = bl_row2 - bl_row, bl_col2 - bl_col
+    return y_diff, x_diff
+
+
+def find_difference2(piece, new_piece):
+    'Takes the type of piece and orientation (T0) of two pieces and returns their difference'
+    global pieces
+    shape = pieces[piece[0]][::-1][int(piece[1])]
+    new_shape = pieces[new_piece[0]][::-1][int(new_piece[1])]
+    x, y = findBLC(shape)
+    x2, y2 = findBLC(new_shape)
+    x_diff, y_diff = x2 - x, y2 - y
+    return x_diff, y_diff
+
+
+def check_kick_tables2(old_piece_notation, new_piece_notation, board_notation):
+    '''Takes a piece notation, board notation, direction and returns the piece notation 
+    after checking kicktables, or False if rotation is impossible'''
+    direction = old_piece_notation[1] + new_piece_notation[1]
+    t = new_piece_notation[0]
+    x, y = return_x_y(new_piece_notation)
+    r_diff = int(old_piece_notation[1]) - int(new_piece_notation[1])
+    if t == "O":
+        return False
+    if r_diff == 2 or r_diff == -2:
+        table = kicktables.fliptable
+    elif t == "I":
+        table = kicktables.i_table
+    else:
+        assert t in "JLSZT"
+        table = kicktables.jlszt_table
+    for i in range(5):
+        # getting offsets from table (formatting)
+        tup = table[direction][i][1:-1].split(", ")
+        x_offset = int(tup[0])
+        y_offset = int(tup[1])
+        new_piece_message = t + \
+            new_piece_notation[1] + str(int(x)+x_offset) + str(int(y)+y_offset)
+        b = update_boardstate2(board_notation, Piece(new_piece_message))
+        if b == "out of bounds" or b == "occupied cell":
+            # Doesn't work, try next kick
+            continue
+        else:
+            return new_piece_message
+    # Checked all kicks, none work
+    return False
+
+
 def rotate_and_update2(pb_notation, direction):
-    pass
+    # TODO: Write stuff
+    piece_n = pb_notation.split(":")[0]
+    b = pb_notation.split(":")[1]
+    d = piece_n[1]
+    x, y = return_x_y(piece_n)
+    if direction == "CW":
+        rotation_factor = 1
+    elif direction == "CCW":
+        rotation_factor = 3
+    elif direction == "180":
+        rotation_factor = 2
+    else:
+        raise ValueError(f"Bad direction: '{direction}")
+    new_direction = str((int(d) + rotation_factor) % 4)
+    po1 = piece_n[:2]
+    po2 = piece_n[0] + new_direction
+    x_diff, y_diff = find_difference2(po1, po2)
+    nx, ny = str(int(x)+x_diff), str(int(y)+y_diff)
+    piece_message = piece_n[0]+new_direction+nx+ny
+    final_piece_notation = check_kick_tables2(piece_n, piece_message, b)
+    if final_piece_notation == False:
+        final_piece_notation = piece_n
+    return final_piece_notation, b
 
 
 """testing commands, these work
@@ -823,8 +836,8 @@ def smart_display(notation, t, screen):
     if type_of_notation == "board notation":
         notation = notation
     elif type_of_notation == "piece-board notation":
-        notation = update_boardstate_from_piece_board_notation(
-            notation, display_partial_pieces=True)
+        notation = update_boardstate2(
+            notation.split(":")[0], notation.split(":")[1])
     elif type_of_notation == "extended board notation":
         notation = extended_boardstate_to_boardstate(notation)
     else:
@@ -857,16 +870,28 @@ def slideshow(slides, t, screen: Screen):
     screen.listen()
 
 
+# t, screen = init_screen()
+# s = "///TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/"
+# #s = "/////////////////3TTT4/4T5"
+# for x in range(10):
+#     b = Board(boardstate=s)
+#     print(b.bag.value)
+#     print(b.piece.value)
+#     b.display_board(t, screen)
+#     sleep(1.5)
+# screen.mainloop()
+
 t, screen = init_screen()
-s = "///TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/"
-s = "/////////////////3TTT4/4T5"
-for x in range(10):
-    b = Board()
-    print(b.bag.value)
-    print(b.piece.value)
+s = "JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS"
+b = Board("S1410", s)
+for x in range(20):
     b.display_board(t, screen)
-    sleep(1.5)
-screen.mainloop()
+    sleep(1)
+    b.rotate_piece("CCW")
+    b.display_board(t, screen)
+    sleep(1)
+    b.rotate_piece("CW")
+
 
 # t, screen = init_screen()
 # smart_display("T040:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS", t, screen)
