@@ -761,61 +761,6 @@ def rotate_and_update2(pb_notation, direction):
     return final_piece_notation, b
 
 
-"""testing commands, these work
-dict1 = board_notation_to_dict('JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS')
-print(create_grid(locked_positions=dict1))
-
-working test function
-a = boardstate_to_extended_boardstate('LIOZ4IL/JS5TSZ/SZSZ6/O9/J9')
-a = boardstate_to_extended_boardstate('')
-print(a)
-print(extended_boardstate_to_boardstate(a))
-
-working test function
-print(access_cell('LIOZ4IL/JS5TSZ/SZSZ6/O9/J9', 2, 1))
-print(change_cell('LIOZ4IL/JS5TSZ/SZSZ6/O9/J9', 1, 5, "S"))
-
-working test functionsz
-a = update_boardstate_from_piece_board_notation("S054:JJI4ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS")
-a = update_boardstate('LIOZ4IL/JS5TSZ/SZSZ6/O9/J9', 'I253')
-display_as_text('LIOZ4IL/JS5TSZ/SZSZ6/O9/J9')
-display_as_text('JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS')
-display_as_text(a)
-
-test function
-print(generate_bag("JIZISLZJOTOJZ"))
-a = "I140:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS"
-display_as_text(update_boardstate_from_piece_board_notation(a))
-for x in range(4):
-      a = rotate_piece(a, "CW")
-      b = update_boardstate_from_piece_board_notation(a)
-      display_as_text(b)
-
-test function
-print(generate_bag("JIZISLZJOTOJZ"))
-
-not working rotation test functions
-a = "S345:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS"
-display_as_text(update_boardstate_from_piece_board_notation(a))
-a = rotate_piece(a, "CCW", True)
-b = update_boardstate_from_piece_board_notation(a)
-display_as_text(b)
-
-kick test functions
-a = "S132:JJJ2JJJJJ/JJJJ2JJJJ"
-print(boardstate_to_extended_boardstate(a.split(":")[1]))
-display_as_text(update_boardstate_from_piece_board_notation(a))
-a = rotate_piece(a, "CW", True)
-display_as_text(update_boardstate_from_piece_board_notation(a))
-b = rotate_piece(a, "CW", False, True)
-print(b)
-c = check_kick_tables_repeatedly(b, 1, 2, True)
-print(c)
-print(display_as_text(update_boardstate_from_piece_board_notation(c)))
-print(check_kick_tables("T", 0, 1, 1))
-"""
-
-
 def init_screen():
     screen = Screen()
     screen.bgcolor("black")
@@ -870,17 +815,6 @@ def slideshow(slides, t, screen: Screen):
     screen.listen()
 
 
-# t, screen = init_screen()
-# s = "///TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/"
-# #s = "/////////////////3TTT4/4T5"
-# for x in range(10):
-#     b = Board(boardstate=s)
-#     print(b.bag.value)
-#     print(b.piece.value)
-#     b.display_board(t, screen)
-#     sleep(1.5)
-# screen.mainloop()
-
 t, screen = init_screen()
 s = "JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS"
 b = Board("S1410", s)
@@ -891,22 +825,3 @@ for x in range(20):
     b.display_board(t, screen)
     sleep(1)
     b.rotate_piece("CW")
-
-
-# t, screen = init_screen()
-# smart_display("T040:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS", t, screen)
-# slides = ["T040:9J/",
-#           "T35-1:9J/",
-#           "T240:9J/",
-#           "T140:9J/",
-#           rotate_and_update("T040:9J/", "CCW", True),
-#           rotate_and_update("T040:9J/", "180", True),
-#           rotate_and_update("T040:9J/", "CW", True),
-#           "T340:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS",
-#           "JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS",
-#           #rotate_and_update("T340:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS", "CCW", True),
-#           "T040:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS",
-#           #rotate_and_update("T040:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS", "CW"),
-#           ]
-# slideshow(slides, t, screen)
-# screen.mainloop()
