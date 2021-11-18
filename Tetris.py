@@ -1,15 +1,8 @@
-import pygame
-import sys
 import random
 import kicktables
 from turtle import Screen, Turtle
 import display
 from time import sleep
-
-cell_size = 18
-cols = 10
-rows = 20
-maxfps = 30
 
 S = [['.....',
       '..0..',
@@ -153,24 +146,6 @@ pieces = {"I": I, "J": J, "L": L, "O": O, "S": S, "Z": Z, "T": T}
 # for key in [k for k in pieces.keys()]:
 #      pieces[key] = pieces[key][::-1]
 
-colours = [
-    (0, 255, 255),
-    (0, 0, 255),
-    (255, 165, 0),
-    (255, 255, 0),
-    (0, 255, 0),
-    (255, 0, 0),
-    (255, 0, 255)
-]
-colours_dict = {
-    "I": (0, 255, 255),
-    "J": (0, 0, 255),
-    "L": (255, 165, 0),
-    "O": (255, 255, 0),
-    "S": (0, 255, 0),
-    "Z": (255, 0, 0),
-    "T": (255, 0, 255)
-}
 colours_dict2 = {  # turtle-compatible colors
     "I": "cyan",
     "J": "blue",
@@ -181,11 +156,8 @@ colours_dict2 = {  # turtle-compatible colors
     "T": "magenta"
 }
 
-shapes = ["I", "J", "L", "O", "S", "Z", "T"]
-
 
 def create_grid(locked_positions={}):
-    # FIXME: Changed height to 40, hopefully doesn't break things
     grid = [["black" for x in range(10)] for x in range(40)]
     for row in range(len(grid)):
         for col in range(len(grid[1])):
@@ -194,30 +166,28 @@ def create_grid(locked_positions={}):
                 grid[row][col] = c
     return grid
 
-
-'LIOZ4IL/JS5TSZ/SZSZ6/O9/J9'  # board notation number 2
+# FIXME: Refactor into smaller methods
 
 
 def boardstate_to_extended_boardstate(boardstate: str):
     if boardstate == "":
-        # FIXME: Changed rows to 40, might cause breaking change
         return "/.........."*40
     output_list = []
     for i in range(len(boardstate.split("/"))):
         row = boardstate.split("/")[i]
         if row == "":
-            if i == 0:
-                continue
-            else:
+            if i != 0:
                 output_list2 = [".........."]
                 output_list.append("".join(output_list2))
-                continue
+            # Skips to next row as row is empty
+            continue
         output_list2 = []
         for index in range(len(row)):
             item = row[index]
             if item.isnumeric() == True:
                 num_of_empty_cells = int(row[index])
-                for i in range(num_of_empty_cells):
+                # Unused variable
+                for _ in range(num_of_empty_cells):
                     output_list2.append(".")
             else:
                 output_list2.append(item)
@@ -227,8 +197,7 @@ def boardstate_to_extended_boardstate(boardstate: str):
         output_list.append("".join(output_list2))
     notation = "/".join(output_list)
     rows = len(notation.split("/"))
-    # FIXME: Changed to 40 max rows
-    for i in range(40-rows):
+    for _ in range(40-rows):
         notation = notation + "/.........."
     return notation
 
@@ -254,7 +223,7 @@ def extended_boardstate_to_boardstate(extended_boardstate: str):
         output_list.append("".join(output_list2))
     return "/".join(output_list)
 
-# this should work, might need more testing
+# FIXME: Refactor into smaller functions, make more readable
 
 
 def board_notation_to_dict(notation):
@@ -264,7 +233,7 @@ def board_notation_to_dict(notation):
     rows = len(notation.split("/"))
     for row in notation.split("/"):
         if row == "":
-            for x in range(10):
+            for _ in range(10):
                 output_list.append("black")
         for index in range(len(row)):
             item = row[index]
@@ -272,7 +241,7 @@ def board_notation_to_dict(notation):
                 output_list.append(colours_dict2[item])
             else:
                 num_of_empty_cells = int(row[index])
-                for i in range(num_of_empty_cells):
+                for _ in range(num_of_empty_cells):
                     output_list.append("black")
     indices = [(x, y) for x in range(rows) for y in range(10)]
     try:
@@ -307,10 +276,6 @@ def change_cell(boardstate: str, row: int, column: int, val: str):
     return list_form_to_boardstate(new_boardstate)
 
 
-# Example piece notation
-'S038'  # S piece in spawn orientation (0) in column 3, row 8
-
-
 def return_x_y(piece_notation):
     if piece_notation[2] == "-":  # handling negative x/y values and 2 digit x values
         x_loc = int(str(piece_notation[2]) + str(piece_notation[3]))
@@ -320,6 +285,8 @@ def return_x_y(piece_notation):
         y_loc = int(piece_notation[3:])
     return str(x_loc), str(y_loc)
 
+# FIXME: Refactor this
+
 
 def generate_bag(current_bag):
     'Takes a 13-long bag and adds a new piece to the end of it'
@@ -327,11 +294,11 @@ def generate_bag(current_bag):
         return current_bag
     # Make list of all the types of pieces
     pieces = [p for p in "IJLOSZT"]
-    output_list = []
     if current_bag == "":
-        for x in range(2):
+        output_list = []
+        for _ in range(2):
             pieces = [p for p in "IJLOSZT"]
-            for x in range(7):
+            for _ in range(7):
                 # FIXME: Hacky solution, check for bugs later
                 if len(pieces) == 1:
                     output_list.append(pieces[0])
@@ -359,136 +326,12 @@ def generate_bag(current_bag):
         return current_bag + random.choice(pieces)
 
 
-def check_kick_tables(piece, initial_direction, final_direction, test_number):
-    'Takes a piece and the test number, returns the respective offset, or False if there are no more tests'
-    direction = str(initial_direction) + str(final_direction)
-    if piece == "O":
-        return False
-    elif piece == "I":
-        table = kicktables.i_table
-    elif piece in [p for p in "JLSZT"]:
-        table = kicktables.jlszt_table
-    if abs(final_direction - initial_direction) == 2:
-        table = kicktables.flip_table  # if 180 rotation
-    kicktable = table[direction]  # accessing kick table
-    if test_number >= len(kicktable):  # no more kicks
-        return False
-    a = kicktable[test_number][1:-1].split(", ")  # converting from
-    x_offset = int(a[0])
-    y_offset = int(a[1])
-    # if x_offset < 0 or x_offset > 9 or y_offset < 0:
-    #       return False
-    return y_offset, x_offset
-
-
-def check_kick_tables_repeatedly(final_piece_board_notation, initial_direction, final_direction, debug=True):
-    'Takes a piece and the rotation, checks all tests and returns the final offset, or False if there are no more tests'
-    full_piece = final_piece_board_notation.split(":")[0]
-    # if "-" in full_piece: #i don't see why this is here
-    #      return False
-    piece = full_piece[0]  # type of piece
-    final_direction = int(full_piece[1])  # final orientation
-    direction = str(initial_direction) + \
-        str(final_direction)  # key in kicktable
-    board = final_piece_board_notation.split(":")[1]
-    if piece == "O":
-        return final_piece_board_notation
-    elif piece == "I":
-        table = kicktables.i_table
-    elif piece in [p for p in "JLSZT"]:
-        table = kicktables.jlszt_table
-    if abs(final_direction - initial_direction) == 2:
-        table = kicktables.flip_table  # if 180 rotation
-        if debug == True:
-            print("180 tables accessed.")
-    kicktable = table[direction]  # accessing kick table
-    if debug == True:
-        print(f"Testing piece '{full_piece}', in direction {direction}.")
-    for test_number in range(5):
-        if test_number >= len(kicktable):  # no more kicks
-            return final_piece_board_notation  # return original
-        a = kicktable[test_number][1:-1].split(", ")  # converting from
-        x_offset = int(a[0])
-        y_offset = int(a[1])
-        x_loc, y_loc = return_x_y(full_piece)
-        if debug == True:
-            print(f"x-offset: {x_offset}, y-offset: {y_offset}")
-        if debug == True:
-            print(
-                f"Test {test_number}: ({int(x_loc) + x_offset}, {int(y_loc) + y_offset})")
-        if (int(x_loc) + x_offset) < 0 or (int(x_loc) + x_offset) > 9 or (int(y_loc) + y_offset < 0):
-            if debug == True:
-                print(
-                    f"Coords failed initial check: {int(x_loc) + x_offset,int(y_loc) + y_offset}")
-            continue
-        try:
-            y_loc = str(int(y_loc) + int(y_offset))
-            x_loc = str(int(x_loc) + int(x_offset))
-            piece_message = piece + str(final_direction) + x_loc + y_loc
-            if debug == True:
-                print(f"Testing {piece_message}, {board}.")
-            update_boardstate2(board, piece_message)
-            return piece_message + ":" + board
-        except:  # if an error is thrown (piece doesn't fit)
-            if debug == True:
-                print(f"Piece does not fit.")
-            continue  # keep trying
-    if debug == True:
-        print("All checks have been tried. Returning original boardstate.")
-    return final_piece_board_notation  # if no breaks have occured
-
-
-def rotate_piece(piece_board_notation, direction, debug=False, without_kick_testing=False):
-    'Takes a piece-board notation and direction (CW, CCW, or 180), returns updated piece-board notation'
-    global pieces
-    piece_notation = piece_board_notation.split(":")[0]
-    piece = piece_notation[0]
-    orientation = int(piece_notation[1])
-    column = int(piece_notation[2])
-    row = int(piece_notation[3])
-    boardstate = piece_board_notation.split(":")[1]
-    boardstate = extended_boardstate_to_boardstate(
-        boardstate_to_extended_boardstate(boardstate))
-    shape = pieces[piece][orientation]
-    if direction == "CW":
-        new_orientation = (orientation+1) % 4
-    elif direction == "CCW":
-        new_orientation = (orientation+3) % 4  # +3 = -1
-    elif direction == "180":
-        new_orientation = (orientation+2) % 4
-    else:
-        raise ValueError(f"Incorrect direction of rotation: '{direction}'")
-    new_shape = pieces[piece][new_orientation]
-    y_diff, x_diff = find_difference(shape, new_shape)
-    location = [column+x_diff, row+y_diff]
-    new_x_loc, new_y_loc = location[0], location[1]
-    if debug == True:
-        print(
-            f"Original loc: ({column}, {row}). New loc: ({new_x_loc}, {new_y_loc}). Diff: ({x_diff}, {y_diff})")
-    if without_kick_testing == True:
-        return piece + str(new_orientation) + str(new_x_loc) + str(new_y_loc) + ":" + boardstate
-    output = piece + str(new_orientation) + str(new_x_loc) + \
-        str(new_y_loc) + ":" + boardstate
-    final_output = check_kick_tables_repeatedly(
-        output, orientation, new_orientation, debug)
-    print(f"Output from check_kick_tables_repeatedly: {final_output}")
-    if final_output == False:
-        return output
-    else:
-        return final_output
-
-
-def move_piece_down(piece_board_notation):
-    piece = piece_board_notation.split(":")[0]
-    x, y = return_x_y(piece)
-    y = str(int(y)-1)
-    return piece[0] + piece[1] + x + y + ":" + piece_board_notation.split(":")[0]
-
-
 def display_as_text(notation):
     notation = boardstate_to_extended_boardstate(notation)
     for row in (notation.split("/"))[::-1]:  # reverse list
         print(row)
+
+# FIXME: Refactor
 
 
 def check_type_notation(notation):
@@ -557,37 +400,27 @@ class Board():
     def display_board(self, t, screen):
         # Creates a temporary variable to display the current piece/boardstate
         boardstate = update_boardstate2(self.boardstate, self.piece)
-        if boardstate == "out of bounds" or boardstate == "occupied cell":
+        if boardstate in ["out of bounds", "occupied cell"]:
             raise ValueError(
                 f"Impossible piece lock, piece: '{self.piece.value}', board: '{self.boardstate}'")
-        else:
-            self.boardstate = boardstate
-            draw_grid(boardstate, t, screen)
+        self.boardstate = boardstate
+        draw_grid(boardstate, t, screen)
 
     def spawn_next_piece(self, init=""):
         new_piece_type = self.bag.update()
         orientation = "0"  # spawn orientation
         # Adjusting spawn coordinates based on piece
-        if new_piece_type == "L":
+        if new_piece_type in ["L", "J", "S", "T", "I"]:
             x, y = 3, 22
-        if new_piece_type == "J":
-            x, y = 3, 22
-        if new_piece_type == "S":
-            x, y = 3, 22
-        if new_piece_type == "Z":
+        if new_piece_type == ["Z", "O"]:
             x, y = 4, 22
-        if new_piece_type == "O":
-            x, y = 4, 22
-        if new_piece_type == "T":
-            x, y = 3, 22
-        if new_piece_type == "I":
-            x, y = 3, 22
         if init != "":
             return new_piece_type + orientation + str(x) + str(y)
         else:
             self.piece.update(new_piece_type + orientation + str(x) + str(y))
 
     def move_piece_down(self):
+        #TODO: Add validation that the piece can actually move down
         y_value = self.piece.y
         rest_of_piece_value = self.piece.type + \
             str(self.piece.orientation) + str(self.piece.x)
@@ -618,7 +451,7 @@ class Board():
                           str(x_value+1) + str(self.piece.y))
 
     def rotate_piece(self, direction):
-        #FIXME: Piece-board notation shenanigans
+        # FIXME: Piece-board notation shenanigans
         #self.piece_board_notation = self.piece.value + ":/" + self.boardstate
         p, b = rotate_and_update2(
             self.piece_board_notation, direction)
@@ -641,6 +474,7 @@ class Game():
         pass
 
 
+#FIXME: Refactor into smaller functions
 def update_boardstate2(boardstate, piecestate: Piece):
     'Takes a boardstate and a Piece, and returns the boardstate with the piece in it, or False if it is impossible'
     global pieces
@@ -662,7 +496,6 @@ def update_boardstate2(boardstate, piecestate: Piece):
         cx, cy = center
         x_loc = cx+change_in_x
         y_loc = cy+change_in_y
-        # FIXME: Changed y_loc upper bound to 39, might cause breaking change
         if x_loc < 0 or x_loc > 9 or y_loc < 0 or y_loc > 39:
             return "out of bounds"
         if access_cell(boardstate, y_loc, x_loc) == ".":
@@ -698,9 +531,9 @@ def find_difference2(piece, new_piece):
     new_shape = pieces[new_piece[0]][::-1][int(new_piece[1])]
     x, y = findBLC(shape)
     x2, y2 = findBLC(new_shape)
-    x_diff, y_diff = x2 - x, y2 - y
-    return x_diff, y_diff
+    return x2 - x, y2 - y
 
+# FIXME: Refactor into smaller chunks
 
 def check_kick_tables2(old_piece_notation, new_piece_notation, board_notation):
     '''Takes a piece notation, board notation, direction and returns the piece notation 
@@ -734,9 +567,8 @@ def check_kick_tables2(old_piece_notation, new_piece_notation, board_notation):
     # Checked all kicks, none work
     return False
 
-
+# FIXME: Refactor, make more readable
 def rotate_and_update2(pb_notation, direction):
-    # TODO: Write stuff
     piece_n = pb_notation.split(":")[0]
     b = pb_notation.split(":")[1]
     d = piece_n[1]
