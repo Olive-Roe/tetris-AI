@@ -1,5 +1,4 @@
 from turtle import Screen, Turtle
-import random
 
 color_dict = {(0,0,0): "black",
               (0,0,255): "blue",
@@ -27,7 +26,7 @@ def draw_square(width, color, t):
   t.fillcolor(color)
   t.begin_fill()
   # Draw the square
-  for i in range(4):
+  for _ in range(4):
     t.forward(width)
     t.right(90)
   # FIll the square
@@ -51,7 +50,7 @@ def draw_grid(rgb, t, screen):
   t.pendown()
   # Face north
   t.setheading(0)
-  #FIXME: Changed height to 40, hopefully doesn't break things
+  # Max height = 40
   for i in range(40):
     t.goto(startX, startY+((i+1)*20))
     for j in range(10):
@@ -62,7 +61,7 @@ def draw_grid(rgb, t, screen):
   t.penup()
   t.goto(startX, startY)
   t.pendown()
-  for x in range(2):
+  for _ in range(2):
     t.forward(200)
     t.left(90)
     t.forward(400)
