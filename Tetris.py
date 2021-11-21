@@ -344,13 +344,12 @@ def check_type_notation(notation):
     elif "/" in n_list:
         if "." in n_list:
             return "extended board notation"
-        else:
-            for item in n_list:
-                if item.isnumeric() == True:
-                    return "board notation"
-            return False
+        for item in n_list:
+            if item.isnumeric() == True:
+                return "board notation"
+        return False
     else:
-        if len(n_list) == 14 or len(n_list) == 13:
+        if len(n_list) in [14, 13]:
             return "bag notation"
         else:
             return False
@@ -424,17 +423,23 @@ class Board():
         y_value = self.piece.y
         rest_of_piece_value = self.piece.type + \
             str(self.piece.orientation) + str(self.piece.x)
+        b = update_boardstate2(self.boardstate, Piece(rest_of_piece_value + str(y_value-1)))
+        if b in ["out of bounds", "occupied cell"]:
+            # Exit function
+            return None
         self.piece.update(rest_of_piece_value + str(y_value-1))
 
     def move_piece_left(self):
         x_value = self.piece.x
-        b = update_boardstate2(self.boardstate, self.piece)
-        # Checking if piece is all the way to the left or will hit something
-        if b == "out of bounds" or b == "occupied cell":
-            # Exit function
-            return None
         rest_of_piece_value = self.piece.type + \
             str(self.piece.orientation)
+        b = update_boardstate2(self.boardstate, Piece(rest_of_piece_value +
+                          str(x_value-1) + str(self.piece.y)))
+        # Checking if piece is all the way to the left or will hit something
+        if b in ["out of bounds", "occupied cell"]:
+            # Exit function
+            return None
+        #If it works, update piece
         self.piece.update(rest_of_piece_value +
                           str(x_value-1) + str(self.piece.y))
 
@@ -442,7 +447,7 @@ class Board():
         x_value = self.piece.x
         b = update_boardstate2(self.boardstate, self.piece)
         # Checking if piece is all the way to the left or will hit something
-        if b == "out of bounds" or b == "occupied cell":
+        if b in ["out of bounds", "occupied cell"]:
             # Exit function
             return None
         rest_of_piece_value = self.piece.type + \
@@ -460,12 +465,11 @@ class Board():
 
     def lock_piece(self):
         b = update_boardstate2(self.boardstate, self.piece)
-        if b == "out of bounds" or b == "occupied cell":
+        if b in ["out of bounds", "occupied cell"]:
             raise ValueError(
                 f"Impossible piece lock, piece: '{self.piece.value}', board: '{self.boardstate}'")
-        else:
-            self.boardstate = b
-            self.spawn_next_piece()
+        self.boardstate = b
+        self.spawn_next_piece()
 
 
 class Game():
@@ -544,7 +548,7 @@ def check_kick_tables2(old_piece_notation, new_piece_notation, board_notation):
     r_diff = int(old_piece_notation[1]) - int(new_piece_notation[1])
     if t == "O":
         return False
-    if r_diff == 2 or r_diff == -2:
+    if r_diff in [2, -2]:
         table = kicktables.fliptable
     elif t == "I":
         table = kicktables.i_table
@@ -559,10 +563,7 @@ def check_kick_tables2(old_piece_notation, new_piece_notation, board_notation):
         new_piece_message = t + \
             new_piece_notation[1] + str(int(x)+x_offset) + str(int(y)+y_offset)
         b = update_boardstate2(board_notation, Piece(new_piece_message))
-        if b == "out of bounds" or b == "occupied cell":
-            # Doesn't work, try next kick
-            continue
-        else:
+        if b not in ["out of bounds", "occupied cell"]:
             return new_piece_message
     # Checked all kicks, none work
     return False
@@ -629,7 +630,7 @@ def slideshow(slides, t, screen: Screen):
 
     def go_back():
         nonlocal current_slide, t, screen
-        if current_slide - 1 >= 0:
+        if current_slide >= 1:
             smart_display(slides[current_slide - 1], t, screen)
             current_slide += -1
         else:
@@ -650,7 +651,7 @@ def slideshow(slides, t, screen: Screen):
 t, screen = init_screen()
 s = "JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS"
 b = Board("S1410", s)
-for x in range(20):
+for _ in range(20):
     b.display_board(t, screen)
     sleep(1)
     b.rotate_piece("CCW")
