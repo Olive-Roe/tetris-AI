@@ -261,6 +261,11 @@ def list_form_to_boardstate(list_form: list):
     return "/".join(["".join(item) for item in (list_form)])
 
 
+def construct_piece_board_notation(piece_notation, board_notation):
+    'Returns str of piece board notation'
+    return f"{piece_notation}:{board_notation}"
+
+
 def access_cell(boardstate: str, row: int, column: int):
     'Given a boardstate, row, and column of a cell (starting from index 0), return the value of the cell in the boardstate.'
     b = boardstate_to_extended_boardstate(boardstate)
@@ -396,6 +401,10 @@ class Board():
         # Non-dynamic init piece board notation
         self.piece_board_notation = self.piece.value + ":/" + self.boardstate
 
+    def update_pb_notation(self):
+        self.piece_board_notation = construct_piece_board_notation(
+            self.piece.value, self.boardstate)
+
     def display_board(self, t, screen):
         # Creates a temporary variable to display the current piece/boardstate
         boardstate = update_boardstate2(self.boardstate, self.piece)
@@ -411,37 +420,41 @@ class Board():
         # Adjusting spawn coordinates based on piece
         if new_piece_type in ["L", "J", "S", "T", "I"]:
             x, y = 3, 22
-        if new_piece_type == ["Z", "O"]:
+        if new_piece_type in ["Z", "O"]:
             x, y = 4, 22
         if init != "":
             return new_piece_type + orientation + str(x) + str(y)
         else:
             self.piece.update(new_piece_type + orientation + str(x) + str(y))
+        self.update_pb_notation()
 
     def move_piece_down(self):
-        #TODO: Add validation that the piece can actually move down
+        # TODO: Add validation that the piece can actually move down
         y_value = self.piece.y
         rest_of_piece_value = self.piece.type + \
             str(self.piece.orientation) + str(self.piece.x)
-        b = update_boardstate2(self.boardstate, Piece(rest_of_piece_value + str(y_value-1)))
+        b = update_boardstate2(self.boardstate, Piece(
+            rest_of_piece_value + str(y_value-1)))
         if b in ["out of bounds", "occupied cell"]:
             # Exit function
             return None
         self.piece.update(rest_of_piece_value + str(y_value-1))
+        self.update_pb_notation()
 
     def move_piece_left(self):
         x_value = self.piece.x
         rest_of_piece_value = self.piece.type + \
             str(self.piece.orientation)
         b = update_boardstate2(self.boardstate, Piece(rest_of_piece_value +
-                          str(x_value-1) + str(self.piece.y)))
+                                                      str(x_value-1) + str(self.piece.y)))
         # Checking if piece is all the way to the left or will hit something
         if b in ["out of bounds", "occupied cell"]:
             # Exit function
             return None
-        #If it works, update piece
+        # If it works, update piece
         self.piece.update(rest_of_piece_value +
                           str(x_value-1) + str(self.piece.y))
+        self.update_pb_notation()
 
     def move_piece_right(self):
         x_value = self.piece.x
@@ -454,6 +467,7 @@ class Board():
             str(self.piece.orientation)
         self.piece.update(rest_of_piece_value +
                           str(x_value+1) + str(self.piece.y))
+        self.update_pb_notation()
 
     def rotate_piece(self, direction):
         # FIXME: Piece-board notation shenanigans
@@ -462,6 +476,7 @@ class Board():
             self.piece_board_notation, direction)
         self.piece.update(p)
         self.boardstate = b
+        self.update_pb_notation()
 
     def lock_piece(self):
         b = update_boardstate2(self.boardstate, self.piece)
@@ -478,7 +493,7 @@ class Game():
         pass
 
 
-#FIXME: Refactor into smaller functions
+# FIXME: Refactor into smaller functions
 def update_boardstate2(boardstate, piecestate: Piece):
     'Takes a boardstate and a Piece, and returns the boardstate with the piece in it, or False if it is impossible'
     global pieces
@@ -539,6 +554,7 @@ def find_difference2(piece, new_piece):
 
 # FIXME: Refactor into smaller chunks
 
+
 def check_kick_tables2(old_piece_notation, new_piece_notation, board_notation):
     '''Takes a piece notation, board notation, direction and returns the piece notation 
     after checking kicktables, or False if rotation is impossible'''
@@ -569,6 +585,8 @@ def check_kick_tables2(old_piece_notation, new_piece_notation, board_notation):
     return False
 
 # FIXME: Refactor, make more readable
+
+
 def rotate_and_update2(pb_notation, direction):
     piece_n = pb_notation.split(":")[0]
     b = pb_notation.split(":")[1]
@@ -647,14 +665,17 @@ def slideshow(slides, t, screen: Screen):
     screen.onkey(go_back, "Left")
     screen.listen()
 
-
 t, screen = init_screen()
-s = "JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS"
-b = Board("S1410", s)
-for _ in range(20):
+
+for _ in range(10):
+    b = Board()
     b.display_board(t, screen)
-    sleep(1)
-    b.rotate_piece("CCW")
-    b.display_board(t, screen)
-    sleep(1)
-    b.rotate_piece("CW")
+    sleep(0.5)
+#FIXME: Kicks do not work
+
+# b = Board("T040", "JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS")
+# b.display_board(t, screen)
+# sleep(1)
+# b.rotate_piece("CCW")
+# b.display_board(t, screen)
+# sleep(1)

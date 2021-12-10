@@ -33,6 +33,30 @@
 # slideshow(slides, t, screen)
 # screen.mainloop()
 
+'''Test function for CCW rotation, z piece'''
+# p1 = "S0311"
+# b1 = "JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS"
+# for _ in range(20):
+#     pb = construct_piece_board_notation(p1, b1)
+#     p1, b1 = rotate_and_update2(pb, "CCW")
+#     d = update_boardstate2(b1, Piece(p1))
+#     display_as_text(d)
+#     print(p1)
+#     sleep(1)
+
+## With turtle GUI
+# t, screen = init_screen()
+# b = Board("S0311", "JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS")
+# for _ in range(20):
+#     b.display_board(t, screen)
+#     print(b.piece.value)
+#     sleep(1)
+#     b.rotate_piece("CCW")
+#     b.display_board(t, screen)
+#     print(b.piece.value)
+#     sleep(1)
+#     b.rotate_piece("CCW")
+
 '''Test functions for various things [DEPRECATED]'''
 # dict1 = board_notation_to_dict('JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS')
 # print(create_grid(locked_positions=dict1))
