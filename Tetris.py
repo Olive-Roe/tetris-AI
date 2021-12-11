@@ -4,147 +4,15 @@ from turtle import Screen, Turtle
 import display
 from time import sleep
 
-S = [['.....',
-      '..0..',
-      '..00.',
-      '...0.',
-      '.....'],
-     ['.....',
-      '......',
-      '..00..',
-      '.00...',
-      '.....'],
-     ['.....',
-      '.0...',
-      '.00..',
-      '..0..',
-      '.....'],
-     ['.....',
-      '..00..',
-      '.00...',
-      '......',
-      '.....'],
-     ]
-
-Z = [['.....',
-      '..0..',
-      '.00..',
-      '.0...',
-      '.....'],
-     ['.....',
-      '.....',
-      '.00..',
-      '..00.',
-      '.....'],
-     ['.....',
-      '...0.',
-      '..00.',
-      '..0..',
-      '.....'],
-     ['.....',
-      '.00..',
-      '..00.',
-      '.....',
-      '.....'], ]
-
-I = [
-    ['..0..',
-     '..0..',
-     '..0..',
-     '..0..',
-     '.....'],
-    ['.....',
-     '.....',
-     '0000.',
-     '.....',
-     '.....'],
-    ['.0...',
-     '.0...',
-     '.0...',
-     '.0...',
-     '.....'],
-    ['.....',
-     '0000.',
-     '.....',
-     '.....',
-     '.....'],
-]
-
-O = [['.....',
-      '.....',
-      '.00..',
-      '.00..',
-      '.....']]
-
-L = [
-    ['.....',
-     '..00.',
-     '..0..',
-     '..0..',
-     '.....'],
-    ['.....',
-     '.....',
-     '.000.',
-     '...0.',
-     '.....'],
-    ['.....',
-     '..0..',
-     '..0..',
-     '.00..',
-     '.....'],
-    ['.....',
-     '.0...',
-     '.000.',
-     '.....',
-     '.....'], ]
-
-J = [[
-     ['.....',
-      '..0..',
-      '..0..',
-      '..00.',
-      '.....'],
-     ['.....',
-      '.....',
-      '.000.',
-      '.0...',
-      '.....'],
-     ['.....',
-      '.00..',
-      '..0..',
-      '..0..',
-      '.....'],
-     '.....',
-     '...0.',
-     '.000.',
-     '.....',
-     '.....'], ]
-
-T = [
-    ['.....',
-     '..0..',
-     '..00.',
-     '..0..',
-     '.....'],
-    ['.....',
-     '.....',
-     '.000.',
-     '..0..',
-     '.....'],
-    ['.....',
-     '..0..',
-     '.00..',
-     '..0..',
-     '.....'],
-    ['.....',
-     '..0..',
-     '.000.',
-     '.....',
-     '.....'], ]
+I = [['.....', '0000.', '.....', '.....', '.....'], ['.0...', '.0...', '.0...', '.0...', '.....'], ['.....', '.....', '0000.', '.....', '.....'], ['..0..', '..0..', '..0..', '..0..', '.....']]
+J = [['.....', '.0...', '.000.', '.....', '.....'], ['.....', '..0..', '..0..', '.00..', '.....'], ['.....', '.....', '.000.', '...0.', '.....'], ['.....', '..00.', '..0..', '..0..', '.....']]
+L = [['.....', '...0.', '.000.', '.....', '.....'], ['.....', '.00..', '..0..', '..0..', '.....'], ['.....', '.....', '.000.', '.0...', '.....'], ['.....', '..0..', '..0..', '..00.', '.....']]
+O = [['.....', '.....', '.00..', '.00..', '.....']]
+S = [['.....', '..00..', '.00...', '......', '.....'], ['.....', '.0...', '.00..', '..0..', '.....'], ['.....', '......', '..00..', '.00...', '.....'], ['.....', '..0..', '..00.', '...0.', '.....']]
+Z = [['.....', '.00..', '..00.', '.....', '.....'], ['.....', '...0.', '..00.', '..0..', '.....'], ['.....', '.....', '.00..', '..00.', '.....'], ['.....', '..0..', '.00..', '.0...', '.....']]
+T = [['.....', '..0..', '.000.', '.....', '.....'], ['.....', '..0..', '.00..', '..0..', '.....'], ['.....', '.....', '.000.', '..0..', '.....'], ['.....', '..0..', '..00.', '..0..', '.....']]
 
 pieces = {"I": I, "J": J, "L": L, "O": O, "S": S, "Z": Z, "T": T}
-# for key in [k for k in pieces.keys()]:
-#      pieces[key] = pieces[key][::-1]
 
 colours_dict2 = {  # turtle-compatible colors
     "I": "cyan",
@@ -333,7 +201,7 @@ def generate_bag(current_bag):
 
 def display_as_text(notation):
     notation = boardstate_to_extended_boardstate(notation)
-    for row in (notation.split("/"))[::-1]:  # reverse list
+    for row in (notation.split("/")):  # reverse list
         print(row)
 
 # FIXME: Refactor
@@ -420,7 +288,7 @@ class Board():
         # Adjusting spawn coordinates based on piece
         if new_piece_type in ["L", "J", "S", "T", "I"]:
             x, y = 3, 22
-        if new_piece_type in ["Z", "O"]:
+        elif new_piece_type in ["Z", "O"]:
             x, y = 4, 22
         if init != "":
             return new_piece_type + orientation + str(x) + str(y)
@@ -499,7 +367,7 @@ def update_boardstate2(boardstate, piecestate: Piece):
     global pieces
     x, y = piecestate.x, piecestate.y
     # Reversed because list is reversed for some reason
-    shape = pieces[piecestate.type][::-1][piecestate.orientation]
+    shape = pieces[piecestate.type][piecestate.orientation]
     blx, bly = findBLC(shape)
     assert blx != None and bly != None
     xdif = 2-blx
@@ -546,8 +414,8 @@ def find_difference(shape, new_shape):
 def find_difference2(piece, new_piece):
     'Takes the type of piece and orientation (T0) of two pieces and returns their difference'
     global pieces
-    shape = pieces[piece[0]][::-1][int(piece[1])]
-    new_shape = pieces[new_piece[0]][::-1][int(new_piece[1])]
+    shape = pieces[piece[0]][int(piece[1])]
+    new_shape = pieces[new_piece[0]][int(new_piece[1])]
     x, y = findBLC(shape)
     x2, y2 = findBLC(new_shape)
     return x2 - x, y2 - y
@@ -626,6 +494,8 @@ def draw_grid(board_notation, t, screen):
     display.draw_grid(create_grid(
         board_notation_to_dict(board_notation)), t, screen)
 
+# FIXME: Deprecated, update to match with Board class structure
+
 
 def smart_display(notation, t, screen):
     type_of_notation = check_type_notation(notation)
@@ -665,14 +535,24 @@ def slideshow(slides, t, screen: Screen):
     screen.onkey(go_back, "Left")
     screen.listen()
 
+
 t, screen = init_screen()
 
-for _ in range(10):
-    b = Board()
-    b.display_board(t, screen)
-    sleep(0.5)
-#FIXME: Kicks do not work
+#FIXME: move_piece_down does not work
+# for _ in range(20):
+#     b = Board()
+#     b.display_board(t, screen)
+#     sleep(0.5)
+#     for _ in range(10):
+#         b.move_piece_down()
+#         b.display_board(t, screen)
+#         sleep(0.1)
+#     b.lock_piece()
+#     b.display_board(t, screen)
+#     sleep(3)
 
+
+# FIXME: Kicks do not work
 # b = Board("T040", "JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS")
 # b.display_board(t, screen)
 # sleep(1)

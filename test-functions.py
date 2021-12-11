@@ -57,6 +57,12 @@
 #     sleep(1)
 #     b.rotate_piece("CCW")
 
+'''Test function for spawning random pieces'''
+# for _ in range(20):
+#     b = Board()
+#     b.display_board(t, screen)
+#     sleep(0.5)
+
 '''Test functions for various things [DEPRECATED]'''
 # dict1 = board_notation_to_dict('JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS')
 # print(create_grid(locked_positions=dict1))
