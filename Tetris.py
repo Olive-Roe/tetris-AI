@@ -4,13 +4,19 @@ from turtle import Screen, Turtle
 import display
 from time import sleep
 
-I = [['.....', '0000.', '.....', '.....', '.....'], ['.0...', '.0...', '.0...', '.0...', '.....'], ['.....', '.....', '0000.', '.....', '.....'], ['..0..', '..0..', '..0..', '..0..', '.....']]
-J = [['.....', '.0...', '.000.', '.....', '.....'], ['.....', '..0..', '..0..', '.00..', '.....'], ['.....', '.....', '.000.', '...0.', '.....'], ['.....', '..00.', '..0..', '..0..', '.....']]
-L = [['.....', '...0.', '.000.', '.....', '.....'], ['.....', '.00..', '..0..', '..0..', '.....'], ['.....', '.....', '.000.', '.0...', '.....'], ['.....', '..0..', '..0..', '..00.', '.....']]
+I = [['.....', '0000.', '.....', '.....', '.....'], ['.0...', '.0...', '.0...', '.0...', '.....'], [
+    '.....', '.....', '0000.', '.....', '.....'], ['..0..', '..0..', '..0..', '..0..', '.....']]
+J = [['.....', '.0...', '.000.', '.....', '.....'], ['.....', '..0..', '..0..', '.00..', '.....'], [
+    '.....', '.....', '.000.', '...0.', '.....'], ['.....', '..00.', '..0..', '..0..', '.....']]
+L = [['.....', '...0.', '.000.', '.....', '.....'], ['.....', '.00..', '..0..', '..0..', '.....'], [
+    '.....', '.....', '.000.', '.0...', '.....'], ['.....', '..0..', '..0..', '..00.', '.....']]
 O = [['.....', '.....', '.00..', '.00..', '.....']]
-S = [['.....', '..00..', '.00...', '......', '.....'], ['.....', '.0...', '.00..', '..0..', '.....'], ['.....', '......', '..00..', '.00...', '.....'], ['.....', '..0..', '..00.', '...0.', '.....']]
-Z = [['.....', '.00..', '..00.', '.....', '.....'], ['.....', '...0.', '..00.', '..0..', '.....'], ['.....', '.....', '.00..', '..00.', '.....'], ['.....', '..0..', '.00..', '.0...', '.....']]
-T = [['.....', '..0..', '.000.', '.....', '.....'], ['.....', '..0..', '.00..', '..0..', '.....'], ['.....', '.....', '.000.', '..0..', '.....'], ['.....', '..0..', '..00.', '..0..', '.....']]
+S = [['.....', '..00..', '.00...', '......', '.....'], ['.....', '.0...', '.00..', '..0..', '.....'], [
+    '.....', '......', '..00..', '.00...', '.....'], ['.....', '..0..', '..00.', '...0.', '.....']]
+Z = [['.....', '.00..', '..00.', '.....', '.....'], ['.....', '...0.', '..00.', '..0..', '.....'], [
+    '.....', '.....', '.00..', '..00.', '.....'], ['.....', '..0..', '.00..', '.0...', '.....']]
+T = [['.....', '..0..', '.000.', '.....', '.....'], ['.....', '..0..', '.00..', '..0..', '.....'], [
+    '.....', '.....', '.000.', '..0..', '.....'], ['.....', '..0..', '..00.', '..0..', '.....']]
 
 pieces = {"I": I, "J": J, "L": L, "O": O, "S": S, "Z": Z, "T": T}
 
@@ -34,7 +40,7 @@ def create_grid(locked_positions={}):
                 grid[row][col] = c
     return grid
 
-# FIXME: Refactor into smaller methods
+# TODO: Refactor into smaller methods
 
 
 def boardstate_to_extended_boardstate(boardstate: str):
@@ -91,7 +97,7 @@ def extended_boardstate_to_boardstate(extended_boardstate: str):
         output_list.append("".join(output_list2))
     return "/".join(output_list)
 
-# FIXME: Refactor into smaller functions, make more readable
+# TODO: Refactor into smaller functions, make more readable
 
 
 def board_notation_to_dict(notation):
@@ -134,6 +140,11 @@ def construct_piece_board_notation(piece_notation, board_notation):
     return f"{piece_notation}:{board_notation}"
 
 
+def separate_piece_board_notation(pb_notation):
+    'Returns a tuple (piece_notation, board_notation)'
+    return (pb_notation.split(":")[0], pb_notation.split(":")[1])
+
+
 def access_cell(boardstate: str, row: int, column: int):
     'Given a boardstate, row, and column of a cell (starting from index 0), return the value of the cell in the boardstate.'
     b = boardstate_to_extended_boardstate(boardstate)
@@ -158,7 +169,7 @@ def return_x_y(piece_notation):
         y_loc = int(piece_notation[3:])
     return str(x_loc), str(y_loc)
 
-# FIXME: Refactor this
+# TODO: Refactor this
 
 
 def generate_bag(current_bag):
@@ -204,7 +215,7 @@ def display_as_text(notation):
     for row in (notation.split("/")):  # reverse list
         print(row)
 
-# FIXME: Refactor
+# TODO: Refactor
 
 
 def check_type_notation(notation):
@@ -279,7 +290,6 @@ class Board():
         if boardstate in ["out of bounds", "occupied cell"]:
             raise ValueError(
                 f"Impossible piece lock, piece: '{self.piece.value}', board: '{self.boardstate}'")
-        self.boardstate = boardstate
         draw_grid(boardstate, t, screen)
 
     def spawn_next_piece(self, init=""):
@@ -301,12 +311,13 @@ class Board():
         y_value = self.piece.y
         rest_of_piece_value = self.piece.type + \
             str(self.piece.orientation) + str(self.piece.x)
+        piece_message = rest_of_piece_value + str(y_value-1)
         b = update_boardstate2(self.boardstate, Piece(
-            rest_of_piece_value + str(y_value-1)))
+            piece_message))
         if b in ["out of bounds", "occupied cell"]:
             # Exit function
             return None
-        self.piece.update(rest_of_piece_value + str(y_value-1))
+        self.piece.update(piece_message)
         self.update_pb_notation()
 
     def move_piece_left(self):
@@ -338,7 +349,6 @@ class Board():
         self.update_pb_notation()
 
     def rotate_piece(self, direction):
-        # FIXME: Piece-board notation shenanigans
         #self.piece_board_notation = self.piece.value + ":/" + self.boardstate
         p, b = rotate_and_update2(
             self.piece_board_notation, direction)
@@ -353,6 +363,7 @@ class Board():
                 f"Impossible piece lock, piece: '{self.piece.value}', board: '{self.boardstate}'")
         self.boardstate = b
         self.spawn_next_piece()
+        self.update_pb_notation()
 
 
 class Game():
@@ -361,7 +372,7 @@ class Game():
         pass
 
 
-# FIXME: Refactor into smaller functions
+# TODO: Refactor into smaller functions
 def update_boardstate2(boardstate, piecestate: Piece):
     'Takes a boardstate and a Piece, and returns the boardstate with the piece in it, or False if it is impossible'
     global pieces
@@ -392,6 +403,12 @@ def update_boardstate2(boardstate, piecestate: Piece):
     return extended_boardstate_to_boardstate(nbs)
 
 
+def update_boardstate_from_pb_notation(pb_notation):
+    'Takes a piece-board notation and returns the updated board notation'
+    p1, b1 = separate_piece_board_notation(pb_notation)
+    return update_boardstate2(b1, Piece(p1))
+
+
 def findBLC(shape):  # finding bottom left corner of a shape
     'Given a shape, finds its bottom left corner (helper function to update_boardstate)'
     for r in range(5):
@@ -420,7 +437,7 @@ def find_difference2(piece, new_piece):
     x2, y2 = findBLC(new_shape)
     return x2 - x, y2 - y
 
-# FIXME: Refactor into smaller chunks
+# TODO: Refactor into smaller chunks
 
 
 def check_kick_tables2(old_piece_notation, new_piece_notation, board_notation):
@@ -452,7 +469,7 @@ def check_kick_tables2(old_piece_notation, new_piece_notation, board_notation):
     # Checked all kicks, none work
     return False
 
-# FIXME: Refactor, make more readable
+# TODO: Refactor, make more readable
 
 
 def rotate_and_update2(pb_notation, direction):
@@ -494,7 +511,7 @@ def draw_grid(board_notation, t, screen):
     display.draw_grid(create_grid(
         board_notation_to_dict(board_notation)), t, screen)
 
-# FIXME: Deprecated, update to match with Board class structure
+# TODO: Deprecated, update to match with Board class structure
 
 
 def smart_display(notation, t, screen):
@@ -538,18 +555,26 @@ def slideshow(slides, t, screen: Screen):
 
 t, screen = init_screen()
 
-#FIXME: move_piece_down does not work
+# p1 = 'T038'
+# b1 = '///////3TTT4/4T5///////////////////////////////'
+
+# a = 'T0322:///////4OO4/4OO4///////////////////////////////'
+# display_as_text("///////4OO4/4OO4///////////////////////////////")
+# print()
+# display_as_text(update_boardstate_from_pb_notation(a))
+
+# FIXME: move_piece_down pushes piece below it
 # for _ in range(20):
 #     b = Board()
 #     b.display_board(t, screen)
 #     sleep(0.5)
-#     for _ in range(10):
-#         b.move_piece_down()
+#     for _ in range(20):
+#         for _ in range(15):
+#             b.move_piece_down()
+#             b.display_board(t, screen)
+#             sleep(0.05)
+#         b.lock_piece()
 #         b.display_board(t, screen)
-#         sleep(0.1)
-#     b.lock_piece()
-#     b.display_board(t, screen)
-#     sleep(3)
 
 
 # FIXME: Kicks do not work
