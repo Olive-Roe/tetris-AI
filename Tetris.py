@@ -538,10 +538,19 @@ def slideshow(slides, t, screen: Screen):
 
 t, screen = init_screen()
 
-for _ in range(20):
-    b = Board()
-    b.display_board(t, screen)
-    sleep(0.5)
+#FIXME: move_piece_down does not work
+# for _ in range(20):
+#     b = Board()
+#     b.display_board(t, screen)
+#     sleep(0.5)
+#     for _ in range(10):
+#         b.move_piece_down()
+#         b.display_board(t, screen)
+#         sleep(0.1)
+#     b.lock_piece()
+#     b.display_board(t, screen)
+#     sleep(3)
+
 
 # FIXME: Kicks do not work
 # b = Board("T040", "JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS")
