@@ -1,0 +1,24 @@
+Bucket list for priority tasks
+1. Make t, screen part of init in Board class and update functions to work
+2. Make change_x() function in Board class
+3. Allow smart_display() to work with the current Board structure
+4. Debug generate_bag() to make it work correctly
+5. Refactor rotate_and_update2() 
+6. Refactor check_kick_tables2()
+
+Unordered:
+- Make Game class
+- Debug text-writing in display.py
+
+Future plans:
+- Make graphical hold display
+- Make graphical next queue display
+- Make keybinds
+- Make hard drop function
+- Implement DAS, ARR, SDF
+
+Priority list values (triage):
+Things that are easy to implement, relatively independent, and useful
+Debugging things
+Refactoring things
+Writing completely new code with large changes
