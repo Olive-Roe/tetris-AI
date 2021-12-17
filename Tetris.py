@@ -4,19 +4,20 @@ from turtle import Screen, Turtle
 import display
 from time import sleep
 
+# switched 2nd and 4th orientation of L, T, J recently
 I = [['.....', '0000.', '.....', '.....', '.....'], ['.0...', '.0...', '.0...', '.0...', '.....'], [
     '.....', '.....', '0000.', '.....', '.....'], ['..0..', '..0..', '..0..', '..0..', '.....']]
-J = [['.....', '.0...', '.000.', '.....', '.....'], ['.....', '..0..', '..0..', '.00..', '.....'], [
-    '.....', '.....', '.000.', '...0.', '.....'], ['.....', '..00.', '..0..', '..0..', '.....']]
-L = [['.....', '...0.', '.000.', '.....', '.....'], ['.....', '.00..', '..0..', '..0..', '.....'], [
-    '.....', '.....', '.000.', '.0...', '.....'], ['.....', '..0..', '..0..', '..00.', '.....']]
+J = [['.....', '.0...', '.000.', '.....', '.....'], ['.....', '..00.', '..0..', '..0..', '.....'], [
+    '.....', '.....', '.000.', '...0.', '.....'], ['.....', '..0..', '..0..', '.00..', '.....']]
+L = [['.....', '...0.', '.000.', '.....', '.....'], ['.....', '..0..', '..0..', '..00.', '.....'], [
+    '.....', '.....', '.000.', '.0...', '.....'], ['.....', '.00..', '..0..', '..0..', '.....']]
 O = [['.....', '.....', '.00..', '.00..', '.....']]
 S = [['.....', '..00..', '.00...', '......', '.....'], ['.....', '.0...', '.00..', '..0..', '.....'], [
     '.....', '......', '..00..', '.00...', '.....'], ['.....', '..0..', '..00.', '...0.', '.....']]
 Z = [['.....', '.00..', '..00.', '.....', '.....'], ['.....', '...0.', '..00.', '..0..', '.....'], [
     '.....', '.....', '.00..', '..00.', '.....'], ['.....', '..0..', '.00..', '.0...', '.....']]
-T = [['.....', '..0..', '.000.', '.....', '.....'], ['.....', '..0..', '.00..', '..0..', '.....'], [
-    '.....', '.....', '.000.', '..0..', '.....'], ['.....', '..0..', '..00.', '..0..', '.....']]
+T = [['.....', '..0..', '.000.', '.....', '.....'], ['.....', '..0..', '..00.', '..0..', '.....'], [
+    '.....', '.....', '.000.', '..0..', '.....'], ['.....', '..0..', '.00..', '..0..', '.....']]
 
 pieces = {"I": I, "J": J, "L": L, "O": O, "S": S, "Z": Z, "T": T}
 
@@ -266,6 +267,8 @@ class Bag():
 
 
 class Board():
+    # TODO: Make a change_x function that combines move_left and move_right
+    # TODO: Make the turtle and screen a part of the init function and make display_board use them
     def __init__(self, piece_notation="", boardstate="", bag="", hold=""):
         self.boardstate = boardstate
         self.extended_boardstate = boardstate_to_extended_boardstate(
@@ -288,6 +291,8 @@ class Board():
         # Creates a temporary variable to display the current piece/boardstate
         boardstate = update_boardstate2(self.boardstate, self.piece)
         if boardstate in ["out of bounds", "occupied cell"]:
+            # TODO: Do validation if the piece locks at the 21st row or up
+            # Meaning the game is over
             raise ValueError(
                 f"Impossible piece lock, piece: '{self.piece.value}', board: '{self.boardstate}'")
         draw_grid(boardstate, t, screen)
@@ -307,7 +312,6 @@ class Board():
         self.update_pb_notation()
 
     def move_piece_down(self):
-        # TODO: Add validation that the piece can actually move down
         y_value = self.piece.y
         rest_of_piece_value = self.piece.type + \
             str(self.piece.orientation) + str(self.piece.x)
@@ -319,6 +323,8 @@ class Board():
             return None
         self.piece.update(piece_message)
         self.update_pb_notation()
+        # returns True if the function is successful
+        return True
 
     def move_piece_left(self):
         x_value = self.piece.x
@@ -377,7 +383,6 @@ def update_boardstate2(boardstate, piecestate: Piece):
     'Takes a boardstate and a Piece, and returns the boardstate with the piece in it, or False if it is impossible'
     global pieces
     x, y = piecestate.x, piecestate.y
-    # Reversed because list is reversed for some reason
     shape = pieces[piecestate.type][piecestate.orientation]
     blx, bly = findBLC(shape)
     assert blx != None and bly != None
@@ -429,8 +434,16 @@ def find_difference(shape, new_shape):
 
 
 def find_difference2(piece, new_piece):
-    'Takes the type of piece and orientation (T0) of two pieces and returns their difference'
+    'Takes the type of piece and orientation (e.g. T0) of two pieces and returns their difference'
     global pieces
+    # FIXME: Hacky fix, might not work
+    if piece[0] == "O":
+        # If piece is an O-piece, make the orientation 0 because all orientations are the same
+        # (for the purpose of this function)
+        piece = piece[0] + "0" + piece[2:]
+    # same goes for new_piece (optimize this later)
+    if new_piece[0] == "O":
+        new_piece = new_piece[0] + "0" + new_piece[2:]
     shape = pieces[piece[0]][int(piece[1])]
     new_shape = pieces[new_piece[0]][int(new_piece[1])]
     x, y = findBLC(shape)
@@ -450,12 +463,15 @@ def check_kick_tables2(old_piece_notation, new_piece_notation, board_notation):
     if t == "O":
         return False
     if r_diff in [2, -2]:
-        table = kicktables.fliptable
+        # this said fliptable for some time
+        table = kicktables.flip_table
     elif t == "I":
         table = kicktables.i_table
     else:
         assert t in "JLSZT"
         table = kicktables.jlszt_table
+    # TODO: Make the first repetition check the original new_piece_notation
+    # as there is unnecessary assignment here
     for i in range(5):
         # getting offsets from table (formatting)
         tup = table[direction][i][1:-1].split(", ")
@@ -555,6 +571,30 @@ def slideshow(slides, t, screen: Screen):
 
 t, screen = init_screen()
 
+# silly test function for random gameplay (game is still broken)
+# directions = ["CW", "CCW", "180"]
+# for _ in range(20):
+#     b = Board()
+#     b.display_board(t, screen)
+#     sleep(0.5)
+#     for _ in range(20):
+#         b.rotate_piece(random.choice(directions))
+#         b.display_board(t, screen)
+#         ran = random.randint(0, 1)
+#         for _ in range(random.randint(0, 4)):
+#             if ran == 0:
+#                 b.move_piece_left()
+#             else:
+#                 b.move_piece_right()
+#             b.display_board(t, screen)
+#         for _ in range(21):
+#             if b.move_piece_down() is None:
+#                 continue
+#             b.display_board(t, screen)
+#             sleep(0.05)
+#         b.lock_piece()
+#         b.display_board(t, screen)
+
 # p1 = 'T038'
 # b1 = '///////3TTT4/4T5///////////////////////////////'
 
@@ -577,10 +617,19 @@ t, screen = init_screen()
 #         b.display_board(t, screen)
 
 
-# FIXME: Kicks do not work
-# b = Board("T040", "JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS")
-# b.display_board(t, screen)
-# sleep(1)
-# b.rotate_piece("CCW")
-# b.display_board(t, screen)
-# sleep(1)
+# T-kick works
+b = Board("T140", "JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS")
+b.display_board(t, screen)
+sleep(1)
+b.rotate_piece("CCW")
+b.display_board(t, screen)
+sleep(2)
+b.rotate_piece("CW")
+b.display_board(t, screen)
+sleep(2)
+
+# FIXME: Possible bug?
+"ValueError: Impossible piece lock, piece: 'I2721', board: '1LOO3SS1/1LOO4SS/LL1OO5/3OO5/4I5/4I5/4I5/4I5/4IIII2/5OO3/5OO3/////////////////////////////'"
+# explanation: I2 is a horizontal state, in the 7th row it's too far to the right
+# could just have happened from weird random gameplay function, but how did this happen
+# could point to some bug in rotate_and_update2, but there's no evidence from this
