@@ -1,3 +1,5 @@
+from Tetris import *
+
 '''PCO test board'''
 # a = 'JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS'
 
@@ -14,24 +16,19 @@
 #     sleep(1.5)
 # screen.mainloop()
 
-'''Test function for kicks [DEPRECATED]'''
+'''Working test function for some T, Z, S kicks'''
 # t, screen = init_screen()
-# smart_display("T040:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS", t, screen)
-# slides = ["T040:9J/",
-#           "T35-1:9J/",
-#           "T240:9J/",
-#           "T140:9J/",
-#           rotate_and_update("T040:9J/", "CCW", True),
-#           rotate_and_update("T040:9J/", "180", True),
-#           rotate_and_update("T040:9J/", "CW", True),
-#           "T340:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS",
-#           "JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS",
-#           #rotate_and_update("T340:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS", "CCW", True),
-#           "T040:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS",
-#           #rotate_and_update("T040:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS", "CW"),
-#           ]
-# slideshow(slides, t, screen)
-# screen.mainloop()
+# tests = ["T140", "Z140", "S150"]
+# for test in tests:
+#     b = Board(test, "JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS")
+#     b.display_board(t, screen)
+#     sleep(0.5)
+#     b.rotate_piece("CCW")
+#     b.display_board(t, screen)
+#     sleep(0.5)
+#     b.rotate_piece("CW")
+#     b.display_board(t, screen)
+#     sleep(0.5)
 
 '''Test function for CCW rotation, z piece'''
 # p1 = "S0311"
@@ -109,3 +106,21 @@
 # print(display_as_text(update_boardstate_from_piece_board_notation(c)))
 # print(check_kick_tables("T", 0, 1, 1))
 
+'''Test function for kicks [DEPRECATED]'''
+# t, screen = init_screen()
+# smart_display("T040:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS", t, screen)
+# slides = ["T040:9J/",
+#           "T35-1:9J/",
+#           "T240:9J/",
+#           "T140:9J/",
+#           rotate_and_update("T040:9J/", "CCW", True),
+#           rotate_and_update("T040:9J/", "180", True),
+#           rotate_and_update("T040:9J/", "CW", True),
+#           "T340:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS",
+#           "JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS",
+#           #rotate_and_update("T340:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS", "CCW", True),
+#           "T040:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS",
+#           #rotate_and_update("T040:JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS", "CW"),
+#           ]
+# slideshow(slides, t, screen)
+# screen.mainloop()

@@ -571,6 +571,20 @@ def slideshow(slides, t, screen: Screen):
 
 t, screen = init_screen()
 
+# FIXME: move_piece_down pushes piece below it
+# for _ in range(20):
+#     b = Board()
+#     b.display_board(t, screen)
+#     sleep(0.5)
+#     for _ in range(20):
+#         for _ in range(15):
+#             b.move_piece_down()
+#             b.display_board(t, screen)
+#             sleep(0.05)
+#         b.lock_piece()
+#         b.display_board(t, screen)
+
+
 # silly test function for random gameplay (game is still broken)
 # directions = ["CW", "CCW", "180"]
 # for _ in range(20):
@@ -594,42 +608,3 @@ t, screen = init_screen()
 #             sleep(0.05)
 #         b.lock_piece()
 #         b.display_board(t, screen)
-
-# p1 = 'T038'
-# b1 = '///////3TTT4/4T5///////////////////////////////'
-
-# a = 'T0322:///////4OO4/4OO4///////////////////////////////'
-# display_as_text("///////4OO4/4OO4///////////////////////////////")
-# print()
-# display_as_text(update_boardstate_from_pb_notation(a))
-
-# FIXME: move_piece_down pushes piece below it
-# for _ in range(20):
-#     b = Board()
-#     b.display_board(t, screen)
-#     sleep(0.5)
-#     for _ in range(20):
-#         for _ in range(15):
-#             b.move_piece_down()
-#             b.display_board(t, screen)
-#             sleep(0.05)
-#         b.lock_piece()
-#         b.display_board(t, screen)
-
-
-# T-kick works
-b = Board("T140", "JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS")
-b.display_board(t, screen)
-sleep(1)
-b.rotate_piece("CCW")
-b.display_board(t, screen)
-sleep(2)
-b.rotate_piece("CW")
-b.display_board(t, screen)
-sleep(2)
-
-# FIXME: Possible bug?
-"ValueError: Impossible piece lock, piece: 'I2721', board: '1LOO3SS1/1LOO4SS/LL1OO5/3OO5/4I5/4I5/4I5/4I5/4IIII2/5OO3/5OO3/////////////////////////////'"
-# explanation: I2 is a horizontal state, in the 7th row it's too far to the right
-# could just have happened from weird random gameplay function, but how did this happen
-# could point to some bug in rotate_and_update2, but there's no evidence from this
