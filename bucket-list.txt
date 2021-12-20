@@ -1,5 +1,4 @@
 Bucket list for priority tasks (ordered)
- Allow smart_display() to work with the current Board structure
  Debug blocks pushing down other blocks bug
  Debug generate_bag() to make it work correctly
  Refactor rotate_and_update2() 
@@ -8,6 +7,7 @@ Bucket list for priority tasks (ordered)
 Unordered:
 - Make Game class
 - Debug text-writing in display.py
+- Make garbage compatibility in all functions
 
 Future plans:
 - Make graphical hold display

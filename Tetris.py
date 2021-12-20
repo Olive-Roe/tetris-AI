@@ -561,18 +561,23 @@ def draw_grid(board_notation, t, screen):
 
 
 def smart_display(notation, t, screen):
+    'Displays a board, piece-board, or extended board notation in the form of a Board'
+    piece_notation = ""
+    boardstate = ""
     type_of_notation = check_type_notation(notation)
     if type_of_notation == "board notation":
-        notation = notation
+        boardstate = notation
     elif type_of_notation == "piece-board notation":
-        notation = update_boardstate2(
-            notation.split(":")[0], notation.split(":")[1])
+        p, b = separate_piece_board_notation(notation)
+        piece_notation = p
+        boardstate = b
     elif type_of_notation == "extended board notation":
-        notation = extended_boardstate_to_boardstate(notation)
+        boardstate = extended_boardstate_to_boardstate(notation)
     else:
         raise ValueError(
             f"Incorrect notation: '{notation}''. This was interpreted as a '{type_of_notation}'")
-    draw_grid(notation, t, screen)
+    b = Board(t, screen, piece_notation, boardstate)
+    b.display_board()
 
 
 def slideshow(slides, t, screen: Screen):
@@ -597,9 +602,15 @@ def slideshow(slides, t, screen: Screen):
     screen.onkey(go_forward, "Right")
     screen.onkey(go_back, "Left")
     screen.listen()
+    screen.mainloop()
 
 
 t, screen = init_screen()
+
+# Slideshow is working (although it spawns a random piece)
+# slides = ["JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS",
+#           "///TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/"]
+# slideshow(slides, t, screen)
 
 # FIXME: move_piece_down pushes piece below it
 # for _ in range(20):
@@ -613,7 +624,6 @@ t, screen = init_screen()
 #             sleep(0.05)
 #         b.lock_piece()
 #         b.display_board()
-
 
 # silly test function for random gameplay (game is still broken)
 directions = ["CW", "CCW", "180"]
