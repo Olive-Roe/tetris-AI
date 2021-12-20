@@ -2,9 +2,10 @@ Bucket list for priority tasks
 1. Make t, screen part of init in Board class and update functions to work
 2. Make change_x() function in Board class
 3. Allow smart_display() to work with the current Board structure
-4. Debug generate_bag() to make it work correctly
-5. Refactor rotate_and_update2() 
-6. Refactor check_kick_tables2()
+4. Debug blocks pushing down other blocks bug
+5. Debug generate_bag() to make it work correctly
+6. Refactor rotate_and_update2() 
+7. Refactor check_kick_tables2()
 
 Unordered:
 - Make Game class
