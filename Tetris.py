@@ -114,6 +114,13 @@ def extended_boardstate_to_boardstate(extended_boardstate: str):
             output_list2.append(str(counter))
         output_list.append("".join(output_list2))
     # Strict format: there is an extra * at the beginning
+    
+    # FIXME: Does not work
+    # Removes extra lines at the end of a boardstate
+    # reverses output list
+    # for row in output_list[::-1]:
+        # if row == "":
+        #     output_list.pop(-1)
     return "*" + "/".join(output_list)
 
 # TODO: Refactor into smaller functions, make more readable
@@ -658,7 +665,7 @@ for _ in range(20):
         b.display_board()
         a = ""
         while a is not None:
-            a =  b.move_piece_down()
+            a = b.move_piece_down()
             b.display_board()
             sleep(0.05)
         b.lock_piece()
