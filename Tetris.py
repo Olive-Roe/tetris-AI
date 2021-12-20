@@ -267,9 +267,12 @@ class Bag():
 
 
 class Board():
+    'A Tetris board, with a turtle, screen, and data'
     # TODO: Make a change_x function that combines move_left and move_right
     # TODO: Make the turtle and screen a part of the init function and make display_board use them
-    def __init__(self, piece_notation="", boardstate="", bag="", hold=""):
+    def __init__(self, t, screen, piece_notation="", boardstate="", bag="", hold=""):
+        self.t = t
+        self.screen = screen
         self.boardstate = boardstate
         self.extended_boardstate = boardstate_to_extended_boardstate(
             self.boardstate)
@@ -287,7 +290,8 @@ class Board():
         self.piece_board_notation = construct_piece_board_notation(
             self.piece.value, self.boardstate)
 
-    def display_board(self, t, screen):
+    def display_board(self):
+        'Displays the current board through Turtle'
         # Creates a temporary variable to display the current piece/boardstate
         boardstate = update_boardstate2(self.boardstate, self.piece)
         if boardstate in ["out of bounds", "occupied cell"]:
@@ -295,7 +299,7 @@ class Board():
             # Meaning the game is over
             raise ValueError(
                 f"Impossible piece lock, piece: '{self.piece.value}', board: '{self.boardstate}'")
-        draw_grid(boardstate, t, screen)
+        draw_grid(boardstate, self.t, self.screen)
 
     def spawn_next_piece(self, init=""):
         new_piece_type = self.bag.update()
@@ -574,37 +578,37 @@ t, screen = init_screen()
 # FIXME: move_piece_down pushes piece below it
 # for _ in range(20):
 #     b = Board()
-#     b.display_board(t, screen)
+#     b.display_board()
 #     sleep(0.5)
 #     for _ in range(20):
 #         for _ in range(15):
 #             b.move_piece_down()
-#             b.display_board(t, screen)
+#             b.display_board()
 #             sleep(0.05)
 #         b.lock_piece()
-#         b.display_board(t, screen)
+#         b.display_board()
 
 
 # silly test function for random gameplay (game is still broken)
-# directions = ["CW", "CCW", "180"]
-# for _ in range(20):
-#     b = Board()
-#     b.display_board(t, screen)
-#     sleep(0.5)
-#     for _ in range(20):
-#         b.rotate_piece(random.choice(directions))
-#         b.display_board(t, screen)
-#         ran = random.randint(0, 1)
-#         for _ in range(random.randint(0, 4)):
-#             if ran == 0:
-#                 b.move_piece_left()
-#             else:
-#                 b.move_piece_right()
-#             b.display_board(t, screen)
-#         for _ in range(21):
-#             if b.move_piece_down() is None:
-#                 continue
-#             b.display_board(t, screen)
-#             sleep(0.05)
-#         b.lock_piece()
-#         b.display_board(t, screen)
+directions = ["CW", "CCW", "180"]
+for _ in range(20):
+    b = Board(t, screen)
+    b.display_board()
+    sleep(0.5)
+    for _ in range(20):
+        b.rotate_piece(random.choice(directions))
+        b.display_board()
+        ran = random.randint(0, 1)
+        for _ in range(random.randint(0, 4)):
+            if ran == 0:
+                b.move_piece_left()
+            else:
+                b.move_piece_right()
+            b.display_board()
+        for _ in range(21):
+            if b.move_piece_down() is None:
+                continue
+            b.display_board()
+            sleep(0.05)
+        b.lock_piece()
+        b.display_board()
