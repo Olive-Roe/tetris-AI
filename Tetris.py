@@ -21,6 +21,7 @@ T = [['.....', '..0..', '.000.', '.....', '.....'], ['.....', '..0..', '..00.', 
 
 pieces = {"I": I, "J": J, "L": L, "O": O, "S": S, "Z": Z, "T": T}
 
+# recently changed, added . and black
 colours_dict2 = {  # turtle-compatible colors
     "I": "cyan",
     "J": "blue",
@@ -28,7 +29,8 @@ colours_dict2 = {  # turtle-compatible colors
     "O": "yellow",
     "S": "lime",
     "Z": "red",
-    "T": "magenta"
+    "T": "magenta",
+    ".": "black",
 }
 
 
@@ -45,15 +47,24 @@ def create_grid(locked_positions={}):
 
 
 def boardstate_to_extended_boardstate(boardstate: str):
-    if boardstate == "":
-        return "/.........."*40
+    # Strict input: must have a starting *
+    # Empty boardstate
+    if boardstate == "*":
+        # Asterisk + 40 rows with slashes in between
+        # but without the last slash
+        return "*" + ("........../"*40)[:-1]
+    # Removes starting asterisk
+    if boardstate[0] == "*":
+        boardstate = boardstate[1:]
+    else:
+        raise ValueError(
+            f"Bad boardstate (no starting asterisk): '{boardstate}'")
     output_list = []
     for i in range(len(boardstate.split("/"))):
         row = boardstate.split("/")[i]
         if row == "":
-            if i != 0:
-                output_list2 = [".........."]
-                output_list.append("".join(output_list2))
+            output_list2 = [".........."]
+            output_list.append("".join(output_list2))
             # Skips to next row as row is empty
             continue
         output_list2 = []
@@ -61,7 +72,6 @@ def boardstate_to_extended_boardstate(boardstate: str):
             item = row[index]
             if item.isnumeric() == True:
                 num_of_empty_cells = int(row[index])
-                # Unused variable
                 for _ in range(num_of_empty_cells):
                     output_list2.append(".")
             else:
@@ -72,13 +82,20 @@ def boardstate_to_extended_boardstate(boardstate: str):
         output_list.append("".join(output_list2))
     notation = "/".join(output_list)
     rows = len(notation.split("/"))
+    # Adds empty rows at the end of a board notation
     for _ in range(40-rows):
         notation = notation + "/.........."
-    return notation
+    return "*" + notation
 
 
 def extended_boardstate_to_boardstate(extended_boardstate: str):
     output_list = []
+    # Check if board is empty and return empty board
+    if extended_boardstate == ("*" + ("........../"*40)[:-1]):
+        return "*"
+    # Remove starting asterisk
+    if extended_boardstate[0] == "*":
+        extended_boardstate = extended_boardstate[1:]
     for row in extended_boardstate.split("/"):
         if row == "..........":
             output_list.append("")
@@ -96,15 +113,17 @@ def extended_boardstate_to_boardstate(extended_boardstate: str):
         if counter != 0:
             output_list2.append(str(counter))
         output_list.append("".join(output_list2))
-    # Strict format: there is an extra / at the beginning
-    return "/" + "/".join(output_list)
+    # Strict format: there is an extra * at the beginning
+    return "*" + "/".join(output_list)
 
 # TODO: Refactor into smaller functions, make more readable
 
 
 def board_notation_to_dict(notation):
     global colours_dict2
-    #notation = boardstate_to_extended_boardstate(notation)
+    notation = boardstate_to_extended_boardstate(notation)
+    # Remove starting asterisk
+    notation = notation[1:]
     output_list = []
     rows = len(notation.split("/"))
     for row in notation.split("/"):
@@ -113,12 +132,8 @@ def board_notation_to_dict(notation):
                 output_list.append("black")
         for index in range(len(row)):
             item = row[index]
-            if item.isnumeric() == False:
-                output_list.append(colours_dict2[item])
-            else:
-                num_of_empty_cells = int(row[index])
-                for _ in range(num_of_empty_cells):
-                    output_list.append("black")
+            # Whether it's S or . check color dict and append the respective colour
+            output_list.append(colours_dict2[item])
     indices = [(x, y) for x in range(rows) for y in range(10)]
     try:
         items_list = [(indices[i], output_list[i]) for i in range(rows * 10)]
@@ -129,8 +144,31 @@ def board_notation_to_dict(notation):
     return {k: v for (k, v) in items_list}
 
 
+def type_of_boardstate(boardstate):
+    if type(boardstate) == list:
+        return "list form"
+    if "." in boardstate:
+        return "extended boardstate"
+    else:
+        return "boardstate"
+
+
 def boardstate_to_list_form(boardstate: str):
-    return [[i for i in item] for item in boardstate_to_extended_boardstate(str(boardstate)).split("/")]
+    # sourcery skip: inline-immediately-returned-variable
+    'Returns a 2D array of cells inside rows from a boardstate'
+    type_b = type_of_boardstate(boardstate)
+    if type_b == "boardstate":
+        # we need to extend the boardstate
+        a = boardstate_to_extended_boardstate(str(boardstate))
+    elif type_b == "extended boardstate":
+        # boardstate is already extended, shorten it and extend it again
+        a = boardstate_to_extended_boardstate(
+            extended_boardstate_to_boardstate(str(boardstate)))
+    # if neither of these an error will be thrown
+    # Remove starting asterisk and split a
+    a = a[1:].split("/")
+    output = [[i for i in item] for item in a]
+    return output
 
 
 def list_form_to_boardstate(list_form: list):
@@ -223,11 +261,12 @@ def display_as_text(notation):
 def check_type_notation(notation):
     'Takes a (valid) notation and returns its type, or False if it\'s unrecognizable.'
     n_list = [i for i in notation]
+    # FIXME: len == 4 no longer applies, change this
     if len(n_list) == 4:
         return "piece notation"
     elif ":" in n_list:
         return "piece-board notation"
-    elif "/" in n_list:
+    elif "*" in n_list:
         if "." in n_list:
             return "extended board notation"
         for item in n_list:
@@ -270,7 +309,7 @@ class Bag():
 class Board():
     'A Tetris board, with a turtle, screen, and data'
 
-    def __init__(self, t, screen, piece_notation="", boardstate="", bag="", hold=""):
+    def __init__(self, t, screen, piece_notation="", boardstate="*", bag="", hold=""):
         self.t = t
         self.screen = screen
         self.boardstate = boardstate
@@ -284,7 +323,7 @@ class Board():
         else:
             self.piece = Piece(piece_notation)
         # Non-dynamic init piece board notation
-        self.piece_board_notation = self.piece.value + ":/" + self.boardstate
+        self.piece_board_notation = self.piece.value + ":" + self.boardstate
 
     def update_pb_notation(self):
         self.piece_board_notation = construct_piece_board_notation(
@@ -426,8 +465,8 @@ def update_boardstate2(boardstate, piecestate: Piece):
             if shape[r][cell] == "0":
                 oList.append((cell-2, 2-r))
     nbs = boardstate_to_extended_boardstate(boardstate)
+    cx, cy = center
     for change_in_x, change_in_y in oList:
-        cx, cy = center
         x_loc = cx+change_in_x
         y_loc = cy+change_in_y
         if x_loc < 0 or x_loc > 9 or y_loc < 0 or y_loc > 39:
@@ -558,8 +597,6 @@ def draw_grid(board_notation, t, screen):
     display.draw_grid(create_grid(
         board_notation_to_dict(board_notation)), t, screen)
 
-# TODO: Deprecated, update to match with Board class structure
-
 
 def smart_display(notation, t, screen):
     'Displays a board, piece-board, or extended board notation in the form of a Board'
@@ -608,45 +645,24 @@ def slideshow(slides, t, screen: Screen):
 
 t, screen = init_screen()
 
-# Slideshow is working (although it spawns a random piece)
-# slides = ["JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS",
-#           "///TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/"]
-# slideshow(slides, t, screen)
-
-# FIXME: move_piece_down pushes piece below it
-try:
-    for _ in range(20):
-        b = Board(t, screen)
-        b.display_board()
-        sleep(0.5)
-        for _ in range(20):
-            for _ in range(15):
-                b.move_piece_down()
-                b.display_board()
-                sleep(0.05)
-            b.lock_piece()
-            b.display_board()
-except KeyboardInterrupt:
-    print(construct_piece_board_notation(b.piece.value, b.boardstate))
-
 # silly test function for random gameplay (game might be ok)
-# directions = ["CW", "CCW", "180"]
-# for _ in range(20):
-#     b = Board(t, screen)
-#     b.display_board()
-#     sleep(0.5)
-#     for _ in range(20):
-#         b.rotate_piece(random.choice(directions))
-#         b.display_board()
-#         b.change_x(random.randint(-5, 5))
-#         b.display_board()
-#         for _ in range(21):
-#             if b.move_piece_down() is None:
-#                 continue
-#             b.display_board()
-#             sleep(0.05)
-#         b.lock_piece()
-#         b.display_board()
+directions = ["CW", "CCW", "180"]
+for _ in range(20):
+    b = Board(t, screen)
+    b.display_board()
+    sleep(0.5)
+    for _ in range(20):
+        b.rotate_piece(random.choice(directions))
+        b.display_board()
+        b.change_x(random.randint(-5, 5))
+        b.display_board()
+        a = ""
+        while a is not None:
+            a =  b.move_piece_down()
+            b.display_board()
+            sleep(0.05)
+        b.lock_piece()
+        b.display_board()
 
 # FIXME: pieces moved to the right cause impossible piece locks error
 # not caught by the move_piece_left/right function

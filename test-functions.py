@@ -12,7 +12,7 @@ from Tetris import *
 #     b = Board(boardstate=s)
 #     print(b.bag.value)
 #     print(b.piece.value)
-#     b.display_board(t, screen)
+#     b.display_board()
 #     sleep(1.5)
 # screen.mainloop()
 
@@ -21,13 +21,13 @@ from Tetris import *
 # tests = ["T140", "Z140", "S150"]
 # for test in tests:
 #     b = Board(test, "JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS")
-#     b.display_board(t, screen)
+#     b.display_board()
 #     sleep(0.5)
 #     b.rotate_piece("CCW")
-#     b.display_board(t, screen)
+#     b.display_board()
 #     sleep(0.5)
 #     b.rotate_piece("CW")
-#     b.display_board(t, screen)
+#     b.display_board()
 #     sleep(0.5)
 
 '''Test function for CCW rotation, z piece'''
@@ -45,19 +45,41 @@ from Tetris import *
 # t, screen = init_screen()
 # b = Board("S0311", "JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS")
 # for _ in range(20):
-#     b.display_board(t, screen)
+#     b.display_board()
 #     print(b.piece.value)
 #     sleep(1)
 #     b.rotate_piece("CCW")
-#     b.display_board(t, screen)
+#     b.display_board()
 #     print(b.piece.value)
 #     sleep(1)
 #     b.rotate_piece("CCW")
 
+'''Test function that shows bug is fixed (blocks pushing down other blocks)'''
+# try:
+#     for _ in range(20):
+#         b = Board(t, screen)
+#         b.display_board()
+#         sleep(0.5)
+#         for _ in range(20):
+#             for _ in range(15):
+#                 b.move_piece_down()
+#                 b.display_board()
+#                 sleep(0.05)
+#             b.lock_piece()
+#             b.display_board()
+# except KeyboardInterrupt:
+#     print(construct_piece_board_notation(b.piece.value, b.boardstate))
+
+'''Test functions for slideshows'''
+# Slideshow is working (although it spawns a random piece)
+# slides = ["JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS",
+#           "///TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/TZLOSJI3/"]
+# slideshow(slides, t, screen)
+
 '''Test function for spawning random pieces'''
 # for _ in range(20):
 #     b = Board()
-#     b.display_board(t, screen)
+#     b.display_board()
 #     sleep(0.5)
 
 '''Test functions for various things [DEPRECATED]'''
