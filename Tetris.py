@@ -96,7 +96,8 @@ def extended_boardstate_to_boardstate(extended_boardstate: str):
         if counter != 0:
             output_list2.append(str(counter))
         output_list.append("".join(output_list2))
-    return "/".join(output_list)
+    # Strict format: there is an extra / at the beginning
+    return "/" + "/".join(output_list)
 
 # TODO: Refactor into smaller functions, make more readable
 
@@ -613,36 +614,39 @@ t, screen = init_screen()
 # slideshow(slides, t, screen)
 
 # FIXME: move_piece_down pushes piece below it
+try:
+    for _ in range(20):
+        b = Board(t, screen)
+        b.display_board()
+        sleep(0.5)
+        for _ in range(20):
+            for _ in range(15):
+                b.move_piece_down()
+                b.display_board()
+                sleep(0.05)
+            b.lock_piece()
+            b.display_board()
+except KeyboardInterrupt:
+    print(construct_piece_board_notation(b.piece.value, b.boardstate))
+
+# silly test function for random gameplay (game might be ok)
+# directions = ["CW", "CCW", "180"]
 # for _ in range(20):
-#     b = Board()
+#     b = Board(t, screen)
 #     b.display_board()
 #     sleep(0.5)
 #     for _ in range(20):
-#         for _ in range(15):
-#             b.move_piece_down()
+#         b.rotate_piece(random.choice(directions))
+#         b.display_board()
+#         b.change_x(random.randint(-5, 5))
+#         b.display_board()
+#         for _ in range(21):
+#             if b.move_piece_down() is None:
+#                 continue
 #             b.display_board()
 #             sleep(0.05)
 #         b.lock_piece()
 #         b.display_board()
-
-# silly test function for random gameplay (game is still broken)
-directions = ["CW", "CCW", "180"]
-for _ in range(20):
-    b = Board(t, screen)
-    b.display_board()
-    sleep(0.5)
-    for _ in range(20):
-        b.rotate_piece(random.choice(directions))
-        b.display_board()
-        b.change_x(random.randint(-5, 5))
-        b.display_board()
-        for _ in range(21):
-            if b.move_piece_down() is None:
-                continue
-            b.display_board()
-            sleep(0.05)
-        b.lock_piece()
-        b.display_board()
 
 # FIXME: pieces moved to the right cause impossible piece locks error
 # not caught by the move_piece_left/right function
