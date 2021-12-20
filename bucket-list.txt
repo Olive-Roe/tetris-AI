@@ -1,5 +1,4 @@
 Bucket list for priority tasks (ordered)
- Make change_x() function in Board class
  Allow smart_display() to work with the current Board structure
  Debug blocks pushing down other blocks bug
  Debug generate_bag() to make it work correctly

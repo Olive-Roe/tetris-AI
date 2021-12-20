@@ -268,8 +268,7 @@ class Bag():
 
 class Board():
     'A Tetris board, with a turtle, screen, and data'
-    # TODO: Make a change_x function that combines move_left and move_right
-    # TODO: Make the turtle and screen a part of the init function and make display_board use them
+
     def __init__(self, t, screen, piece_notation="", boardstate="", bag="", hold=""):
         self.t = t
         self.screen = screen
@@ -330,6 +329,29 @@ class Board():
         # returns True if the function is successful
         return True
 
+    def change_x(self, value: int):
+        '''Moves the piece left or right by a certain amount of cells
+        Will stop if the piece cannot move
+        Does not validate the input of cells needed to move'''
+        if value > 0:
+            func = self.move_piece_right
+        elif value < 0:
+            func = self.move_piece_left
+        else:
+            # Value is 0 or not an integer, exit the function
+            return None
+        # Loop absolute value of the number of cell times
+        for _ in range(abs(value)):
+            # Call the move_piece_left/right func
+            # Piece, board, and piece-board notation are updated in here
+            flag = func()
+            self.display_board()
+            # Flag is True if it is successful, None if unsuccessful
+            if flag is None:
+                # Piece cannot be moved left/right anymore, stop the function
+                break
+        return True
+
     def move_piece_left(self):
         x_value = self.piece.x
         rest_of_piece_value = self.piece.type + \
@@ -344,6 +366,8 @@ class Board():
         self.piece.update(rest_of_piece_value +
                           str(x_value-1) + str(self.piece.y))
         self.update_pb_notation()
+        # Return True if successful
+        return True
 
     def move_piece_right(self):
         x_value = self.piece.x
@@ -357,6 +381,8 @@ class Board():
         self.piece.update(rest_of_piece_value +
                           str(x_value+1) + str(self.piece.y))
         self.update_pb_notation()
+        # Return True if successful
+        return True
 
     def rotate_piece(self, direction):
         #self.piece_board_notation = self.piece.value + ":/" + self.boardstate
@@ -598,13 +624,8 @@ for _ in range(20):
     for _ in range(20):
         b.rotate_piece(random.choice(directions))
         b.display_board()
-        ran = random.randint(0, 1)
-        for _ in range(random.randint(0, 4)):
-            if ran == 0:
-                b.move_piece_left()
-            else:
-                b.move_piece_right()
-            b.display_board()
+        b.change_x(random.randint(-5, 5))
+        b.display_board()
         for _ in range(21):
             if b.move_piece_down() is None:
                 continue
@@ -612,3 +633,7 @@ for _ in range(20):
             sleep(0.05)
         b.lock_piece()
         b.display_board()
+
+# FIXME: pieces moved to the right cause impossible piece locks error
+# not caught by the move_piece_left/right function
+# e.g. "ValueError: Impossible piece lock, piece: 'J1921', board: 'IIII3T2/1Z1J2TTT1/ZZZJ3J2/ZZZJJ2J2/JZT1T2JJ1/J1TTTT1ZZ1/JJT1T1ZZ2/LIIII5/LLL1T5/4TT4/4T5/4IIII2/5LL3/5L4/5L4/5S4/4SS4/4S5//////////////////////'"
