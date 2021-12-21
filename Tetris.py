@@ -367,15 +367,7 @@ class Board():
         rest_of_piece_value = self.piece.type + \
             str(self.piece.orientation) + str(self.piece.x)
         piece_message = rest_of_piece_value + str(y_value-1)
-        b = update_boardstate2(self.boardstate, Piece(
-            piece_message))
-        if b in ["out of bounds", "occupied cell"]:
-            # Exit function
-            return None
-        self.piece.update(piece_message)
-        self.update_pb_notation()
-        # returns True if the function is successful
-        return True
+        return self.check_if_valid(piece_message)
 
     def change_x(self, value: int):
         '''Moves the piece left or right by a certain amount of cells
@@ -402,36 +394,25 @@ class Board():
 
     def move_piece_left(self):
         # Create a new piece moved left one cell
-        piece_message = self.piece.type + str(self.piece.orientation) + str(self.piece.x-1) + str(self.piece.y)
-        # Pass the piece and current boardstate to update_boardstate
-        b = update_boardstate2(self.boardstate, Piece(piece_message))
-        # Checks if piece is all the way to the left or will hit something
-        if b in ["out of bounds", "occupied cell"]:
-            # No change in piece.value
-            # Exit function
-            return None
-        # Check successful, update piece with new piece_message
-        self.piece.update(piece_message)
-        # Update piece_board notation
-        self.update_pb_notation()
-        # Return True if successful
-        return True
+        piece_message = self.piece.type + \
+            str(self.piece.orientation) + \
+            str(self.piece.x-1) + str(self.piece.y)
+        return self.check_if_valid(piece_message)
 
     def move_piece_right(self):
         # Create a new piece moved right one cell
-        piece_message = self.piece.type + str(self.piece.orientation) + str(self.piece.x+1) + str(self.piece.y)
-        # Pass the piece and current boardstate to update_boardstate
+        piece_message = self.piece.type + \
+            str(self.piece.orientation) + \
+            str(self.piece.x+1) + str(self.piece.y)
+        return self.check_if_valid(piece_message)
+
+    def check_if_valid(self, piece_message):
         b = update_boardstate2(self.boardstate, Piece(piece_message))
-        # Checks if piece is all the way to the right or will hit something
-        if b in ["out of bounds", "occupied cell"]:
-            # No change in piece.value
-            # Exit function
+        if b in ['out of bounds', 'occupied cell']:
             return None
-        # Check successful, update piece with new piece_message
+        # Piece message is valid
         self.piece.update(piece_message)
-        # Update piece_board notation
         self.update_pb_notation()
-        # Return True if successful
         return True
 
     def rotate_piece(self, direction):
@@ -463,6 +444,11 @@ def update_boardstate2(boardstate, piecestate: Piece):
     'Takes a boardstate and a Piece, and returns the boardstate with the piece in it, or False if it is impossible'
     global pieces
     x, y = piecestate.x, piecestate.y
+    # FIXME: Hacky fix, might not work
+    if piecestate.type == "O":
+        # If piece is an O-piece, make the orientation 0 because all orientations are the same
+        # (for the purpose of this function)
+        piecestate.update("O0"+str(piecestate.x)+str(piecestate.y))
     shape = pieces[piecestate.type][piecestate.orientation]
     blx, bly = findBLC(shape)
     assert blx != None and bly != None
