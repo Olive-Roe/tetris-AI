@@ -218,45 +218,58 @@ def return_x_y(piece_notation):
         y_loc = int(piece_notation[3:])
     return str(x_loc), str(y_loc)
 
-# TODO: Refactor this
-
 
 def generate_bag(current_bag):
     'Takes a 13-long bag and adds a new piece to the end of it'
     if len(current_bag) == 14:
         return current_bag
     # Make list of all the types of pieces
-    pieces = [p for p in "IJLOSZT"]
+    # If the current bag is empty, generate a new one
     if current_bag == "":
-        output_list = []
-        for _ in range(2):
-            pieces = [p for p in "IJLOSZT"]
-            for _ in range(7):
-                # FIXME: Hacky solution, check for bugs later
-                if len(pieces) == 1:
-                    output_list.append(pieces[0])
-                    continue
-                a = random.randint(0, len(pieces) - 1)
-                output_list.append(pieces[a])
-                pieces.pop(a)
-                #output_list.append(pieces.pop(random.randint(0, len(pieces) - 1)))
-        return "".join(output_list)
+        return generate_new_bag()
     # Current bag is not empty
+    available_pieces = find_available_pieces(current_bag)
+    if available_pieces == []:
+        # If there are no available pieces, start a new bag with a random piece
+        return current_bag + random.choice([p for p in "IJLOSZT"])
+    else:
+        # If there are available pieces, choose one randomly
+        return current_bag + random.choice(available_pieces)
+
+
+def find_available_pieces(current_bag):
+    'Returns the possible options for the next piece, given a bag sequence'
     assert len(current_bag) == 13
+    # Finding the last bag in the sequence
     latest_bag = []
     for piece in current_bag:
+        # If the piece is repeated, it means there is a new bag
         if piece in latest_bag:
+            # This is a new bag now, we don't care about the old one
             latest_bag = [piece]
         else:
+            # Add to the latest bag with the piece
             latest_bag.append(piece)
-    for item in latest_bag:
-        if item in pieces:
-            pieces.remove(item)
-    # FIXME: Hacky solution, check for bugs
-    if pieces == []:
-        return random.choice([p for p in "IJLOSZT"])
-    else:
-        return current_bag + random.choice(pieces)
+    # Returns the available pieces, which are all the pieces that are not in the latest bag
+    return [p for p in "IJLOSZT" if p not in latest_bag]
+
+
+def generate_new_bag():
+    'Generates a 14-long sequence of two bags'
+    output_list = []
+    for _ in range(2):
+        piece_list = [p for p in "IJLOSZT"]
+        for _ in range(7):
+            # If there is only one piece left, output it and break
+            if len(piece_list) == 1:
+                output_list.append(piece_list[0])
+                break
+            a = random.choice(piece_list)
+            # Add a random piece to the output list
+            output_list.append(a)
+            # Remove that piece from the current bag
+            piece_list.remove(a)
+    return "".join(output_list)
 
 
 def display_as_text(notation):
@@ -446,7 +459,8 @@ def update_boardstate(boardstate, piecestate: Piece):
     # Finds the center x and y coordinates
     center_x, center_y = find_center(piecestate)
     # Combining offset and center list to find the list of the actual coordinates
-    coord_list = [(x_offset + center_x, y_offset + center_y) for (x_offset, y_offset) in offset_list]
+    coord_list = [(x_offset + center_x, y_offset + center_y)
+                  for (x_offset, y_offset) in offset_list]
     # Creates a temporary extended boardstate
     nbs = boardstate_to_extended_boardstate(boardstate)
     # Loops over each tile to check whether they are allowed
@@ -463,7 +477,8 @@ def update_boardstate(boardstate, piecestate: Piece):
     # Turn back into abbreviated boardstate
     return extended_boardstate_to_boardstate(nbs)
 
-def find_center(piecestate:Piece):
+
+def find_center(piecestate: Piece):
     'Given a Piece, returns the coordinates of its actual center (x, y)'
     if piecestate.type == "O":
         # If piece is an O-piece, just check the spawn orientation (there's only 1)
@@ -475,7 +490,8 @@ def find_center(piecestate:Piece):
     # Therefore, the center is x+2-blx
     return piecestate.x + 2 - blx, piecestate.y + 2 - bly
 
-def find_offset_list(piecestate:Piece):
+
+def find_offset_list(piecestate: Piece):
     'Given a Piece, returns a list of offsets of each filled tile from the center [(x1, y1), (x2, y2)]'
     # TODO: Might be more efficient (time-wise) to use a lookup table, as there are only 28 possibilities of shapes
     # Accesses global variable pieces
@@ -489,6 +505,7 @@ def find_offset_list(piecestate:Piece):
                 offset_list.append((cell-2, 2-r))
     return offset_list
 
+
 def update_boardstate_from_pb_notation(pb_notation):
     'Takes a piece-board notation and returns the updated board notation'
     p1, b1 = separate_piece_board_notation(pb_notation)
@@ -501,6 +518,7 @@ def findBLC(shape):  # finding bottom left corner of a shape
         for c in range(5):
             if shape[4-r][c] == "0":
                 return (c, r)
+
 
 def find_difference2(piece, new_piece):
     'Takes the type of piece and orientation (e.g. T0) of two pieces and returns their difference'
@@ -644,17 +662,20 @@ def slideshow(slides, t, screen: Screen):
 
 t, screen = init_screen()
 
+
 # silly test function for random gameplay (game might be ok)
+a = generate_bag("")
+print(a)
 try:
     directions = ["CW", "CCW", "180"]
     for _ in range(20):
-        b = Board(t, screen)
+        b = Board(t, screen, "", "*", a)
         b.display_board()
         sleep(0.5)
         for _ in range(20):
             b.rotate_piece(random.choice(directions))
             b.display_board()
-            b.change_x(random.randint(-10, 10))
+            b.change_x(random.randint(-5, 5))
             b.display_board()
             a = ""
             while a is not None:
@@ -662,6 +683,7 @@ try:
                 b.display_board()
                 sleep(0.05)
             b.lock_piece()
+            print(b.bag.value)
             b.display_board()
 except KeyboardInterrupt:
     print(b.piece_board_notation)

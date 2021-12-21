@@ -1,5 +1,4 @@
 Bucket list for priority tasks (ordered)
- Debug generate_bag() to make it work correctly
  Make garbage compatibility in all functions
  Refactor rotate_and_update2() 
  Refactor check_kick_tables2()
@@ -11,6 +10,7 @@ Unordered:
 Future plans:
 - Make graphical hold display
 - Make graphical next queue display
+- Add support for hold and next queue in Tetris.py
 - Make keybinds
 - Make hard drop function
 - Implement DAS, ARR, SDF

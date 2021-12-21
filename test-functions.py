@@ -105,6 +105,30 @@ from Tetris import *
 #     b.display_board()
 #     sleep(0.5)
 
+# Bag generation is working (evidence)
+# '''
+# ZSLTIOJ/LSITZOJ
+# LTIOJ/LSITZOJ/JL
+# TIOJ/LSITZOJ/JLO
+# IOJ/LSITZOJ/JLOI
+# OJ/LSITZOJ/JLOIS
+# J/LSITZOJ/JLOISZ
+# /LSITZOJ/JLOISZT
+# SITZOJ/JLOISZT/Z
+# ITZOJ/JLOISZT/ZO
+# TZOJ/JLOISZT/ZOI
+# ZOJ/JLOISZT/ZOIT
+# OJ/JLOISZT/ZOITS
+# J/JLOISZT/ZOITSJ
+# /JLOISZT/ZOITSJL
+# LOISZT/ZOITSJL/Z
+# OISZT/ZOITSJL/ZO
+# ISZT/ZOITSJL/ZOS
+# SZT/ZOITSJL/ZOSJ
+# ZT/ZOITSJL/ZOSJL
+# T/ZOITSJL/ZOSJLZ
+# ZOITSJL/ZOSJLZJ/'''
+
 '''Test functions for various things [DEPRECATED]'''
 # dict1 = board_notation_to_dict('JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS')
 # print(create_grid(locked_positions=dict1))
