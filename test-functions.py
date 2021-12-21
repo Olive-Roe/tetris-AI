@@ -70,6 +70,18 @@ from Tetris import *
 # except KeyboardInterrupt:
 #     print(construct_piece_board_notation(b.piece.value, b.boardstate))
 
+'''Test function showing impossible left/right movement is caught'''
+# Now caught by the move_piece_left/right function
+# for _ in range(10):
+#     b = Board(t, screen, "I0622")
+#     b.move_piece_right()
+#     # (the above does not work, it returns None)
+#     b.display_board()
+#     sleep(1)
+#     b.rotate_piece("CCW")
+#     b.display_board()
+#     sleep(1)
+
 '''Test functions for slideshows'''
 # Slideshow is working (although it spawns a random piece)
 # slides = ["JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS",

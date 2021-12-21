@@ -401,33 +401,35 @@ class Board():
         return True
 
     def move_piece_left(self):
-        x_value = self.piece.x
-        rest_of_piece_value = self.piece.type + \
-            str(self.piece.orientation)
-        b = update_boardstate2(self.boardstate, Piece(rest_of_piece_value +
-                                                      str(x_value-1) + str(self.piece.y)))
-        # Checking if piece is all the way to the left or will hit something
+        # Create a new piece moved left one cell
+        piece_message = self.piece.type + str(self.piece.orientation) + str(self.piece.x-1) + str(self.piece.y)
+        # Pass the piece and current boardstate to update_boardstate
+        b = update_boardstate2(self.boardstate, Piece(piece_message))
+        # Checks if piece is all the way to the left or will hit something
         if b in ["out of bounds", "occupied cell"]:
+            # No change in piece.value
             # Exit function
             return None
-        # If it works, update piece
-        self.piece.update(rest_of_piece_value +
-                          str(x_value-1) + str(self.piece.y))
+        # Check successful, update piece with new piece_message
+        self.piece.update(piece_message)
+        # Update piece_board notation
         self.update_pb_notation()
         # Return True if successful
         return True
 
     def move_piece_right(self):
-        x_value = self.piece.x
-        b = update_boardstate2(self.boardstate, self.piece)
-        # Checking if piece is all the way to the left or will hit something
+        # Create a new piece moved right one cell
+        piece_message = self.piece.type + str(self.piece.orientation) + str(self.piece.x+1) + str(self.piece.y)
+        # Pass the piece and current boardstate to update_boardstate
+        b = update_boardstate2(self.boardstate, Piece(piece_message))
+        # Checks if piece is all the way to the right or will hit something
         if b in ["out of bounds", "occupied cell"]:
+            # No change in piece.value
             # Exit function
             return None
-        rest_of_piece_value = self.piece.type + \
-            str(self.piece.orientation)
-        self.piece.update(rest_of_piece_value +
-                          str(x_value+1) + str(self.piece.y))
+        # Check successful, update piece with new piece_message
+        self.piece.update(piece_message)
+        # Update piece_board notation
         self.update_pb_notation()
         # Return True if successful
         return True
@@ -663,7 +665,7 @@ try:
         for _ in range(20):
             b.rotate_piece(random.choice(directions))
             b.display_board()
-            b.change_x(random.randint(-5, 5))
+            b.change_x(random.randint(-10, 10))
             b.display_board()
             a = ""
             while a is not None:
@@ -674,11 +676,6 @@ try:
             b.display_board()
 except KeyboardInterrupt:
     print(b.piece_board_notation)
-
-# FIXME: pieces moved to the right cause impossible piece lock error
-# not caught by the move_piece_left/right function
-# e.g. "ValueError: Impossible piece lock, piece: 'J1921', board: 'IIII3T2/1Z1J2TTT1/ZZZJ3J2/ZZZJJ2J2/JZT1T2JJ1/J1TTTT1ZZ1/JJT1T1ZZ2/LIIII5/LLL1T5/4TT4/4T5/4IIII2/5LL3/5L4/5L4/5S4/4SS4/4S5//////////////////////'"
-# other piece notations: 'T2921', 'Z2921',
 
 # FIXME: Pieces hover over the first column when dropped
 # L2220:*7T2/OO5TT1/OO5T2/J9/J9/JJ8
