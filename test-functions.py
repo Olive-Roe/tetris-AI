@@ -41,6 +41,17 @@ from Tetris import *
 #     print(p1)
 #     sleep(1)
 
+
+'''Fixed: Pieces hover over the first column when dropped'''
+# b = Board(t, screen, "I001")
+# a = True
+# b.display_board()
+# sleep(1)
+# while a is not None:
+#     a = b.move_piece_down()
+#     b.display_board()
+# sleep(2)
+
 ## With turtle GUI
 # t, screen = init_screen()
 # b = Board("S0311", "JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS")

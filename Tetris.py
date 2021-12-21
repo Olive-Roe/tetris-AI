@@ -196,7 +196,8 @@ def separate_piece_board_notation(pb_notation):
 def access_cell(boardstate: str, row: int, column: int):
     'Given a boardstate, row, and column of a cell (starting from index 0), return the value of the cell in the boardstate.'
     b = boardstate_to_extended_boardstate(boardstate)
-    return b.split("/")[row][column]
+    # Removes starting asterisk
+    return b[1:].split("/")[row][column]
 
 
 def change_cell(boardstate: str, row: int, column: int, val: str):
@@ -364,9 +365,8 @@ class Board():
 
     def move_piece_down(self):
         y_value = self.piece.y
-        rest_of_piece_value = self.piece.type + \
-            str(self.piece.orientation) + str(self.piece.x)
-        piece_message = rest_of_piece_value + str(y_value-1)
+        piece_message = self.piece.type + \
+            str(self.piece.orientation) + str(self.piece.x) + str(y_value-1)
         return self.check_if_valid(piece_message)
 
     def change_x(self, value: int):
@@ -445,7 +445,7 @@ def update_boardstate2(boardstate, piecestate: Piece):
     global pieces
     x, y = piecestate.x, piecestate.y
     # FIXME: Hacky fix, might not work
-    if piecestate.type == "O":
+    if piecestate.type == "O" and piecestate.orientation != 0:
         # If piece is an O-piece, make the orientation 0 because all orientations are the same
         # (for the purpose of this function)
         piecestate.update("O0"+str(piecestate.x)+str(piecestate.y))
@@ -662,7 +662,3 @@ try:
             b.display_board()
 except KeyboardInterrupt:
     print(b.piece_board_notation)
-
-# FIXME: Pieces hover over the first column when dropped
-# L2220:*7T2/OO5TT1/OO5T2/J9/J9/JJ8
-# (o piece is hanging)
