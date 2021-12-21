@@ -1,0 +1,22 @@
+Bucket list for priority tasks (ordered)
+ Make garbage compatibility in all functions
+ Refactor rotate_and_update2() 
+ Refactor check_kick_tables2()
+
+Unordered:
+- Make Game class
+- Debug text-writing in display.py
+
+Future plans:
+- Make graphical hold display
+- Make graphical next queue display
+- Add support for hold and next queue in Tetris.py
+- Make keybinds
+- Make hard drop function
+- Implement DAS, ARR, SDF
+
+Priority list values (triage):
+Things that are easy to implement, relatively independent, and useful
+Debugging things
+Refactoring things
+Writing completely new code with large changes
