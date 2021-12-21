@@ -1,5 +1,6 @@
 Bucket list for priority tasks (ordered)
- Make extended_boardstate_to_boardstate remove unnecessary lines at the end of boardstate
+ Debug "pieces moved to the right cause impossible piece lock error"
+ Debug "pieces hover over the first column when dropped"
  Debug generate_bag() to make it work correctly
  Make garbage compatibility in all functions
  Refactor rotate_and_update2() 

@@ -113,14 +113,15 @@ def extended_boardstate_to_boardstate(extended_boardstate: str):
         if counter != 0:
             output_list2.append(str(counter))
         output_list.append("".join(output_list2))
-    # Strict format: there is an extra * at the beginning
-    
-    # FIXME: Does not work
     # Removes extra lines at the end of a boardstate
     # reverses output list
-    # for row in output_list[::-1]:
-        # if row == "":
-        #     output_list.pop(-1)
+    for row in output_list[::-1]:
+        # As long as the rows (from the end) are empty, remove them
+        if row == "":
+            output_list.pop(-1)
+        else:
+            break
+    # Strict format: there is an extra * at the beginning
     return "*" + "/".join(output_list)
 
 # TODO: Refactor into smaller functions, make more readable
@@ -653,24 +654,32 @@ def slideshow(slides, t, screen: Screen):
 t, screen = init_screen()
 
 # silly test function for random gameplay (game might be ok)
-directions = ["CW", "CCW", "180"]
-for _ in range(20):
-    b = Board(t, screen)
-    b.display_board()
-    sleep(0.5)
+try:
+    directions = ["CW", "CCW", "180"]
     for _ in range(20):
-        b.rotate_piece(random.choice(directions))
+        b = Board(t, screen)
         b.display_board()
-        b.change_x(random.randint(-5, 5))
-        b.display_board()
-        a = ""
-        while a is not None:
-            a = b.move_piece_down()
+        sleep(0.5)
+        for _ in range(20):
+            b.rotate_piece(random.choice(directions))
             b.display_board()
-            sleep(0.05)
-        b.lock_piece()
-        b.display_board()
+            b.change_x(random.randint(-5, 5))
+            b.display_board()
+            a = ""
+            while a is not None:
+                a = b.move_piece_down()
+                b.display_board()
+                sleep(0.05)
+            b.lock_piece()
+            b.display_board()
+except KeyboardInterrupt:
+    print(b.piece_board_notation)
 
-# FIXME: pieces moved to the right cause impossible piece locks error
+# FIXME: pieces moved to the right cause impossible piece lock error
 # not caught by the move_piece_left/right function
 # e.g. "ValueError: Impossible piece lock, piece: 'J1921', board: 'IIII3T2/1Z1J2TTT1/ZZZJ3J2/ZZZJJ2J2/JZT1T2JJ1/J1TTTT1ZZ1/JJT1T1ZZ2/LIIII5/LLL1T5/4TT4/4T5/4IIII2/5LL3/5L4/5L4/5S4/4SS4/4S5//////////////////////'"
+# other piece notations: 'T2921', 'Z2921',
+
+# FIXME: Pieces hover over the first column when dropped
+# L2220:*7T2/OO5TT1/OO5T2/J9/J9/JJ8
+# (o piece is hanging)
