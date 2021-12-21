@@ -1,5 +1,4 @@
 Bucket list for priority tasks (ordered)
- Refactor update_boardstate2
  Debug generate_bag() to make it work correctly
  Make garbage compatibility in all functions
  Refactor rotate_and_update2() 

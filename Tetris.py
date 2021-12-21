@@ -341,7 +341,7 @@ class Board():
     def display_board(self):
         'Displays the current board through Turtle'
         # Creates a temporary variable to display the current piece/boardstate
-        boardstate = update_boardstate2(self.boardstate, self.piece)
+        boardstate = update_boardstate(self.boardstate, self.piece)
         if boardstate in ["out of bounds", "occupied cell"]:
             # TODO: Do validation if the piece locks at the 21st row or up
             # Meaning the game is over
@@ -407,7 +407,7 @@ class Board():
         return self.check_if_valid(piece_message)
 
     def check_if_valid(self, piece_message):
-        b = update_boardstate2(self.boardstate, Piece(piece_message))
+        b = update_boardstate(self.boardstate, Piece(piece_message))
         if b in ['out of bounds', 'occupied cell']:
             return None
         # Piece message is valid
@@ -424,7 +424,7 @@ class Board():
         self.update_pb_notation()
 
     def lock_piece(self):
-        b = update_boardstate2(self.boardstate, self.piece)
+        b = update_boardstate(self.boardstate, self.piece)
         if b in ["out of bounds", "occupied cell"]:
             raise ValueError(
                 f"Impossible piece lock, piece: '{self.piece.value}', board: '{self.boardstate}'")
@@ -439,65 +439,68 @@ class Game():
         pass
 
 
-# TODO: Refactor into smaller functions
-def update_boardstate2(boardstate, piecestate: Piece):
+def update_boardstate(boardstate, piecestate: Piece):
     'Takes a boardstate and a Piece, and returns the boardstate with the piece in it, or False if it is impossible'
-    global pieces
-    x, y = piecestate.x, piecestate.y
-    # FIXME: Hacky fix, might not work
-    if piecestate.type == "O" and piecestate.orientation != 0:
-        # If piece is an O-piece, make the orientation 0 because all orientations are the same
-        # (for the purpose of this function)
-        piecestate.update("O0"+str(piecestate.x)+str(piecestate.y))
-    shape = pieces[piecestate.type][piecestate.orientation]
-    blx, bly = findBLC(shape)
-    assert blx != None and bly != None
-    xdif = 2-blx
-    ydif = 2-bly
-    center = (x+xdif, y+ydif)
-    oList = []
-    for r in range(5):
-        for cell in range(5):
-            if shape[r][cell] == "0":
-                oList.append((cell-2, 2-r))
+    # Gets a list of offsets from the Piece
+    offset_list = find_offset_list(piecestate)
+    # Finds the center x and y coordinates
+    center_x, center_y = find_center(piecestate)
+    # Combining offset and center list to find the list of the actual coordinates
+    coord_list = [(x_offset + center_x, y_offset + center_y) for (x_offset, y_offset) in offset_list]
+    # Creates a temporary extended boardstate
     nbs = boardstate_to_extended_boardstate(boardstate)
-    cx, cy = center
-    for change_in_x, change_in_y in oList:
-        x_loc = cx+change_in_x
-        y_loc = cy+change_in_y
+    # Loops over each tile to check whether they are allowed
+    for x_loc, y_loc in coord_list:
+        # If the x/y coordinates are higher/lower than the size of the board
         if x_loc < 0 or x_loc > 9 or y_loc < 0 or y_loc > 39:
             return "out of bounds"
+        # If the cell is empty
         if access_cell(boardstate, y_loc, x_loc) == ".":
+            # Updates the cell with the piece type (e.g. T)
             nbs = change_cell(nbs, y_loc, x_loc, piecestate.type)
         else:
             return "occupied cell"
+    # Turn back into abbreviated boardstate
     return extended_boardstate_to_boardstate(nbs)
 
+def find_center(piecestate:Piece):
+    'Given a Piece, returns the coordinates of its actual center (x, y)'
+    if piecestate.type == "O":
+        # If piece is an O-piece, just check the spawn orientation (there's only 1)
+        shape = pieces["O"][0]
+    else:
+        shape = pieces[piecestate.type][piecestate.orientation]
+    blx, bly = findBLC(shape)
+    # The x-offset from the actual x of the piece to the center is 2-blx, same for y
+    # Therefore, the center is x+2-blx
+    return piecestate.x + 2 - blx, piecestate.y + 2 - bly
+
+def find_offset_list(piecestate:Piece):
+    'Given a Piece, returns a list of offsets of each filled tile from the center [(x1, y1), (x2, y2)]'
+    # TODO: Might be more efficient (time-wise) to use a lookup table, as there are only 28 possibilities of shapes
+    # Accesses global variable pieces
+    shape = pieces[piecestate.type][piecestate.orientation]
+    offset_list = []
+    # Alternative list comprehension (might not be super readable)
+    # return [[(cell-2, 2-r) for cell in range(5) if shape[r][cell] == "0"] for r in range(5)]
+    for r in range(5):
+        for cell in range(5):
+            if shape[r][cell] == "0":
+                offset_list.append((cell-2, 2-r))
+    return offset_list
 
 def update_boardstate_from_pb_notation(pb_notation):
     'Takes a piece-board notation and returns the updated board notation'
     p1, b1 = separate_piece_board_notation(pb_notation)
-    return update_boardstate2(b1, Piece(p1))
+    return update_boardstate(b1, Piece(p1))
 
 
 def findBLC(shape):  # finding bottom left corner of a shape
-    'Given a shape, finds its bottom left corner (helper function to update_boardstate)'
+    'Given a shape, finds its bottom left corner relative to a 5x5 grid (helper function to update_boardstate)'
     for r in range(5):
         for c in range(5):
             if shape[4-r][c] == "0":
                 return (c, r)
-    return (None, None)
-
-
-def find_difference(shape, new_shape):
-    'Helper function for rotate_piece'
-    bl_row, bl_col = findBLC(shape)
-    assert bl_row != None and bl_col != None
-    bl_row2, bl_col2 = findBLC(new_shape)
-    assert bl_row2 != None and bl_col2 != None
-    y_diff, x_diff = bl_row2 - bl_row, bl_col2 - bl_col
-    return y_diff, x_diff
-
 
 def find_difference2(piece, new_piece):
     'Takes the type of piece and orientation (e.g. T0) of two pieces and returns their difference'
@@ -545,7 +548,7 @@ def check_kick_tables2(old_piece_notation, new_piece_notation, board_notation):
         y_offset = int(tup[1])
         new_piece_message = t + \
             new_piece_notation[1] + str(int(x)+x_offset) + str(int(y)+y_offset)
-        b = update_boardstate2(board_notation, Piece(new_piece_message))
+        b = update_boardstate(board_notation, Piece(new_piece_message))
         if b not in ["out of bounds", "occupied cell"]:
             return new_piece_message
     # Checked all kicks, none work
