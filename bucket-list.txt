@@ -1,4 +1,5 @@
 Bucket list for priority tasks (ordered)
+ Debug "swooshing movement"
  Make garbage compatibility in all functions
  Refactor rotate_and_update2() 
  Refactor check_kick_tables2()

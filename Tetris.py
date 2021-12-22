@@ -377,14 +377,17 @@ class Board():
         self.update_pb_notation()
 
     def move_piece_down(self):
-        y_value = self.piece.y
+        if self.piece.y < 1:
+            # Piece is too low (touching ground) to be moved down
+            return None
         piece_message = self.piece.type + \
-            str(self.piece.orientation) + str(self.piece.x) + str(y_value-1)
+            str(self.piece.orientation) + \
+            str(self.piece.x) + str(self.piece.y-1)
         return self.check_if_valid(piece_message)
 
     def change_x(self, value: int):
-        '''Moves the piece left or right by a certain amount of cells
-        Will stop if the piece cannot move
+        '''Moves the piece left or right by a certain amount of cells \n
+        Will stop if the piece cannot move \n
         Does not validate the input of cells needed to move'''
         if value > 0:
             func = self.move_piece_right
@@ -392,6 +395,7 @@ class Board():
             func = self.move_piece_left
         else:
             # Value is 0 or not an integer, exit the function
+            # No error is thrown
             return None
         # Loop absolute value of the number of cell times
         for _ in range(abs(value)):
@@ -407,6 +411,10 @@ class Board():
 
     def move_piece_left(self):
         # Create a new piece moved left one cell
+        if self.piece.x < 1:
+            # Piece cannot be moved left
+            # because it will be out of bounds
+            return None
         piece_message = self.piece.type + \
             str(self.piece.orientation) + \
             str(self.piece.x-1) + str(self.piece.y)
@@ -414,6 +422,10 @@ class Board():
 
     def move_piece_right(self):
         # Create a new piece moved right one cell
+        if self.piece.x > 8:
+            # Piece cannot be moved right
+            # because it will be out of bounds (handled here)
+            return None
         piece_message = self.piece.type + \
             str(self.piece.orientation) + \
             str(self.piece.x+1) + str(self.piece.y)
@@ -664,26 +676,30 @@ t, screen = init_screen()
 
 
 # silly test function for random gameplay (game might be ok)
-a = generate_bag("")
-print(a)
-try:
-    directions = ["CW", "CCW", "180"]
-    for _ in range(20):
-        b = Board(t, screen, "", "*", a)
-        b.display_board()
-        sleep(0.5)
-        for _ in range(20):
-            b.rotate_piece(random.choice(directions))
-            b.display_board()
-            b.change_x(random.randint(-5, 5))
-            b.display_board()
-            a = ""
-            while a is not None:
-                a = b.move_piece_down()
-                b.display_board()
-                sleep(0.05)
-            b.lock_piece()
-            print(b.bag.value)
-            b.display_board()
-except KeyboardInterrupt:
-    print(b.piece_board_notation)
+# try:
+#     directions = ["CW", "CCW", "180"]
+#     for _ in range(20):
+#         b = Board(t, screen, "", "*", a)
+#         b.display_board()
+#         sleep(0.5)
+#         for _ in range(20):
+#             b.rotate_piece(random.choice(directions))
+#             b.display_board()
+#             b.change_x(random.randint(-5, 5))
+#             b.display_board()
+#             a = ""
+#             while a is not None:
+#                 a = b.move_piece_down()
+#                 b.display_board()
+#                 sleep(0.05)
+#             b.lock_piece()
+#             b.display_board()
+# except KeyboardInterrupt:
+#     print(b.piece_board_notation)
+
+# FIXME: "Swooshing" movement
+b = Board(t, screen, "J2322")
+for _ in range(10):
+    b.display_board()
+    b.change_x(1)
+    sleep(0.5)
