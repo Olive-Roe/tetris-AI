@@ -462,8 +462,9 @@ class Board():
 
     def rotate_piece(self, direction):
         #self.piece_board_notation = self.piece.value + ":/" + self.boardstate
-        p, b = rotate_and_update2(
+        pb = rotate_and_update(
             self.piece_board_notation, direction)
+        p, b = separate_piece_board_notation(pb)
         self.piece.update(p)
         self.boardstate = b
         self.update_pb_notation()
@@ -486,6 +487,9 @@ class Game():
 
 def update_boardstate(boardstate, piecestate: Piece):
     'Takes a boardstate and a Piece, and returns the boardstate with the piece in it, or False if it is impossible'
+    # Immediate check whether the piece is out of bounds (to save time)
+    if piecestate.x < 0 or piecestate.x > 9 or piecestate.y < 0 or piecestate.y > 39:
+        return "out of bounds"
     # Gets a list of offsets from the Piece
     offset_list = find_offset_list(piecestate)
     # Finds the center x and y coordinates
@@ -517,7 +521,7 @@ def find_center(piecestate: Piece):
         shape = pieces["O"][0]
     else:
         shape = pieces[piecestate.type][piecestate.orientation]
-    blx, bly = findBLC(shape)
+    blx, bly = _findBLC(shape)
     # The x-offset from the actual x of the piece to the center is 2-blx, same for y
     # Therefore, the center is x+2-blx
     return piecestate.x + 2 - blx, piecestate.y + 2 - bly
@@ -544,7 +548,7 @@ def update_boardstate_from_pb_notation(pb_notation):
     return update_boardstate(b1, Piece(p1))
 
 
-def findBLC(shape):  # finding bottom left corner of a shape
+def _findBLC(shape):  # finding bottom left corner of a shape
     'Given a shape, finds its bottom left corner relative to a 5x5 grid (helper function to update_boardstate)'
     for r in range(5):
         for c in range(5):
@@ -552,8 +556,8 @@ def findBLC(shape):  # finding bottom left corner of a shape
                 return (c, r)
 
 
-def find_difference2(piece, new_piece):
-    'Takes the type of piece and orientation (e.g. T0) of two pieces and returns their difference'
+def _find_difference2(piece, new_piece):
+    'Takes the type of piece and orientation (e.g. T0) of two pieces and returns their difference in x and y coordinates'
     global pieces
     # FIXME: Hacky fix, might not work
     if piece[0] == "O":
@@ -561,75 +565,122 @@ def find_difference2(piece, new_piece):
         # (for the purpose of this function)
         piece = piece[0] + "0" + piece[2:]
     # same goes for new_piece (optimize this later)
+    # TODO: if new_piece is O, piece is also O and vice versa
     if new_piece[0] == "O":
         new_piece = new_piece[0] + "0" + new_piece[2:]
     shape = pieces[piece[0]][int(piece[1])]
     new_shape = pieces[new_piece[0]][int(new_piece[1])]
-    x, y = findBLC(shape)
-    x2, y2 = findBLC(new_shape)
+    x, y = _findBLC(shape)
+    x2, y2 = _findBLC(new_shape)
     return x2 - x, y2 - y
 
 # TODO: Refactor into smaller chunks
 
 
-def check_kick_tables2(old_piece_notation, new_piece_notation, board_notation):
+def _find_kick_table(old_piece: Piece, new_piece: Piece):
+    'Given a old piece and a new piece, returns the appropriate kick table'
+    # Table for 180 kicks (from tetr.io) if difference in orientation is 2 or -2
+    if old_piece.orientation - new_piece.orientation in [2, -2]:
+        return kicktables.flip_table
+    # Table for I piece kicks
+    elif new_piece.type == "I":
+        return kicktables.i_table
+    else:
+        # Table for JLSZT piece kicks
+        assert new_piece.type in "JLSZT"
+        return kicktables.jlszt_table
+
+
+def _get_coord_from_kick(x_or_y, kick_tuple):
+    'Given a string "x" or "y" and a kick tuple (e.g.) (0, -1), return the corresponding coordinate'
+    if x_or_y == "x":
+        # Tup is "(0, -1)" and [1:-1].split(", ") makes it into [0, -1] which is the x and y offsets
+        return int(kick_tuple[1:-1].split(", ")[0])
+    elif x_or_y == "y":
+        return int(kick_tuple[1:-1].split(", ")[1])
+    else:
+        raise ValueError(f"Bad argument, x_or_y is '{x_or_y}'")
+
+
+def _generate_coords_list(new_piece: Piece, table):
+    'Given a piece and a kick table, generate all coordinates of the new piece with kick offsets applied'
+    # Get_coord_from table gets the x and y coordinates from the tuple
+    return [(int(new_piece.x) + _get_coord_from_kick("x", tup), int(new_piece.y) + _get_coord_from_kick("y", tup)) for tup in table]
+
+
+def _check_kick_tables(old_piece_notation, new_piece_notation, board_notation):
     '''Takes a piece notation, board notation, direction and returns the piece notation 
     after checking kicktables, or False if rotation is impossible'''
-    direction = old_piece_notation[1] + new_piece_notation[1]
-    t = new_piece_notation[0]
-    x, y = return_x_y(new_piece_notation)
-    r_diff = int(old_piece_notation[1]) - int(new_piece_notation[1])
-    if t == "O":
-        return False
-    if r_diff in [2, -2]:
-        # this said fliptable for some time
-        table = kicktables.flip_table
-    elif t == "I":
-        table = kicktables.i_table
-    else:
-        assert t in "JLSZT"
-        table = kicktables.jlszt_table
-    # TODO: Make the first repetition check the original new_piece_notation
-    # as there is unnecessary assignment here
-    for i in range(5):
-        # getting offsets from table (formatting)
-        tup = table[direction][i][1:-1].split(", ")
-        x_offset = int(tup[0])
-        y_offset = int(tup[1])
-        new_piece_message = t + \
-            new_piece_notation[1] + str(int(x)+x_offset) + str(int(y)+y_offset)
+    # First, check the original notation if it works
+    b = update_boardstate(board_notation, Piece(new_piece_notation))
+    if b not in ["out of bounds", "occupied cell"]:
+        # If there is no problem, return immediately
+        return new_piece_notation
+    # If it doesn't work, check the kicks
+    # Create new Pieces for future reference
+    old_piece = Piece(old_piece_notation)
+    new_piece = Piece(new_piece_notation)
+    # If the piece is O, the rotation will always work, so return the new piece notation
+    if new_piece.type == "O":
+        return new_piece_notation
+    # Gets a message for the directions that will be looked up later
+    direction_message = str(old_piece.orientation) + str(new_piece.orientation)
+    # Finds the corresponding kick table
+    table = _find_kick_table(old_piece, new_piece)[direction_message]
+    # Generate a list with the new coordinates, offsetted with each of the kicks
+    coords_list = _generate_coords_list(new_piece, table)
+    for new_x, new_y in coords_list:
+        # Generate a piece message with the new orientation, and x and y values
+        new_piece_message = new_piece.type + \
+            str(new_piece.orientation) + str(new_x) + str(new_y)
         b = update_boardstate(board_notation, Piece(new_piece_message))
         if b not in ["out of bounds", "occupied cell"]:
             return new_piece_message
-    # Checked all kicks, none work
+    # This means all kicks have been checked, and none work
+    # Return false, meaning rotation is impossible
     return False
 
-# TODO: Refactor, make more readable
 
-
-def rotate_and_update2(pb_notation, direction):
-    piece_n = pb_notation.split(":")[0]
-    b = pb_notation.split(":")[1]
-    d = piece_n[1]
-    x, y = return_x_y(piece_n)
-    if direction == "CW":
-        rotation_factor = 1
-    elif direction == "CCW":
-        rotation_factor = 3
-    elif direction == "180":
-        rotation_factor = 2
+def _find_rotation_factor(rotation_direction):
+    'Given a rotation direction (text), returns the rotation factor associated with that.'
+    # Converts the rotation direction into a number used later
+    if rotation_direction == "CW":
+        return 1
+    elif rotation_direction == "CCW":
+        return 3
+    elif rotation_direction == "180":
+        return 2
     else:
-        raise ValueError(f"Bad direction: '{direction}")
-    new_direction = str((int(d) + rotation_factor) % 4)
-    po1 = piece_n[:2]
-    po2 = piece_n[0] + new_direction
-    x_diff, y_diff = find_difference2(po1, po2)
-    nx, ny = str(int(x)+x_diff), str(int(y)+y_diff)
-    piece_message = piece_n[0]+new_direction+nx+ny
-    final_piece_notation = check_kick_tables2(piece_n, piece_message, b)
+        raise ValueError(f"Bad rotation_direction: '{rotation_direction}")
+
+
+def _find_piece_message(piece: Piece, new_direction: int):
+    'Takes a Piece and new direction, and returns the new piece message with updated x and y coordinates'
+    po1 = piece.type + str(piece.orientation)
+    po2 = piece.type + str(new_direction)
+    # Finds the difference in the two shapes
+    x_diff, y_diff = _find_difference2(po1, po2)
+    # Finds the new x and y coordinates
+    new_x, new_y = str(int(piece.x)+x_diff), str(int(piece.y)+y_diff)
+    # Returns the new piece message
+    return piece.type+str(new_direction)+new_x+new_y
+
+
+def rotate_and_update(pb_notation, direction):
+    '''Takes a piece-board notation and a direction of rotation, \n
+    and returns a new piece-board notation with the current piece rotated'''
+    piece_n, b = separate_piece_board_notation(pb_notation)
+    piece_n = Piece(piece_n)
+    rotation_factor = _find_rotation_factor(direction)
+    # Finds the new direction based on the original direction and the rotation
+    new_direction = (int(piece_n.orientation) + rotation_factor) % 4
+    piece_message = _find_piece_message(piece_n, new_direction)
+    final_piece_notation = _check_kick_tables(piece_n.value, piece_message, b)
+    # If the piece cannot be rotated (all kicks are checked or it is an O piece)
     if final_piece_notation == False:
-        final_piece_notation = piece_n
-    return final_piece_notation, b
+        # Make the piece notation the original value
+        final_piece_notation = piece_n.value
+    return construct_piece_board_notation(final_piece_notation, b)
 
 
 def init_screen():
@@ -720,10 +771,13 @@ t, screen = init_screen()
 dtc = "*OO1LLLIJJJ/OO1SSLIJZZ/J3SSIZZI/J2TTTIOOI/JJ1LTZZOOI/3LZZ1SSI/2LL4SS"
 g1 = "*g0/g0/g0/g0/g1/g1/g1/g1/g1/g1/OO1LLLIJJJ/OO1SSLIJZZ/J3SSIZZI/J2TTTIOOI/JJ1LTZZOOI/3LZZ1SSI/2LL4SS"
 b1 = Board(t, screen, "T1022", g1)
+
+
 def d():
     b1.display_board()
-    sleep(0.05
-    )
+    sleep(0)
+
+
 b1.display_board()
 d()
 a = True
