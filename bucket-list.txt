@@ -1,7 +1,7 @@
 Bucket list for priority tasks (ordered)
- Make garbage compatibility in all functions
  Refactor rotate_and_update2() 
  Refactor check_kick_tables2()
+ Make line clear function
 
 Unordered:
 - Make Game class

@@ -31,6 +31,8 @@ colours_dict2 = {  # turtle-compatible colors
     "Z": "red",
     "T": "magenta",
     ".": "black",
+    # x is used for garbage
+    "x": "grey"
 }
 
 
@@ -67,6 +69,15 @@ def boardstate_to_extended_boardstate(boardstate: str):
             output_list.append("".join(output_list2))
             # Skips to next row as row is empty
             continue
+        # Checking if row is a garbage row (e.g. "g6")
+        if row[0] == "g":
+            garbage_index = int(row[1])
+            assert garbage_index >= 0 and garbage_index <= 9
+            # g6 becomes xxxxxx.xxx as the . is in index 6
+            message = "x" * garbage_index + "." + "x" * (9 - garbage_index)
+            # Appends the message to the outputlist
+            output_list.append(message)
+            continue
         output_list2 = []
         for index in range(len(row)):
             item = row[index]
@@ -98,7 +109,15 @@ def extended_boardstate_to_boardstate(extended_boardstate: str):
         extended_boardstate = extended_boardstate[1:]
     for row in extended_boardstate.split("/"):
         if row == "..........":
+            # If row is empty, add an empty row to the output list
             output_list.append("")
+            continue
+        # Checking if it is a garbage row:
+        if "x" in row:
+            # Converts row to a list, finds the index of the empty cell,
+            # and appends "g" and the index to the outputlist (e.g g2 for xx.xxxxxxx)
+            message = "g" + str(list(row).index("."))
+            output_list.append(message)
             continue
         output_list2 = []
         counter = 0
@@ -145,6 +164,7 @@ def board_notation_to_dict(notation):
     indices = [(x, y) for x in range(rows) for y in range(10)]
     try:
         items_list = [(indices[i], output_list[i]) for i in range(rows * 10)]
+    # TODO: Add a more specific except here
     except:
         print(output_list)
         raise ValueError(
@@ -676,23 +696,46 @@ t, screen = init_screen()
 
 
 # silly test function for random gameplay (game might be ok)
-try:
-    directions = ["CW", "CCW", "180"]
-    for _ in range(20):
-        b = Board(t, screen, "", "*", a)
-        b.display_board()
-        sleep(0.5)
-        for _ in range(20):
-            b.rotate_piece(random.choice(directions))
-            b.display_board()
-            b.change_x(random.randint(-5, 5))
-            b.display_board()
-            a = ""
-            while a is not None:
-                a = b.move_piece_down()
-                b.display_board()
-                sleep(0.05)
-            b.lock_piece()
-            b.display_board()
-except KeyboardInterrupt:
-    print(b.piece_board_notation)
+# try:
+#     directions = ["CW", "CCW", "180"]
+#     for _ in range(20):
+#         b = Board(t, screen, "", "*")
+#         b.display_board()
+#         sleep(0.5)
+#         for _ in range(20):
+#             b.rotate_piece(random.choice(directions))
+#             b.display_board()
+#             b.change_x(random.randint(-5, 5))
+#             b.display_board()
+#             a = ""
+#             while a is not None:
+#                 a = b.move_piece_down()
+#                 b.display_board()
+#             b.lock_piece()
+#             b.display_board()
+# except KeyboardInterrupt:
+#     print(b.piece_board_notation)
+
+# test function for garbage
+dtc = "*OO1LLLIJJJ/OO1SSLIJZZ/J3SSIZZI/J2TTTIOOI/JJ1LTZZOOI/3LZZ1SSI/2LL4SS"
+g1 = "*g0/g0/g0/g0/g1/g1/g1/g1/g1/g1/OO1LLLIJJJ/OO1SSLIJZZ/J3SSIZZI/J2TTTIOOI/JJ1LTZZOOI/3LZZ1SSI/2LL4SS"
+b1 = Board(t, screen, "T1022", g1)
+def d():
+    b1.display_board()
+    sleep(0.05
+    )
+b1.display_board()
+d()
+a = True
+while a:
+    a = b1.move_piece_down()
+    d()
+b1.rotate_piece("CCW")
+d()
+b1.rotate_piece("CCW")
+d()
+b1.move_piece_down()
+d()
+b1.rotate_piece("CCW")
+d()
+sleep(5)
