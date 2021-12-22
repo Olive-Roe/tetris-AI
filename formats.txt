@@ -1,34 +1,42 @@
 
 Piece notation (str)
 Notation to describe a piece
-Type of piece, orientation, column, row
+Pieces are described with the position of their bottom-left corner
+(Bottom-most tile, then left-most tile)
+Type of piece, orientation, x-coordinate (column), y-coordinate (row)
 (column and row start from index 0)
+Y-coordinate can be between 0 and 39
+X-coordinate can be between 0 and 9
 "S024"
 
 Board notation (str)
 Condensed description of a board
+Starts with an asterisk (*)
 Letters to represent pieces
 Numbers to represent empty spaces
 Rows are in between slashes (/)
-Empty rows are represented with /, like "/J9//9L"
-There can be extra rows at the start and the end.
+Empty rows are represented with /, like "J9//9L"
+There can be extra rows at the start
 (Can take up to 40 rows)
 Represents garbage rows with "gN", where N is the column that is empty
 e.g. "g2" = "xx.xxxxxxx" (starts with a zero-index)
-"JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS"
+"*JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS//J9"
 
 Extended board notation (str)
 Extended description of a board
-Replaces numbers with (.) so that each row is 10 long
-Used for formatting purposes
-(Can take up to 40 rows)
+Starts with an asterisk
+Replaces numbers with (.) for empty spaces so that each row is 10 characters long
+Used for formatting/displaying/updating purposes
+Is 40 rows long, and fills empty rows at the end if necessary
 Replaces garbage rows ('g6') with 'xxxxxx.xxxx', for example
-"LIOZ....IL/JS.....TSZ/SZSZ....../O........./J........./........../........../........../........../........../........../........../........../........../........../........../........../........../........../.........."
+"*xxxxxx.xxxx/LIOZ....IL/JS.....TSZ/SZSZ....../O........./J........./........../........../........../........../........../........../........../........../........../........../........../........../........../.........."
 
 Piece-board notation (str)
-Consists of piece notation and board notation separated by a colon
-"I253:LIOZ4IL/JS5TSZ/SZSZ6/O9/J9"
+Consists of piece notation and (shortened) board notation separated by a colon
+Used for describing the state of the board and the piece
+"I253:*LIOZ4IL/JS5TSZ/SZSZ6/O9/J9"
 
 Bag (str)
 Consists of 13/14 pieces represented by letters
+Used for showing the next queue
 "OLIZTSJSLZTJOI"
