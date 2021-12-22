@@ -676,30 +676,23 @@ t, screen = init_screen()
 
 
 # silly test function for random gameplay (game might be ok)
-# try:
-#     directions = ["CW", "CCW", "180"]
-#     for _ in range(20):
-#         b = Board(t, screen, "", "*", a)
-#         b.display_board()
-#         sleep(0.5)
-#         for _ in range(20):
-#             b.rotate_piece(random.choice(directions))
-#             b.display_board()
-#             b.change_x(random.randint(-5, 5))
-#             b.display_board()
-#             a = ""
-#             while a is not None:
-#                 a = b.move_piece_down()
-#                 b.display_board()
-#                 sleep(0.05)
-#             b.lock_piece()
-#             b.display_board()
-# except KeyboardInterrupt:
-#     print(b.piece_board_notation)
-
-# FIXME: "Swooshing" movement
-b = Board(t, screen, "J2322")
-for _ in range(10):
-    b.display_board()
-    b.change_x(1)
-    sleep(0.5)
+try:
+    directions = ["CW", "CCW", "180"]
+    for _ in range(20):
+        b = Board(t, screen, "", "*", a)
+        b.display_board()
+        sleep(0.5)
+        for _ in range(20):
+            b.rotate_piece(random.choice(directions))
+            b.display_board()
+            b.change_x(random.randint(-5, 5))
+            b.display_board()
+            a = ""
+            while a is not None:
+                a = b.move_piece_down()
+                b.display_board()
+                sleep(0.05)
+            b.lock_piece()
+            b.display_board()
+except KeyboardInterrupt:
+    print(b.piece_board_notation)

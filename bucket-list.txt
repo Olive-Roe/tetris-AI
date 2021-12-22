@@ -1,5 +1,4 @@
 Bucket list for priority tasks (ordered)
- Debug "swooshing movement"
  Make garbage compatibility in all functions
  Refactor rotate_and_update2() 
  Refactor check_kick_tables2()
@@ -17,7 +16,7 @@ Future plans:
 - Implement DAS, ARR, SDF
 
 Priority list values (triage):
-Things that are easy to implement, relatively independent, and useful
 Debugging things
+Small new things that are easy to implement, relatively independent, and useful
 Refactoring things
 Writing completely new code with large changes

@@ -129,6 +129,13 @@ from Tetris import *
 # T/ZOITSJL/ZOSJLZ
 # ZOITSJL/ZOSJLZJ/'''
 
+'''Swooshing movement is fixed'''
+# b = Board(t, screen, "S1821")
+# for _ in range(10):
+#     b.display_board()
+#     b.change_x(1)
+#     sleep(0.5)
+
 '''Test functions for various things [DEPRECATED]'''
 # dict1 = board_notation_to_dict('JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS')
 # print(create_grid(locked_positions=dict1))
