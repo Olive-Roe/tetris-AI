@@ -169,7 +169,7 @@ def board_notation_to_dict(notation):
         print(output_list)
         raise ValueError(
             f"Invalid board notation. Length of output_list: {len(output_list)}")
-    return {k: v for (k, v) in items_list}
+    return dict(items_list)
 
 
 def type_of_boardstate(boardstate):
@@ -195,7 +195,7 @@ def boardstate_to_list_form(boardstate: str):
     # if neither of these an error will be thrown
     # Remove starting asterisk and split a
     a = a[1:].split("/")
-    output = [[i for i in item] for item in a]
+    output = [list(item) for item in a]
     return output
 
 
@@ -251,7 +251,7 @@ def generate_bag(current_bag):
     available_pieces = find_available_pieces(current_bag)
     if available_pieces == []:
         # If there are no available pieces, start a new bag with a random piece
-        return current_bag + random.choice([p for p in "IJLOSZT"])
+        return current_bag + random.choice(list("IJLOSZT"))
     else:
         # If there are available pieces, choose one randomly
         return current_bag + random.choice(available_pieces)
@@ -278,7 +278,7 @@ def generate_new_bag():
     'Generates a 14-long sequence of two bags'
     output_list = []
     for _ in range(2):
-        piece_list = [p for p in "IJLOSZT"]
+        piece_list = list("IJLOSZT")
         for _ in range(7):
             # If there is only one piece left, output it and break
             if len(piece_list) == 1:
@@ -302,7 +302,7 @@ def display_as_text(notation):
 
 def check_type_notation(notation):
     'Takes a (valid) notation and returns its type, or False if it\'s unrecognizable.'
-    n_list = [i for i in notation]
+    n_list = list(notation)
     # FIXME: len == 4 no longer applies, change this
     if len(n_list) == 4:
         return "piece notation"
@@ -573,8 +573,6 @@ def _find_difference2(piece, new_piece):
     x, y = _findBLC(shape)
     x2, y2 = _findBLC(new_shape)
     return x2 - x, y2 - y
-
-# TODO: Refactor into smaller chunks
 
 
 def _find_kick_table(old_piece: Piece, new_piece: Piece):
