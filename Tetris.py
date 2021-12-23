@@ -72,10 +72,7 @@ def boardstate_to_extended_boardstate(boardstate: str):
         # Checking if row is a garbage row (e.g. "g6")
         if row[0] == "g":
             garbage_index = int(row[1])
-            if len(row) == 3:
-                type_of_piece = row[2]
-            else:
-                type_of_piece = "."
+            type_of_piece = row[2] if len(row) == 3 else "."
             assert garbage_index >= 0 and garbage_index <= 9
             # g6 becomes xxxxxx.xxx as the . is in index 6
             message = "x" * garbage_index + \
@@ -539,10 +536,7 @@ class Board():
             else:
                 # TODO: Write cleaner code
                 i, time = item.split(" ")
-                if time == " ":
-                    time = 0.05
-                else:
-                    time = float(time)
+                time = 0.05 if time == " " else float(time)
             # Checking the different cases
             if i in ["CW", "CCW", "180"]:
                 self.rotate_piece(i)
@@ -783,15 +777,12 @@ def check_line_clears(b_notation):
         # Checking for garbage rows first
         # TODO: Clarify
         if row[0] == "g":
-            # If this is a filled garbage row
-            if len(row) == 3 and row[2] != ".":
-                # No empty spaces, meaning this is a filled row
-                filled_rows.append(index)
-                b_notation.remove(row)
-            # This is an empty garbage row
-            else:
+            if len(row) != 3 or row[2] == ".":
                 # Skip the row
                 continue
+            # No empty spaces, meaning this is a filled row
+            filled_rows.append(index)
+            b_notation.remove(row)
         for cell in row:
             # Empty spaces, whether in a garbage row or a normal row
             if cell.isnumeric() == True:
@@ -876,56 +867,56 @@ t, screen = init_screen()
 
 
 # silly test function for random gameplay (game might be ok)
-# try:
-#     directions = ["CW", "CCW", "180"]
-#     for _ in range(20):
-#         b = Board(t, screen, "", "*")
-#         b.display_board()
-#         sleep(0.5)
-#         for _ in range(20):
-#             b.rotate_piece(random.choice(directions))
-#             b.display_board()
-#             b.change_x(random.randint(-5, 5))
-#             b.display_board()
-#             a = ""
-#             while a is not None:
-#                 a = b.move_piece_down()
-#                 b.display_board()
-#             b.lock_piece()
-#             b.display_board()
-# except KeyboardInterrupt:
-#     print(b.piece_board_notation)
+try:
+    directions = ["CW", "CCW", "180"]
+    for _ in range(20):
+        b = Board(t, screen, "", "*")
+        b.display_board()
+        sleep(0.5)
+        for _ in range(20):
+            b.rotate_piece(random.choice(directions))
+            b.display_board()
+            b.change_x(random.randint(-5, 5))
+            b.display_board()
+            a = ""
+            while a is not None:
+                a = b.move_piece_down()
+                b.display_board()
+            b.lock_piece()
+            b.display_board()
+except KeyboardInterrupt:
+    print(b.piece_board_notation)
 
 # test function for garbage
-g1 = "*g0/g0/g0/g0/g1/g1/g1/g1/g1/OO1LLLIJJJ/OO1SSLIJZZ/J3SSIZZI/J2TTTIOOI/JJ1LTZZOOI/3LZZZSSI/2LL2ZZSS/7Z2"
-b1 = Board(t, screen, "T1022", g1, "TITIOJZLSJLOZ")
-actions = """d
-CCW
-CCW
-d
-CCW
-lock 1
-CW
-L
-d
-CCW
-CCW
-lock 1
-L
-CW
-d
-lock 1
-CW
-L
-d
-CW
-lock 1
-CW
-L
-d
-lock 1"""
+# g1 = "*g0/g0/g0/g0/g1/g1/g1/g1/g1/OO1LLLIJJJ/OO1SSLIJZZ/J3SSIZZI/J2TTTIOOI/JJ1LTZZOOI/3LZZZSSI/2LL2ZZSS/7Z2"
+# b1 = Board(t, screen, "T1022", g1, "TITIOJZLSJLOZ")
+# actions = """d
+# CCW
+# CCW
+# d
+# CCW
+# lock 1
+# CW
+# L
+# d
+# CCW
+# CCW
+# lock 1
+# L
+# CW
+# d
+# lock 1
+# CW
+# L
+# d
+# CW
+# lock 1
+# CW
+# L
+# d
+# lock 1"""
 
-b1.do_actions_from_input(actions)
+# b1.do_actions_from_input(actions)
 # def d():
 #     b1.display_board()
 #     sleep(0)
