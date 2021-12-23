@@ -490,6 +490,9 @@ def update_boardstate(boardstate, piecestate: Piece):
     # Immediate check whether the piece is out of bounds (to save time)
     if piecestate.x < 0 or piecestate.x > 9 or piecestate.y < 0 or piecestate.y > 39:
         return "out of bounds"
+    # Check whether the piece is an O piece and set its orientation to 0 (doesn't matter in updating boardstate)
+    if piecestate.type == "O":
+        piecestate = Piece("O0" + str(piecestate.x) + str(piecestate.y))
     # Gets a list of offsets from the Piece
     offset_list = find_offset_list(piecestate)
     # Finds the center x and y coordinates
@@ -609,18 +612,18 @@ def _generate_coords_list(new_piece: Piece, table):
 def _check_kick_tables(old_piece_notation, new_piece_notation, board_notation):
     '''Takes a piece notation, board notation, direction and returns the piece notation 
     after checking kicktables, or False if rotation is impossible'''
-    # First, check the original notation if it works
-    b = update_boardstate(board_notation, Piece(new_piece_notation))
-    if b not in ["out of bounds", "occupied cell"]:
-        # If there is no problem, return immediately
-        return new_piece_notation
-    # If it doesn't work, check the kicks
     # Create new Pieces for future reference
     old_piece = Piece(old_piece_notation)
     new_piece = Piece(new_piece_notation)
     # If the piece is O, the rotation will always work, so return the new piece notation
     if new_piece.type == "O":
         return new_piece_notation
+    # First, check the original notation if it works
+    b = update_boardstate(board_notation, new_piece)
+    if b not in ["out of bounds", "occupied cell"]:
+        # If there is no problem, return immediately
+        return new_piece_notation
+    # If it doesn't work, check the kicks
     # Gets a message for the directions that will be looked up later
     direction_message = str(old_piece.orientation) + str(new_piece.orientation)
     # Finds the corresponding kick table
@@ -745,49 +748,49 @@ t, screen = init_screen()
 
 
 # silly test function for random gameplay (game might be ok)
-# try:
-#     directions = ["CW", "CCW", "180"]
-#     for _ in range(20):
-#         b = Board(t, screen, "", "*")
-#         b.display_board()
-#         sleep(0.5)
-#         for _ in range(20):
-#             b.rotate_piece(random.choice(directions))
-#             b.display_board()
-#             b.change_x(random.randint(-5, 5))
-#             b.display_board()
-#             a = ""
-#             while a is not None:
-#                 a = b.move_piece_down()
-#                 b.display_board()
-#             b.lock_piece()
-#             b.display_board()
-# except KeyboardInterrupt:
-#     print(b.piece_board_notation)
+try:
+    directions = ["CW", "CCW", "180"]
+    for _ in range(20):
+        b = Board(t, screen, "", "*")
+        b.display_board()
+        sleep(0.5)
+        for _ in range(20):
+            b.rotate_piece(random.choice(directions))
+            b.display_board()
+            b.change_x(random.randint(-5, 5))
+            b.display_board()
+            a = ""
+            while a is not None:
+                a = b.move_piece_down()
+                b.display_board()
+            b.lock_piece()
+            b.display_board()
+except KeyboardInterrupt:
+    print(b.piece_board_notation)
 
 # test function for garbage
-dtc = "*OO1LLLIJJJ/OO1SSLIJZZ/J3SSIZZI/J2TTTIOOI/JJ1LTZZOOI/3LZZ1SSI/2LL4SS"
-g1 = "*g0/g0/g0/g0/g1/g1/g1/g1/g1/g1/OO1LLLIJJJ/OO1SSLIJZZ/J3SSIZZI/J2TTTIOOI/JJ1LTZZOOI/3LZZ1SSI/2LL4SS"
-b1 = Board(t, screen, "T1022", g1)
+# dtc = "*OO1LLLIJJJ/OO1SSLIJZZ/J3SSIZZI/J2TTTIOOI/JJ1LTZZOOI/3LZZ1SSI/2LL4SS"
+# g1 = "*g0/g0/g0/g0/g1/g1/g1/g1/g1/g1/OO1LLLIJJJ/OO1SSLIJZZ/J3SSIZZI/J2TTTIOOI/JJ1LTZZOOI/3LZZ1SSI/2LL4SS"
+# b1 = Board(t, screen, "T1022", g1)
 
 
-def d():
-    b1.display_board()
-    sleep(0)
+# def d():
+#     b1.display_board()
+#     sleep(0)
 
 
-b1.display_board()
-d()
-a = True
-while a:
-    a = b1.move_piece_down()
-    d()
-b1.rotate_piece("CCW")
-d()
-b1.rotate_piece("CCW")
-d()
-b1.move_piece_down()
-d()
-b1.rotate_piece("CCW")
-d()
-sleep(5)
+# b1.display_board()
+# d()
+# a = True
+# while a:
+#     a = b1.move_piece_down()
+#     d()
+# b1.rotate_piece("CCW")
+# d()
+# b1.rotate_piece("CCW")
+# d()
+# b1.move_piece_down()
+# d()
+# b1.rotate_piece("CCW")
+# d()
+# sleep(5)
