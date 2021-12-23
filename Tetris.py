@@ -683,6 +683,31 @@ def rotate_and_update(pb_notation, direction):
         final_piece_notation = piece_n.value
     return construct_piece_board_notation(final_piece_notation, b)
 
+def check_line_clears(b_notation):
+    'Given a board notation, check whether there are any line clears, and return a tuple of (new board notation, number of lines cleared, which lines were cleared (a list of indices of the original board notation))'
+    # FIXME: Check_line_clears does not clear all lines
+    # Removes starting asterisk and turns it into a list of rows
+    b_notation = b_notation[1:].split("/")
+    b_notation_copy = b_notation
+    filled_rows = []    
+    for index, row in enumerate(b_notation_copy):
+        for cell in row:
+            # Empty spaces, whether in a garbage row or a normal row
+            if cell.isnumeric() == True:
+                # Skip this row
+                break
+        else:
+            # No empty spaces, meaning this is a filled row
+            filled_rows.append(index)
+            # If there are duplicate rows, will remove one of them (both will be removed anyway)
+            b_notation.remove(row)
+    # Return new board notation, number of rows cleared, which rows were cleared
+    return "*" + "/".join(b_notation), len(filled_rows), filled_rows
+
+
+def check_t_spin(pb_notation, input_list):
+    'Given a piece-board notation and list of inputs, return whether this was a t-spin, t-spin mini, or not a t-spin'
+    # TODO: Write this function
 
 def init_screen():
     screen = Screen()
@@ -748,49 +773,56 @@ t, screen = init_screen()
 
 
 # silly test function for random gameplay (game might be ok)
-try:
-    directions = ["CW", "CCW", "180"]
-    for _ in range(20):
-        b = Board(t, screen, "", "*")
-        b.display_board()
-        sleep(0.5)
-        for _ in range(20):
-            b.rotate_piece(random.choice(directions))
-            b.display_board()
-            b.change_x(random.randint(-5, 5))
-            b.display_board()
-            a = ""
-            while a is not None:
-                a = b.move_piece_down()
-                b.display_board()
-            b.lock_piece()
-            b.display_board()
-except KeyboardInterrupt:
-    print(b.piece_board_notation)
+# try:
+#     directions = ["CW", "CCW", "180"]
+#     for _ in range(20):
+#         b = Board(t, screen, "", "*")
+#         b.display_board()
+#         sleep(0.5)
+#         for _ in range(20):
+#             b.rotate_piece(random.choice(directions))
+#             b.display_board()
+#             b.change_x(random.randint(-5, 5))
+#             b.display_board()
+#             a = ""
+#             while a is not None:
+#                 a = b.move_piece_down()
+#                 b.display_board()
+#             b.lock_piece()
+#             b.display_board()
+# except KeyboardInterrupt:
+#     print(b.piece_board_notation)
 
 # test function for garbage
-# dtc = "*OO1LLLIJJJ/OO1SSLIJZZ/J3SSIZZI/J2TTTIOOI/JJ1LTZZOOI/3LZZ1SSI/2LL4SS"
-# g1 = "*g0/g0/g0/g0/g1/g1/g1/g1/g1/g1/OO1LLLIJJJ/OO1SSLIJZZ/J3SSIZZI/J2TTTIOOI/JJ1LTZZOOI/3LZZ1SSI/2LL4SS"
-# b1 = Board(t, screen, "T1022", g1)
+dtc = "*OO1LLLIJJJ/OO1SSLIJZZ/J3SSIZZI/J2TTTIOOI/JJ1LTZZOOI/3LZZ1SSI/2LL4SS"
+g1 = "*g0/g0/g0/g0/g1/g1/g1/g1/g1/g1/OO1LLLIJJJ/OO1SSLIJZZ/J3SSIZZI/J2TTTIOOI/JJ1LTZZOOI/3LZZ1SSI/2LL4SS"
+b1 = Board(t, screen, "T1022", g1, "TITIOJZLSJLOZ")
 
 
-# def d():
-#     b1.display_board()
-#     sleep(0)
+
+def d():
+    b1.display_board()
+    sleep(0)
 
 
-# b1.display_board()
-# d()
-# a = True
-# while a:
-#     a = b1.move_piece_down()
-#     d()
-# b1.rotate_piece("CCW")
-# d()
-# b1.rotate_piece("CCW")
-# d()
-# b1.move_piece_down()
-# d()
-# b1.rotate_piece("CCW")
-# d()
-# sleep(5)
+b1.display_board()
+d()
+a = True
+while a:
+    a = b1.move_piece_down()
+    d()
+b1.rotate_piece("CCW")
+d()
+b1.rotate_piece("CCW")
+d()
+b1.move_piece_down()
+d()
+b1.rotate_piece("CCW")
+d()
+sleep(3)
+test_clear = check_line_clears(update_boardstate_from_pb_notation(b1.piece_board_notation))
+print(test_clear)
+# ('*g0/g0/g0/g0/g1/g1/g1/g1/g1/g1/OO1LLLIJJJ/JTTTSSIZZI/J2TTTIOOI/JJ1LTZZOOI/3LZZ1SSI/2LL4SS', 1, [11])
+b2 = Board(t, screen, "T0322", test_clear[0])
+b2.display_board()
+sleep(3)
