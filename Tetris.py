@@ -72,9 +72,14 @@ def boardstate_to_extended_boardstate(boardstate: str):
         # Checking if row is a garbage row (e.g. "g6")
         if row[0] == "g":
             garbage_index = int(row[1])
+            if len(row) == 3:
+                type_of_piece = row[2]
+            else:
+                type_of_piece = "."
             assert garbage_index >= 0 and garbage_index <= 9
             # g6 becomes xxxxxx.xxx as the . is in index 6
-            message = "x" * garbage_index + "." + "x" * (9 - garbage_index)
+            message = "x" * garbage_index + \
+                type_of_piece + "x" * (9 - garbage_index)
             # Appends the message to the outputlist
             output_list.append(message)
             continue
@@ -114,9 +119,24 @@ def extended_boardstate_to_boardstate(extended_boardstate: str):
             continue
         # Checking if it is a garbage row:
         if "x" in row:
-            # Converts row to a list, finds the index of the empty cell,
+            # Converts row to a list, finds the index of the non-garbage cell,
             # and appends "g" and the index to the outputlist (e.g g2 for xx.xxxxxxx)
-            message = "g" + str(list(row).index("."))
+            index = 0
+            # Default piece type is ., which isn't shown
+            piece_type = ""
+            for i, cell in enumerate(row):
+                if cell != "x":
+                    # Finds the non garbage cell
+                    index = i
+                    if cell != ".":
+                        # Sets the piece type to the contents of the cell
+                        piece_type = cell
+                    break
+            else:
+                # All cells are x, which shouldn't happen
+                raise ValueError(
+                    f"Filled garbage row in boardstate: {extended_boardstate}")
+            message = "g" + str(index) + piece_type
             output_list.append(message)
             continue
         output_list2 = []
@@ -456,6 +476,7 @@ class Board():
         if b in ['out of bounds', 'occupied cell']:
             return None
         # Piece message is valid
+        # Updates piece and board notation
         self.piece.update(piece_message)
         self.update_pb_notation()
         return True
@@ -474,9 +495,76 @@ class Board():
         if b in ["out of bounds", "occupied cell"]:
             raise ValueError(
                 f"Impossible piece lock, piece: '{self.piece.value}', board: '{self.boardstate}'")
+        b, number_of_cleared_lines, list_of_cleared_lines = check_line_clears(
+            b)
         self.boardstate = b
         self.spawn_next_piece()
         self.update_pb_notation()
+
+    def move_down_as_much_as_possible(self):
+        flag = True
+        while flag != None:
+            flag = self.move_piece_down()
+
+    def hard_drop(self):
+        self.move_down_as_much_as_possible()
+        self.lock_piece()
+
+    def move_piece_leftmost(self):
+        flag = True
+        while flag != None:
+            flag = self.move_piece_left()
+
+    def move_piece_rightmost(self):
+        flag = True
+        while flag != None:
+            flag = self.move_piece_right()
+
+    def do_actions_from_input(self, input: str):
+        'Given an input of a string separated by newlines, performs actions accordingly'
+        # CW/CCW/180 -> rotates current piece
+        # l/r -> moves current piece left/right
+        # L/R -> moves current piece as much left/right as possible
+        # d -> moves current piece down as much as possible
+        # d(n) -> moves current piece by n tiles
+        # lock -> locks current piece
+        # separated by a space, and then (time) -> time sleeping before next action
+        input_list = input.split("\n")
+        for item in input_list:
+            # If there is no time value specified
+            if len(item.split(" ")) == 1:
+                i = item.split(" ")[0]
+                # Setting a default delay value
+                time = 0.05
+            else:
+                # TODO: Write cleaner code
+                i, time = item.split(" ")
+                if time == " ":
+                    time = 0.05
+                else:
+                    time = float(time)
+            # Checking the different cases
+            if i in ["CW", "CCW", "180"]:
+                self.rotate_piece(i)
+            elif i == "l":
+                self.move_piece_left()
+            elif i == "r":
+                self.move_piece_right()
+            elif i == "L":
+                self.move_piece_leftmost()
+            elif i == "R":
+                self.move_piece_rightmost()
+            elif i[0] == "d":
+                if i == "d":
+                    self.move_down_as_much_as_possible()
+                else:
+                    # Repeat n times moving the piece down
+                    for _ in range(i[1]):
+                        self.move_piece_down()
+            elif i == "lock":
+                self.lock_piece()
+            self.display_board()
+            sleep(time)
 
 
 class Game():
@@ -683,18 +771,27 @@ def rotate_and_update(pb_notation, direction):
         final_piece_notation = piece_n.value
     return construct_piece_board_notation(final_piece_notation, b)
 
+
 def check_line_clears(b_notation):
     'Given a board notation, check whether there are any line clears, and return a tuple of (new board notation, number of lines cleared, which lines were cleared (a list of indices of the original board notation))'
     # Removes starting asterisk and turns it into a list of rows
     b_notation = b_notation[1:].split("/")
     # Makes a copy of board_notation for iteration
     b_notation_copy = list(b_notation)
-    filled_rows = []    
+    filled_rows = []
     for index, row in enumerate(b_notation_copy):
         # Checking for garbage rows first
+        # TODO: Clarify
         if row[0] == "g":
-            # Skip the row
-            continue
+            # If this is a filled garbage row
+            if len(row) == 3 and row[2] != ".":
+                # No empty spaces, meaning this is a filled row
+                filled_rows.append(index)
+                b_notation.remove(row)
+            # This is an empty garbage row
+            else:
+                # Skip the row
+                continue
         for cell in row:
             # Empty spaces, whether in a garbage row or a normal row
             if cell.isnumeric() == True:
@@ -706,12 +803,14 @@ def check_line_clears(b_notation):
             # If there are duplicate rows, will remove one of them (both will be removed anyway)
             b_notation.remove(row)
     # Return new board notation, number of rows cleared, which rows were cleared
+    # TODO: Determine whether (which rows were cleared) will actually be used or should be removed
     return "*" + "/".join(b_notation), len(filled_rows), filled_rows
 
 
 def check_t_spin(pb_notation, input_list):
     'Given a piece-board notation and list of inputs, return whether this was a t-spin, t-spin mini, or not a t-spin'
     # TODO: Write this function
+
 
 def init_screen():
     screen = Screen()
@@ -777,33 +876,56 @@ t, screen = init_screen()
 
 
 # silly test function for random gameplay (game might be ok)
-try:
-    directions = ["CW", "CCW", "180"]
-    for _ in range(20):
-        b = Board(t, screen, "", "*")
-        b.display_board()
-        sleep(0.5)
-        for _ in range(20):
-            b.rotate_piece(random.choice(directions))
-            b.display_board()
-            b.change_x(random.randint(-5, 5))
-            b.display_board()
-            a = ""
-            while a is not None:
-                a = b.move_piece_down()
-                b.display_board()
-            b.lock_piece()
-            b.display_board()
-except KeyboardInterrupt:
-    print(b.piece_board_notation)
+# try:
+#     directions = ["CW", "CCW", "180"]
+#     for _ in range(20):
+#         b = Board(t, screen, "", "*")
+#         b.display_board()
+#         sleep(0.5)
+#         for _ in range(20):
+#             b.rotate_piece(random.choice(directions))
+#             b.display_board()
+#             b.change_x(random.randint(-5, 5))
+#             b.display_board()
+#             a = ""
+#             while a is not None:
+#                 a = b.move_piece_down()
+#                 b.display_board()
+#             b.lock_piece()
+#             b.display_board()
+# except KeyboardInterrupt:
+#     print(b.piece_board_notation)
 
 # test function for garbage
-# dtc = "*OO1LLLIJJJ/OO1SSLIJZZ/J3SSIZZI/J2TTTIOOI/JJ1LTZZOOI/3LZZ1SSI/2LL4SS"
-# g1 = "*g0/g0/g0/g0/g1/g1/g1/g1/g1/g1/OO1LLLIJJJ/OO1SSLIJZZ/J3SSIZZI/J2TTTIOOI/JJ1LTZZOOI/3LZZ1SSI/2LL4SS"
-# b1 = Board(t, screen, "T1022", g1, "TITIOJZLSJLOZ")
+g1 = "*g0/g0/g0/g0/g1/g1/g1/g1/g1/OO1LLLIJJJ/OO1SSLIJZZ/J3SSIZZI/J2TTTIOOI/JJ1LTZZOOI/3LZZZSSI/2LL2ZZSS/7Z2"
+b1 = Board(t, screen, "T1022", g1, "TITIOJZLSJLOZ")
+actions = """d
+CCW
+CCW
+d
+CCW
+lock 1
+CW
+L
+d
+CCW
+CCW
+lock 1
+L
+CW
+d
+lock 1
+CW
+L
+d
+CW
+lock 1
+CW
+L
+d
+lock 1"""
 
-
-
+b1.do_actions_from_input(actions)
 # def d():
 #     b1.display_board()
 #     sleep(0)
@@ -824,9 +946,6 @@ except KeyboardInterrupt:
 # b1.rotate_piece("CCW")
 # d()
 # sleep(3)
-# test_clear = check_line_clears(update_boardstate_from_pb_notation(b1.piece_board_notation))
-# print(test_clear)
-# # ('*g0/g0/g0/g0/g1/g1/g1/g1/g1/g1/OO1LLLIJJJ/JTTTSSIZZI/J2TTTIOOI/JJ1LTZZOOI/3LZZ1SSI/2LL4SS', 1, [11])
-# b2 = Board(t, screen, "T0322", test_clear[0])
-# b2.display_board()
-# sleep(3)
+# b1.lock_piece()
+# b1.display_board()
+# sleep(2)
