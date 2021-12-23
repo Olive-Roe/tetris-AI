@@ -1,22 +1,41 @@
 Bucket list for priority tasks (ordered)
- Make garbage compatibility in all functions
- Refactor rotate_and_update2() 
- Refactor check_kick_tables2()
+ Make line clear function
+ Make Game class
 
 Unordered:
-- Make Game class
 - Debug text-writing in display.py
+- Add support for hold and next queue in Tetris.py
+- Make hard drop function
 
 Future plans:
 - Make graphical hold display
 - Make graphical next queue display
-- Add support for hold and next queue in Tetris.py
 - Make keybinds
-- Make hard drop function
 - Implement DAS, ARR, SDF
+- Implement sending lines
+- Implement garbage multiplier, gravity
+- Make find_possible_moves function
+- Write evaluation function for board cleanliness
+- Make basic minimax AI
 
 Priority list values (triage):
-Things that are easy to implement, relatively independent, and useful
 Debugging things
+Small new things that are easy to implement, relatively independent, and useful
 Refactoring things
 Writing completely new code with large changes
+
+Done:
+Refactor rotate_and_update and _check_kick_tables
+Debug "swooshing movement"
+Refactor generate_bag()
+Debug generate_bag() not generating bag properly
+Refactor update_boardstate()
+Debug "pieces hover over the first column when dropped"
+Refactor Board piece message validation
+Debug "pieces moved to the right cause impossible piece lock error"
+Add test function for impossible left/right movement being caught
+Make extended_boardstate_to_boardstate remove unnecessary lines at the end of boardstate
+Debug blocks pushing down other blocks bug
+Allow smart_display() to work with the current Board structure
+Make change_x() function in Board class
+Make t, screen part of init in Board class and update functions to work
