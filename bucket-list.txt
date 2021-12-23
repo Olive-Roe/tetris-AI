@@ -1,15 +1,14 @@
 Bucket list for priority tasks (ordered)
- Make line clear function
- Make Game class
+ Make graphical hold display
+ Make graphical next queue display
+ Make t-spin detection
 
 Unordered:
-- Debug text-writing in display.py
-- Add support for hold and next queue in Tetris.py
-- Make hard drop function
+ Make Game class
+ Make game over checks
 
 Future plans:
-- Make graphical hold display
-- Make graphical next queue display
+- Add support for hold and next queue in Tetris.py
 - Make keybinds
 - Implement DAS, ARR, SDF
 - Implement sending lines
@@ -19,12 +18,15 @@ Future plans:
 - Make basic minimax AI
 
 Priority list values (triage):
-Debugging things
-Small new things that are easy to implement, relatively independent, and useful
-Refactoring things
-Writing completely new code with large changes
+1. Debugging things
+2. Small new things that are easy to implement, relatively independent, and useful
+3. Refactoring things
+4. Writing completely new code with large changes
 
 Done:
+Make hard drop function
+Make line clear function
+Debug text-writing in display.py
 Refactor rotate_and_update and _check_kick_tables
 Debug "swooshing movement"
 Refactor generate_bag()
