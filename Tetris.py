@@ -498,6 +498,10 @@ class Board():
         self.spawn_next_piece()
         self.update_pb_notation()
 
+    def game_over_check(self):
+        # TODO: Write game over check
+        return False
+
     def move_down_as_much_as_possible(self):
         flag = True
         while flag != None:
@@ -517,6 +521,15 @@ class Board():
         while flag != None:
             flag = self.move_piece_right()
 
+    def receive_garbage(self, column: int, amount: int):
+        'Given a column and an amount of garbage, updates the boardstate'
+        garbage = "x"*column + "." + "x"*(9-column)
+        # Removes starting asterisk
+        # Multiplies the garbage row with the amount
+        b = "*" + amount * (garbage + "/") + self.boardstate[1:]
+        self.boardstate = b
+        self.update_pb_notation()
+
     def do_actions_from_input(self, input: str):
         'Given an input of a string separated by newlines, performs actions accordingly'
         # CW/CCW/180 -> rotates current piece
@@ -525,18 +538,20 @@ class Board():
         # d -> moves current piece down as much as possible
         # d(n) -> moves current piece by n tiles
         # lock -> locks current piece
+        # g0x5 -> receives 5 rows of garbage in column 0
         # separated by a space, and then (time) -> time sleeping before next action
+        default_time = 0
         input_list = input.split("\n")
         for item in input_list:
             # If there is no time value specified
             if len(item.split(" ")) == 1:
                 i = item.split(" ")[0]
                 # Setting a default delay value
-                time = 0.05
+                time = default_time
             else:
                 # TODO: Write cleaner code
                 i, time = item.split(" ")
-                time = 0.05 if time == " " else float(time)
+                time = default_time if time == " " else float(time)
             # Checking the different cases
             if i in ["CW", "CCW", "180"]:
                 self.rotate_piece(i)
@@ -557,6 +572,10 @@ class Board():
                         self.move_piece_down()
             elif i == "lock":
                 self.lock_piece()
+            elif i[0] == "g":
+                # e.g. g0x5
+                # i[1] is the column, i[3] is the amount of garbage
+                self.receive_garbage(int(i[1]), int(i[3]))
             self.display_board()
             sleep(time)
 
@@ -564,6 +583,7 @@ class Board():
 class Game():
     def __init__(self):
         # TODO: Write some stuff
+        # TODO: Write replay notation (gets appended to in input)
         pass
 
 
@@ -867,76 +887,57 @@ t, screen = init_screen()
 
 
 # silly test function for random gameplay (game might be ok)
-try:
-    directions = ["CW", "CCW", "180"]
-    for _ in range(20):
-        b = Board(t, screen, "", "*")
-        b.display_board()
-        sleep(0.5)
-        for _ in range(20):
-            b.rotate_piece(random.choice(directions))
-            b.display_board()
-            b.change_x(random.randint(-5, 5))
-            b.display_board()
-            a = ""
-            while a is not None:
-                a = b.move_piece_down()
-                b.display_board()
-            b.lock_piece()
-            b.display_board()
-except KeyboardInterrupt:
-    print(b.piece_board_notation)
+# try:
+#     directions = ["CW", "CCW", "180"]
+#     for _ in range(20):
+#         b = Board(t, screen, "", "*")
+#         b.display_board()
+#         sleep(0.5)
+#         for _ in range(20):
+#             b.rotate_piece(random.choice(directions))
+#             b.display_board()
+#             b.change_x(random.randint(-5, 5))
+#             b.display_board()
+#             a = ""
+#             while a is not None:
+#                 a = b.move_piece_down()
+#                 b.display_board()
+#             b.lock_piece()
+#             b.display_board()
+# except KeyboardInterrupt:
+#     print(b.piece_board_notation)
 
 # test function for garbage
-# g1 = "*g0/g0/g0/g0/g1/g1/g1/g1/g1/OO1LLLIJJJ/OO1SSLIJZZ/J3SSIZZI/J2TTTIOOI/JJ1LTZZOOI/3LZZZSSI/2LL2ZZSS/7Z2"
-# b1 = Board(t, screen, "T1022", g1, "TITIOJZLSJLOZ")
-# actions = """d
-# CCW
-# CCW
-# d
-# CCW
-# lock 1
-# CW
-# L
-# d
-# CCW
-# CCW
-# lock 1
-# L
-# CW
-# d
-# lock 1
-# CW
-# L
-# d
-# CW
-# lock 1
-# CW
-# L
-# d
-# lock 1"""
+dtc = "*OO1LLLIJJJ/OO1SSLIJZZ/J3SSIZZI/J2TTTIOOI/JJ1LTZZOOI/3LZZZSSI/2LL2ZZSS/7Z2"
+g1 = "*g0/g0/g0/g0/g1/g1/g1/g1/g1/OO1LLLIJJJ/OO1SSLIJZZ/J3SSIZZI/J2TTTIOOI/JJ1LTZZOOI/3LZZZSSI/2LL2ZZSS/7Z2"
+b1 = Board(t, screen, "T1022", dtc, "TITIOJZLSJLOZ")
+actions = """g1x5 0.5
+g0x4 0.5
+d
+CCW
+CCW
+d
+CCW
+lock
+CW
+L
+d
+CCW
+CCW
+lock
+L
+CW
+d
+lock
+CW
+L
+d
+CW
+lock
+CW
+L
+d
+lock"""
 
-# b1.do_actions_from_input(actions)
-# def d():
-#     b1.display_board()
-#     sleep(0)
-
-
-# b1.display_board()
-# d()
-# a = True
-# while a:
-#     a = b1.move_piece_down()
-#     d()
-# b1.rotate_piece("CCW")
-# d()
-# b1.rotate_piece("CCW")
-# d()
-# b1.move_piece_down()
-# d()
-# b1.rotate_piece("CCW")
-# d()
-# sleep(3)
-# b1.lock_piece()
-# b1.display_board()
-# sleep(2)
+b1.do_actions_from_input(actions)
+sleep(1)
