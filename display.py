@@ -34,7 +34,7 @@ def draw_square(width, color, t):
     t.end_fill()
 
 
-def draw_outline(t: Turtle, screen: Screen, startX, startY):
+def draw_outline(t: Turtle, screen, startX, startY):
     # Draws outline (200x400 rectangle)
     t.pencolor("white")
     t.penup()
@@ -48,7 +48,7 @@ def draw_outline(t: Turtle, screen: Screen, startX, startY):
     t.penup()
 
 
-def draw_grid(rgb, t: Turtle, screen: Screen):
+def draw_grid(rgb, t: Turtle, screen):
     '''Draws a grid, given a dictionary of colors and coordinates
     'rgb', and provided the turtle 't' and screen 'screen'. '''
     # Hide the turtle
@@ -77,7 +77,7 @@ def draw_grid(rgb, t: Turtle, screen: Screen):
     screen.update()
 
 
-def write_text(message: str, screen: Screen, color="white"):
+def write_text(message: str, screen, color="white"):
   #FIXME: Not working
     FONT = ('Verdana', 16, 'normal')
     t = Turtle()
@@ -92,7 +92,7 @@ def draw_hold_slot(piece: str, locked: bool):
     pass
 
 
-def draw_next_queue(bag_notation: str, screen: Screen, n_of_previews=3):
+def draw_next_queue(bag_notation: str, screen, n_of_previews=3):
     # TODO: Make next queue
     t = Turtle()
     t.hideturtle()

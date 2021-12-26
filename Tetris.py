@@ -2,7 +2,7 @@ import random
 import kicktables
 from turtle import Screen, Turtle
 import display
-from time import sleep
+from time import sleep, time
 
 # switched 2nd and 4th orientation of L, T, J recently
 I = [['.....', '0000.', '.....', '.....', '.....'], ['.0...', '.0...', '.0...', '.0...', '.....'], [
@@ -338,6 +338,17 @@ def check_type_notation(notation):
         else:
             return False
 
+def _get_data_from_replay_line(item: str):
+    'Given a line from a replay notation, return the action and the delay in a tuple'
+    default_time = 0.05
+    i = item.split(" ")[0]
+    if len(item.split(" ")) == 1:
+        # Setting a default delay value
+        time = default_time
+    else:
+        time = float(item.split(" ")[1])
+        time = float(default_time) if time == " " else float(time)
+    return i, time
 
 class Piece():
     def __init__(self, piece_notation: str = ""):
@@ -383,6 +394,10 @@ class Board():
             self.piece = Piece(piece_notation)
         # Non-dynamic init piece board notation
         self.piece_board_notation = self.piece.value + ":" + self.boardstate
+        # Initializes an empty replay notation
+        self.replay_notation = ""
+        # Starts the clock immediately
+        self.last_action_time = time()
 
     def update_pb_notation(self):
         self.piece_board_notation = construct_piece_board_notation(
@@ -416,10 +431,11 @@ class Board():
     def move_piece_down(self):
         if self.piece.y < 1:
             # Piece is too low (touching ground) to be moved down
-            return None
+            return False
         piece_message = self.piece.type + \
             str(self.piece.orientation) + \
             str(self.piece.x) + str(self.piece.y-1)
+        self.update_replay_notation("d1")
         return self.check_if_valid(piece_message)
 
     def change_x(self, value: int):
@@ -433,15 +449,15 @@ class Board():
         else:
             # Value is 0 or not an integer, exit the function
             # No error is thrown
-            return None
+            return False
         # Loop absolute value of the number of cell times
         for _ in range(abs(value)):
             # Call the move_piece_left/right func
             # Piece, board, and piece-board notation are updated in here
             flag = func()
             self.display_board()
-            # Flag is True if it is successful, None if unsuccessful
-            if flag is None:
+            # Flag is True if it is successful, False if unsuccessful
+            if flag is False:
                 # Piece cannot be moved left/right anymore, stop the function
                 break
         return True
@@ -451,7 +467,7 @@ class Board():
         if self.piece.x < 1:
             # Piece cannot be moved left
             # because it will be out of bounds
-            return None
+            return False
         piece_message = self.piece.type + \
             str(self.piece.orientation) + \
             str(self.piece.x-1) + str(self.piece.y)
@@ -462,7 +478,7 @@ class Board():
         if self.piece.x > 8:
             # Piece cannot be moved right
             # because it will be out of bounds (handled here)
-            return None
+            return False
         piece_message = self.piece.type + \
             str(self.piece.orientation) + \
             str(self.piece.x+1) + str(self.piece.y)
@@ -471,23 +487,31 @@ class Board():
     def check_if_valid(self, piece_message):
         b = update_boardstate(self.boardstate, Piece(piece_message))
         if b in ['out of bounds', 'occupied cell']:
-            return None
+            return False
         # Piece message is valid
         # Updates piece and board notation
         self.piece.update(piece_message)
         self.update_pb_notation()
         return True
 
-    def rotate_piece(self, direction):
+    def rotate_piece(self, direction):  # sourcery skip: class-extract-method
         #self.piece_board_notation = self.piece.value + ":/" + self.boardstate
         pb = rotate_and_update(
             self.piece_board_notation, direction)
         p, b = separate_piece_board_notation(pb)
+        # Check if piece cannot rotate
+        if p == self.piece.value:
+            # Piece cannot rotate, return False 
+            # (piece and board have not changed)
+            return False
+        # Piece has rotated
         self.piece.update(p)
         self.boardstate = b
         self.update_pb_notation()
+        return True
 
     def lock_piece(self):
+        # TODO: Check for t-spin, perfect clear
         b = update_boardstate(self.boardstate, self.piece)
         if b in ["out of bounds", "occupied cell"]:
             raise ValueError(
@@ -497,29 +521,51 @@ class Board():
         self.boardstate = b
         self.spawn_next_piece()
         self.update_pb_notation()
+        # Inverts the game over check (returns True if check is False)
+        return self.game_over_check() != True
 
     def game_over_check(self):
         # TODO: Write game over check
         return False
 
     def move_down_as_much_as_possible(self):
+        # Checks the first down movement
+        output = self.move_piece_down()
+        if output is False:
+            return False
+        # Move down until it is impossible
         flag = True
-        while flag != None:
+        while flag:
             flag = self.move_piece_down()
+        return True
 
     def hard_drop(self):
-        self.move_down_as_much_as_possible()
+        flag = self.move_down_as_much_as_possible()
         self.lock_piece()
+        # Returns False if moving down at all was impossible
+        return flag
 
     def move_piece_leftmost(self):
+        # Checks the first left movement
+        output = self.move_piece_left()
+        if output is False:
+            # Returns False if moving left at all was impossible
+            return False
         flag = True
-        while flag != None:
+        while flag:
             flag = self.move_piece_left()
+        return True
 
     def move_piece_rightmost(self):
+        # Checks the first right movement
+        output = self.move_piece_right()
+        if output is False:
+            # Returns False if moving left at all was impossible
+            return False
         flag = True
-        while flag != None:
+        while flag:
             flag = self.move_piece_right()
+        return True
 
     def receive_garbage(self, column: int, amount: int):
         'Given a column and an amount of garbage, updates the boardstate'
@@ -529,6 +575,7 @@ class Board():
         b = "*" + amount * (garbage + "/") + self.boardstate[1:]
         self.boardstate = b
         self.update_pb_notation()
+        return True
 
     def do_actions_from_input(self, input: str):
         'Given an input of a string separated by newlines, performs actions accordingly'
@@ -542,34 +589,30 @@ class Board():
         # separated by a space, and then (time) -> time sleeping before next action
         default_time = 0
         input_list = input.split("\n")
+        flag = False
         for item in input_list:
             # If there is no time value specified
-            if len(item.split(" ")) == 1:
-                i = item.split(" ")[0]
-                # Setting a default delay value
-                time = default_time
-            else:
-                # TODO: Write cleaner code
-                i, time = item.split(" ")
-                time = default_time if time == " " else float(time)
+            i, time = _get_data_from_replay_line(item)
             # Checking the different cases
             if i in ["CW", "CCW", "180"]:
-                self.rotate_piece(i)
+                flag = self.rotate_piece(i)
             elif i == "l":
-                self.move_piece_left()
+                flag = self.move_piece_left()
             elif i == "r":
-                self.move_piece_right()
+                flag = self.move_piece_right()
             elif i == "L":
-                self.move_piece_leftmost()
+                flag = self.move_piece_leftmost()
             elif i == "R":
-                self.move_piece_rightmost()
+                flag = self.move_piece_rightmost()
+            # d -> moving down as much as possible
+            elif i == "d":
+                flag = self.move_down_as_much_as_possible()
+            # d(n) -> moving down n times
             elif i[0] == "d":
-                if i == "d":
-                    self.move_down_as_much_as_possible()
-                else:
-                    # Repeat n times moving the piece down
-                    for _ in range(i[1]):
-                        self.move_piece_down()
+                # Repeat n times moving the piece down (does not check for collision)
+                flag = self.move_piece_down()
+                for _ in range(i[1]):
+                    self.move_piece_down()
             elif i == "lock":
                 self.lock_piece()
             elif i[0] == "g":
@@ -578,7 +621,22 @@ class Board():
                 self.receive_garbage(int(i[1]), int(i[3]))
             self.display_board()
             sleep(time)
+    
+    def get_current_delay(self) -> float:
+        'Returns the delay from the time of the last action in seconds (float)\nand updates self.last_action_time'
+        # Creates a deep copy of the attribute
+        t = float(self.last_action_time)
+        c = time()
+        # Updates the last action time to be now
+        self.last_action_time = c
+        # Returns the delay as a float (rounded to 3 d.p.)
+        return round(c - t, 3)
 
+    def update_replay_notation(self, action_notation:str):
+        delay = self.get_current_delay()
+        # Delay is automatically casted to a string
+        # Add the action and the delay to a new line in the replay notation
+        self.replay_notation += f'\n{action_notation} {delay}'
 
 class Game():
     def __init__(self):
@@ -818,8 +876,12 @@ def check_line_clears(b_notation):
     return "*" + "/".join(b_notation), len(filled_rows), filled_rows
 
 
-def check_t_spin(pb_notation, input_list):
-    'Given a piece-board notation and list of inputs, return whether this was a t-spin, t-spin mini, or not a t-spin'
+def check_t_spin(pb_notation, replay_notation):
+    'Given a piece-board notation and replay notation, return whether this was a t-spin, t-spin mini, or not a t-spin'
+    p, b = separate_piece_board_notation(pb_notation)
+    p = Piece(p)
+    if p.type != "T":
+        return False
     # TODO: Write this function
 
 
@@ -858,7 +920,7 @@ def smart_display(notation, t, screen):
     b.display_board()
 
 
-def slideshow(slides, t, screen: Screen):
+def slideshow(slides, t, screen):
     current_slide = 0
     smart_display(slides[0], t, screen)
 
@@ -899,7 +961,7 @@ t, screen = init_screen()
 #             b.change_x(random.randint(-5, 5))
 #             b.display_board()
 #             a = ""
-#             while a is not None:
+#             while a is not False:
 #                 a = b.move_piece_down()
 #                 b.display_board()
 #             b.lock_piece()
