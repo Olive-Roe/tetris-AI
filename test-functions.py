@@ -33,7 +33,12 @@ d
 lock"""
 
 b1.do_actions_from_input(actions)
-sleep(1)
+for _ in range(5):
+    with_delay = b1.replay_notation
+    print(with_delay, end="\nending\n")
+    b1 = Board(t, screen, "T1022", dtc, "TITIOJZLSJLOZ")
+    b1.do_actions_from_input(with_delay)
+    sleep(1)
 
 '''silly test function for random gameplay (game might be ok)'''
 # try:
@@ -109,7 +114,7 @@ sleep(1)
 #     b.display_board()
 # sleep(2)
 
-## With turtle GUI
+# With turtle GUI
 # t, screen = init_screen()
 # b = Board("S0311", "JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS")
 # for _ in range(20):

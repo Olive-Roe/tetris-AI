@@ -257,6 +257,7 @@ def return_x_y(piece_notation):
 
 
 def generate_bag(current_bag):
+    #TODO: Make this seedable
     'Takes a 13-long bag and adds a new piece to the end of it'
     if len(current_bag) == 14:
         return current_bag
@@ -340,7 +341,8 @@ def check_type_notation(notation):
 
 def _get_data_from_replay_line(item: str):
     'Given a line from a replay notation, return the action and the delay in a tuple'
-    default_time = 0.05
+    # float(0) is used to appease mypy
+    default_time = float(0)
     i = item.split(" ")[0]
     if len(item.split(" ")) == 1:
         # Setting a default delay value
@@ -428,14 +430,15 @@ class Board():
             self.piece.update(new_piece_type + orientation + str(x) + str(y))
         self.update_pb_notation()
 
-    def move_piece_down(self):
+    def move_piece_down(self, subfunction = False):
         if self.piece.y < 1:
             # Piece is too low (touching ground) to be moved down
             return False
         piece_message = self.piece.type + \
             str(self.piece.orientation) + \
             str(self.piece.x) + str(self.piece.y-1)
-        self.update_replay_notation("d1")
+        # Updates replay notation if this is being called by itself
+        if not subfunction: self.update_replay_notation("d1")
         return self.check_if_valid(piece_message)
 
     def change_x(self, value: int):
@@ -454,7 +457,8 @@ class Board():
         for _ in range(abs(value)):
             # Call the move_piece_left/right func
             # Piece, board, and piece-board notation are updated in here
-            flag = func()
+            # As this is calling another function, subfunction is set to True
+            flag = func(subfunction=True)
             self.display_board()
             # Flag is True if it is successful, False if unsuccessful
             if flag is False:
@@ -462,7 +466,7 @@ class Board():
                 break
         return True
 
-    def move_piece_left(self):
+    def move_piece_left(self, subfunction = False):
         # Create a new piece moved left one cell
         if self.piece.x < 1:
             # Piece cannot be moved left
@@ -471,9 +475,11 @@ class Board():
         piece_message = self.piece.type + \
             str(self.piece.orientation) + \
             str(self.piece.x-1) + str(self.piece.y)
+         # Updates replay notation if this is being called by itself
+        if not subfunction: self.update_replay_notation("r")
         return self.check_if_valid(piece_message)
 
-    def move_piece_right(self):
+    def move_piece_right(self, subfunction = False):
         # Create a new piece moved right one cell
         if self.piece.x > 8:
             # Piece cannot be moved right
@@ -482,6 +488,8 @@ class Board():
         piece_message = self.piece.type + \
             str(self.piece.orientation) + \
             str(self.piece.x+1) + str(self.piece.y)
+        # Updates replay notation if this is being called by itself
+        if not subfunction: self.update_replay_notation("r")
         return self.check_if_valid(piece_message)
 
     def check_if_valid(self, piece_message):
@@ -494,7 +502,7 @@ class Board():
         self.update_pb_notation()
         return True
 
-    def rotate_piece(self, direction):  # sourcery skip: class-extract-method
+    def rotate_piece(self, direction:str):  # sourcery skip: class-extract-method
         #self.piece_board_notation = self.piece.value + ":/" + self.boardstate
         pb = rotate_and_update(
             self.piece_board_notation, direction)
@@ -508,6 +516,7 @@ class Board():
         self.piece.update(p)
         self.boardstate = b
         self.update_pb_notation()
+        self.update_replay_notation(direction)
         return True
 
     def lock_piece(self):
@@ -516,12 +525,12 @@ class Board():
         if b in ["out of bounds", "occupied cell"]:
             raise ValueError(
                 f"Impossible piece lock, piece: '{self.piece.value}', board: '{self.boardstate}'")
-        b, number_of_cleared_lines, list_of_cleared_lines = check_line_clears(
-            b)
+        b, number_of_cleared_lines, list_of_cleared_lines = check_line_clears(b)
         self.boardstate = b
         self.spawn_next_piece()
         self.update_pb_notation()
         # Inverts the game over check (returns True if check is False)
+        self.update_replay_notation("lock")
         return self.game_over_check() != True
 
     def game_over_check(self):
@@ -530,16 +539,18 @@ class Board():
 
     def move_down_as_much_as_possible(self):
         # Checks the first down movement
-        output = self.move_piece_down()
+        output = self.move_piece_down(subfunction=True)
         if output is False:
             return False
         # Move down until it is impossible
         flag = True
         while flag:
-            flag = self.move_piece_down()
+            flag = self.move_piece_down(subfunction=True)
+        self.update_replay_notation("d")
         return True
 
     def hard_drop(self):
+        # Will update replay notation as 'd [newline] lock, not as harddrop'
         flag = self.move_down_as_much_as_possible()
         self.lock_piece()
         # Returns False if moving down at all was impossible
@@ -547,34 +558,41 @@ class Board():
 
     def move_piece_leftmost(self):
         # Checks the first left movement
-        output = self.move_piece_left()
+        output = self.move_piece_left(subfunction=True)
         if output is False:
             # Returns False if moving left at all was impossible
             return False
         flag = True
         while flag:
-            flag = self.move_piece_left()
+            flag = self.move_piece_left(subfunction=True)
+        self.update_replay_notation("L")
         return True
 
     def move_piece_rightmost(self):
         # Checks the first right movement
-        output = self.move_piece_right()
+        output = self.move_piece_right(subfunction=True)
         if output is False:
             # Returns False if moving left at all was impossible
             return False
         flag = True
         while flag:
-            flag = self.move_piece_right()
+            flag = self.move_piece_right(subfunction=True)
+        self.update_replay_notation("R")
         return True
 
     def receive_garbage(self, column: int, amount: int):
         'Given a column and an amount of garbage, updates the boardstate'
+        # example: g0x5
         garbage = "x"*column + "." + "x"*(9-column)
         # Removes starting asterisk
         # Multiplies the garbage row with the amount
         b = "*" + amount * (garbage + "/") + self.boardstate[1:]
         self.boardstate = b
         self.update_pb_notation()
+        # Formats the message (e.g. g0x5)
+        replay_message = f"g{column}x{amount}"
+        # Updates the replay notation
+        self.update_replay_notation(replay_message)
         return True
 
     def do_actions_from_input(self, input: str):
@@ -586,13 +604,15 @@ class Board():
         # d(n) -> moves current piece by n tiles
         # lock -> locks current piece
         # g0x5 -> receives 5 rows of garbage in column 0
-        # separated by a space, and then (time) -> time sleeping before next action
-        default_time = 0
+        # separated by a space, and then (time) -> time since last action
         input_list = input.split("\n")
         flag = False
         for item in input_list:
-            # If there is no time value specified
+            # Ignores empty lines
+            if item == '':
+                continue
             i, time = _get_data_from_replay_line(item)
+            sleep(time)
             # Checking the different cases
             if i in ["CW", "CCW", "180"]:
                 flag = self.rotate_piece(i)
@@ -620,7 +640,6 @@ class Board():
                 # i[1] is the column, i[3] is the amount of garbage
                 self.receive_garbage(int(i[1]), int(i[3]))
             self.display_board()
-            sleep(time)
     
     def get_current_delay(self) -> float:
         'Returns the delay from the time of the last action in seconds (float)\nand updates self.last_action_time'
@@ -630,18 +649,45 @@ class Board():
         # Updates the last action time to be now
         self.last_action_time = c
         # Returns the delay as a float (rounded to 3 d.p.)
-        return round(c - t, 3)
+        delay = round(c - t, 2)
+        # Trying to correct for processing time
+        processing_delay = 0.1
+        if delay < processing_delay:
+            return 0
+        else:
+            return delay
 
     def update_replay_notation(self, action_notation:str):
         delay = self.get_current_delay()
-        # Delay is automatically casted to a string
-        # Add the action and the delay to a new line in the replay notation
-        self.replay_notation += f'\n{action_notation} {delay}'
+        # Hide delay is delay = 0 (understood)
+        if delay == 0:
+            self.replay_notation += f'\n{action_notation}'
+        else:
+            # Delay is automatically casted to a string
+            # Add the action and the delay to a new line in the replay notation
+            self.replay_notation += f'{action_notation} {delay}\n'
+
+def init_screen():
+    screen = Screen()
+    screen.bgcolor("black")
+    screen.setup(width=300, height=600)
+    screen.title("Tetris")
+    t = Turtle()
+    screen.tracer(0)
+    return t, screen
 
 class Game():
-    def __init__(self):
-        # TODO: Write some stuff
+    def __init__(self, mode="vs ai", players=2, replay=""):
+        self.mode = mode
+        self.players = players
+        # T is unused
+        t, self.screen = init_screen()
+        self.t_list = [Turtle() for _ in range(self.players)]
+        self.board_list = [Board(t, self.screen) for t in self.t_list]
         # TODO: Write replay notation (gets appended to in input)
+    
+    def input(self):
+        # TODO: Find keybinds
         pass
 
 
@@ -854,6 +900,9 @@ def check_line_clears(b_notation):
     for index, row in enumerate(b_notation_copy):
         # Checking for garbage rows first
         # TODO: Clarify
+        # Skip empty rows
+        if row == "":
+            continue
         if row[0] == "g":
             if len(row) != 3 or row[2] == ".":
                 # Skip the row
@@ -883,16 +932,6 @@ def check_t_spin(pb_notation, replay_notation):
     if p.type != "T":
         return False
     # TODO: Write this function
-
-
-def init_screen():
-    screen = Screen()
-    screen.bgcolor("black")
-    screen.setup(width=300, height=600)
-    screen.title("Tetris")
-    t = Turtle()
-    screen.tracer(0)
-    return t, screen
 
 
 def draw_grid(board_notation, t, screen):
