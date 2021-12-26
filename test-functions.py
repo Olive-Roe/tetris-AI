@@ -1,5 +1,62 @@
 from Tetris import *
 
+''' test function for garbage '''
+dtc = "*OO1LLLIJJJ/OO1SSLIJZZ/J3SSIZZI/J2TTTIOOI/JJ1LTZZOOI/3LZZZSSI/2LL2ZZSS/7Z2"
+g1 = "*g0/g0/g0/g0/g1/g1/g1/g1/g1/OO1LLLIJJJ/OO1SSLIJZZ/J3SSIZZI/J2TTTIOOI/JJ1LTZZOOI/3LZZZSSI/2LL2ZZSS/7Z2"
+b1 = Board(t, screen, "T1022", dtc, "TITIOJZLSJLOZ")
+actions = """g1x5 0.5
+g0x4 0.5
+d
+CCW
+CCW
+d
+CCW
+lock
+CW
+L
+d
+CCW
+CCW
+lock
+L
+CW
+d
+lock
+CW
+L
+d
+CW
+lock
+CW
+L
+d
+lock"""
+
+b1.do_actions_from_input(actions)
+sleep(1)
+
+'''silly test function for random gameplay (game might be ok)'''
+# try:
+#     directions = ["CW", "CCW", "180"]
+#     for _ in range(20):
+#         b = Board(t, screen, "", "*")
+#         b.display_board()
+#         sleep(0.5)
+#         for _ in range(20):
+#             b.rotate_piece(random.choice(directions))
+#             b.display_board()
+#             b.change_x(random.randint(-5, 5))
+#             b.display_board()
+#             a = ""
+#             while a is not False:
+#                 a = b.move_piece_down()
+#                 b.display_board()
+#             b.lock_piece()
+#             b.display_board()
+# except KeyboardInterrupt:
+#     print(b.piece_board_notation)
+
+
 '''PCO test board'''
 # a = 'JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS'
 
