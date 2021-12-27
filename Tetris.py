@@ -1,4 +1,5 @@
 import random
+from typing import List, Tuple, Any
 import kicktables
 from turtle import Screen, Turtle
 import display
@@ -595,6 +596,62 @@ class Board():
         self.update_replay_notation(replay_message)
         return True
 
+    def load_replay(self, replay:str) -> Tuple[List[str], List[Any]]:
+        'Given a replay, simulates it and returns a list of piece-board notations, and a list of delays'
+        output_list = []
+        delay_list = []
+        b1 = Board(self.t, self.screen)
+        output_list.append(f"{b1.piece_board_notation} 0")
+        for item in replay:
+            i, delay = _get_data_from_replay_line(item)
+            b1.update_pb_notation()
+            b1.do_action(i)
+            output_list.append(b1.piece_board_notation)
+            delay_list.append(delay)
+        return output_list, delay_list
+    
+    def play_replay(self, replay:str):
+        # TODO: Make this play any replay with any starting bag seed
+        pb_list, delay_list = self.load_replay(replay)
+        for index, delay in enumerate(delay_list):
+            sleep(delay)
+            piece, board = separate_piece_board_notation(pb_list[index])
+            # possibly simulate this
+            # or put it in the Game class
+            # or make display board take a piece-board notation as an argument
+            
+        
+    def do_action(self, i:str):
+        flag = False
+        # Ignores empty lines (does nothing)
+        # Checking the different cases
+        if i in {"CW", "CCW", "180"}:
+            flag = self.rotate_piece(i)
+        elif i == "l":
+            flag = self.move_piece_left()
+        elif i == "r":
+            flag = self.move_piece_right()
+        elif i == "L":
+            flag = self.move_piece_leftmost()
+        elif i == "R":
+            flag = self.move_piece_rightmost()
+        # d -> moving down as much as possible
+        elif i == "d":
+            flag = self.move_down_as_much_as_possible()
+        # d(n) -> moving down n times
+        elif i[0] == "d":
+            # Repeat n times moving the piece down (does not check for collision)
+            flag = self.move_piece_down()
+            for _ in range(int(i[1])):
+                self.move_piece_down()
+        elif i == "lock":
+            self.lock_piece()
+        elif i[0] == "g":
+            # e.g. g0x5
+            # i[1] is the column, i[3] is the amount of garbage
+            self.receive_garbage(int(i[1]), int(i[3]))
+        return flag
+
     def do_actions_from_input(self, input: str):
         'Given an input of a string separated by newlines, performs actions accordingly'
         # CW/CCW/180 -> rotates current piece
@@ -606,39 +663,10 @@ class Board():
         # g0x5 -> receives 5 rows of garbage in column 0
         # separated by a space, and then (time) -> time since last action
         input_list = input.split("\n")
-        flag = False
         for item in input_list:
-            # Ignores empty lines
-            if item == '':
-                continue
-            i, time = _get_data_from_replay_line(item)
-            sleep(time)
-            # Checking the different cases
-            if i in ["CW", "CCW", "180"]:
-                flag = self.rotate_piece(i)
-            elif i == "l":
-                flag = self.move_piece_left()
-            elif i == "r":
-                flag = self.move_piece_right()
-            elif i == "L":
-                flag = self.move_piece_leftmost()
-            elif i == "R":
-                flag = self.move_piece_rightmost()
-            # d -> moving down as much as possible
-            elif i == "d":
-                flag = self.move_down_as_much_as_possible()
-            # d(n) -> moving down n times
-            elif i[0] == "d":
-                # Repeat n times moving the piece down (does not check for collision)
-                flag = self.move_piece_down()
-                for _ in range(i[1]):
-                    self.move_piece_down()
-            elif i == "lock":
-                self.lock_piece()
-            elif i[0] == "g":
-                # e.g. g0x5
-                # i[1] is the column, i[3] is the amount of garbage
-                self.receive_garbage(int(i[1]), int(i[3]))
+            i, delay = _get_data_from_replay_line(item)
+            sleep(delay)
+            self.do_action(i)
             self.display_board()
     
     def get_current_delay(self) -> float:
