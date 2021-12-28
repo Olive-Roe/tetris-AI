@@ -1,7 +1,7 @@
 import kicktables
 import display
 from random import choice, seed
-from typing import List, Tuple, Any
+from typing import List, Tuple, Any, Generator
 from turtle import Screen, Turtle
 from time import sleep, time
 
@@ -255,46 +255,20 @@ def return_x_y(piece_notation):
         y_loc = int(piece_notation[3:])
     return str(x_loc), str(y_loc)
 
-def produce_bag_generator(generator_seed):
-    seed(generator_seed)
-    pieces = list("IJLOSZT")
-    pass
-
-def generate_bag(current_bag):
-    #TODO: Make this seedable
-    'Takes a 13-long bag and adds a new piece to the end of it'
-    if len(current_bag) == 14:
-        return current_bag
-    # Make list of all the types of pieces
-    # If the current bag is empty, generate a new one
-    if current_bag == "":
-        return generate_new_bag()
-    # Current bag is not empty
-    available_pieces = find_available_pieces(current_bag)
-    if available_pieces == []:
-        # If there are no available pieces, start a new bag with a random piece
-        return current_bag + choice(list("IJLOSZT"))
+def produce_bag_generator(generator_seed:str ="") -> Generator[str, None, None]:
+    'Creates a generator for bags, which will return seeded bags\nIf generator seed is kept as default (empty str), it will produce random, unseeded bags'
+    if generator_seed == "":
+        yield generate_new_bag()
     else:
-        # If there are available pieces, choose one randomly
-        return current_bag + choice(available_pieces)
-
-
-def find_available_pieces(current_bag):
-    'Returns the possible options for the next piece, given a bag sequence'
-    assert len(current_bag) == 13
-    # Finding the last bag in the sequence
-    latest_bag = []
-    for piece in current_bag:
-        # If the piece is repeated, it means there is a new bag
-        if piece in latest_bag:
-            # This is a new bag now, we don't care about the old one
-            latest_bag = [piece]
-        else:
-            # Add to the latest bag with the piece
-            latest_bag.append(piece)
-    # Returns the available pieces, which are all the pieces that are not in the latest bag
-    return [p for p in "IJLOSZT" if p not in latest_bag]
-
+        seed(generator_seed)
+    while True:
+        pieces = list("IJLOSZT")
+        output = []
+        for _ in range(7):
+            chosen_piece = choice(pieces)
+            output.append(chosen_piece)
+            pieces.remove(chosen_piece)
+        yield "".join(output)
 
 def generate_new_bag():
     'Generates a 14-long sequence of two bags'
@@ -338,7 +312,7 @@ def check_type_notation(notation):
                 return "board notation"
         return False
     else:
-        if len(n_list) in [14, 13]:
+        if len(n_list) > 13 and len(n_list) < 21:
             return "bag notation"
         else:
             return False
@@ -373,25 +347,30 @@ class Piece():
 
 
 class Bag():
-    def __init__(self, bag=""):
-        self.value = generate_bag(bag)
+    def __init__(self, seed = ""):
+        self.gen = produce_bag_generator(seed)
+        initial_bag = next(self.gen) + next(self.gen) + next(self.gen)
+        self.value = initial_bag
 
     def update(self):
         piece = self.value[0]
-        self.value = generate_bag(self.value[1:])
+        if len(self.value) <= 14:
+            self.value = self.value[1:] + next(self.gen)
+        else:
+            self.value = self.value[1:]
         return piece
 
 
 class Board():
     'A Tetris board, with a turtle, screen, and data'
 
-    def __init__(self, t, screen, piece_notation="", boardstate="*", bag="", hold=""):
+    def __init__(self, t, screen, piece_notation="", boardstate="*", bag_seed="", hold=""):
         self.t = t
         self.screen = screen
         self.boardstate = boardstate
         self.extended_boardstate = boardstate_to_extended_boardstate(
             self.boardstate)
-        self.bag = Bag(bag)
+        self.bag = Bag(bag_seed)
         self.hold = hold
         # Weird how you can call functions written after __init__
         if piece_notation == "":
@@ -1016,4 +995,5 @@ def slideshow(slides, t, screen):
 
 t, screen = init_screen()
 
-display.draw_next_queue(generate_bag(""), screen)
+bag1 = Bag()
+display.draw_next_queue(bag1.value, screen)
