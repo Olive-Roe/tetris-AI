@@ -1,8 +1,8 @@
-import random
-from typing import List, Tuple, Any
 import kicktables
-from turtle import Screen, Turtle
 import display
+from random import choice, seed
+from typing import List, Tuple, Any
+from turtle import Screen, Turtle
 from time import sleep, time
 
 # switched 2nd and 4th orientation of L, T, J recently
@@ -20,10 +20,10 @@ Z = [['.....', '.00..', '..00.', '.....', '.....'], ['.....', '...0.', '..00.', 
 T = [['.....', '..0..', '.000.', '.....', '.....'], ['.....', '..0..', '..00.', '..0..', '.....'], [
     '.....', '.....', '.000.', '..0..', '.....'], ['.....', '..0..', '.00..', '..0..', '.....']]
 
-pieces = {"I": I, "J": J, "L": L, "O": O, "S": S, "Z": Z, "T": T}
+PIECES = {"I": I, "J": J, "L": L, "O": O, "S": S, "Z": Z, "T": T}
 
 # recently changed, added . and black
-colours_dict2 = {  # turtle-compatible colors
+COLOURS_DICT = {  # turtle-compatible colors
     "I": "cyan",
     "J": "blue",
     "L": "orange",
@@ -165,7 +165,6 @@ def extended_boardstate_to_boardstate(extended_boardstate: str):
 
 
 def board_notation_to_dict(notation):
-    global colours_dict2
     notation = boardstate_to_extended_boardstate(notation)
     # Remove starting asterisk
     notation = notation[1:]
@@ -178,7 +177,7 @@ def board_notation_to_dict(notation):
         for index in range(len(row)):
             item = row[index]
             # Whether it's S or . check color dict and append the respective colour
-            output_list.append(colours_dict2[item])
+            output_list.append(COLOURS_DICT[item])
     indices = [(x, y) for x in range(rows) for y in range(10)]
     try:
         items_list = [(indices[i], output_list[i]) for i in range(rows * 10)]
@@ -256,6 +255,8 @@ def return_x_y(piece_notation):
         y_loc = int(piece_notation[3:])
     return str(x_loc), str(y_loc)
 
+def produce_bag_generator(seed):
+    pass
 
 def generate_bag(current_bag):
     #TODO: Make this seedable
@@ -270,10 +271,10 @@ def generate_bag(current_bag):
     available_pieces = find_available_pieces(current_bag)
     if available_pieces == []:
         # If there are no available pieces, start a new bag with a random piece
-        return current_bag + random.choice(list("IJLOSZT"))
+        return current_bag + choice(list("IJLOSZT"))
     else:
         # If there are available pieces, choose one randomly
-        return current_bag + random.choice(available_pieces)
+        return current_bag + choice(available_pieces)
 
 
 def find_available_pieces(current_bag):
@@ -303,7 +304,7 @@ def generate_new_bag():
             if len(piece_list) == 1:
                 output_list.append(piece_list[0])
                 break
-            a = random.choice(piece_list)
+            a = choice(piece_list)
             # Add a random piece to the output list
             output_list.append(a)
             # Remove that piece from the current bag
@@ -755,9 +756,9 @@ def find_center(piecestate: Piece):
     'Given a Piece, returns the coordinates of its actual center (x, y)'
     if piecestate.type == "O":
         # If piece is an O-piece, just check the spawn orientation (there's only 1)
-        shape = pieces["O"][0]
+        shape = PIECES["O"][0]
     else:
-        shape = pieces[piecestate.type][piecestate.orientation]
+        shape = PIECES[piecestate.type][piecestate.orientation]
     blx, bly = _findBLC(shape)
     # The x-offset from the actual x of the piece to the center is 2-blx, same for y
     # Therefore, the center is x+2-blx
@@ -768,7 +769,7 @@ def find_offset_list(piecestate: Piece):
     'Given a Piece, returns a list of offsets of each filled tile from the center [(x1, y1), (x2, y2)]'
     # TODO: Might be more efficient (time-wise) to use a lookup table, as there are only 28 possibilities of shapes
     # Accesses global variable pieces
-    shape = pieces[piecestate.type][piecestate.orientation]
+    shape = PIECES[piecestate.type][piecestate.orientation]
     offset_list = []
     # Alternative list comprehension (might not be super readable)
     # return [[(cell-2, 2-r) for cell in range(5) if shape[r][cell] == "0"] for r in range(5)]
@@ -795,7 +796,6 @@ def _findBLC(shape):  # finding bottom left corner of a shape
 
 def _find_difference2(piece, new_piece):
     'Takes the type of piece and orientation (e.g. T0) of two pieces and returns their difference in x and y coordinates'
-    global pieces
     # FIXME: Hacky fix, might not work
     if piece[0] == "O":
         # If piece is an O-piece, make the orientation 0 because all orientations are the same
@@ -805,8 +805,8 @@ def _find_difference2(piece, new_piece):
     # TODO: if new_piece is O, piece is also O and vice versa
     if new_piece[0] == "O":
         new_piece = new_piece[0] + "0" + new_piece[2:]
-    shape = pieces[piece[0]][int(piece[1])]
-    new_shape = pieces[new_piece[0]][int(new_piece[1])]
+    shape = PIECES[piece[0]][int(piece[1])]
+    new_shape = PIECES[new_piece[0]][int(new_piece[1])]
     x, y = _findBLC(shape)
     x2, y2 = _findBLC(new_shape)
     return x2 - x, y2 - y
