@@ -255,7 +255,9 @@ def return_x_y(piece_notation):
         y_loc = int(piece_notation[3:])
     return str(x_loc), str(y_loc)
 
-def produce_bag_generator(seed):
+def produce_bag_generator(generator_seed):
+    seed(generator_seed)
+    pieces = list("IJLOSZT")
     pass
 
 def generate_bag(current_bag):
@@ -1013,3 +1015,5 @@ def slideshow(slides, t, screen):
 
 
 t, screen = init_screen()
+
+display.draw_next_queue(generate_bag(""), screen)
