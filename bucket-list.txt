@@ -1,17 +1,19 @@
 Bucket list for priority tasks (ordered)
  Make graphical hold display
  Make graphical next queue display
- Make t-spin detection
+ Make game over checks
+ Make pieces able to be held
+ Make replays playable
 
 Unordered:
  Make Game class
- Make game over checks
+ Add support for hold and next queue in Tetris.py
 
 Future plans:
-- Add support for hold and next queue in Tetris.py
 - Make keybinds
 - Implement DAS, ARR, SDF
-- Implement sending lines
+- Implement sending lines/combo table
+- Implement score table
 - Implement garbage multiplier, gravity
 - Make find_possible_moves function
 - Write evaluation function for board cleanliness
@@ -24,6 +26,7 @@ Priority list values (triage):
 4. Writing completely new code with large changes
 
 Done:
+Make t-spin detection
 Make hard drop function
 Make line clear function
 Debug text-writing in display.py
