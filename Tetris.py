@@ -1,40 +1,9 @@
-import kicktables
+import storage
 import display
 from random import choice, seed, shuffle
 from typing import List, Tuple, Any, Generator
 from turtle import Screen, Turtle
 from time import sleep, time
-
-# switched 2nd and 4th orientation of L, T, J recently
-I = [['.....', '0000.', '.....', '.....', '.....'], ['.0...', '.0...', '.0...', '.0...', '.....'], [
-    '.....', '.....', '0000.', '.....', '.....'], ['..0..', '..0..', '..0..', '..0..', '.....']]
-J = [['.....', '.0...', '.000.', '.....', '.....'], ['.....', '..00.', '..0..', '..0..', '.....'], [
-    '.....', '.....', '.000.', '...0.', '.....'], ['.....', '..0..', '..0..', '.00..', '.....']]
-L = [['.....', '...0.', '.000.', '.....', '.....'], ['.....', '..0..', '..0..', '..00.', '.....'], [
-    '.....', '.....', '.000.', '.0...', '.....'], ['.....', '.00..', '..0..', '..0..', '.....']]
-O = [['.....', '.....', '.00..', '.00..', '.....']]
-S = [['.....', '..00..', '.00...', '......', '.....'], ['.....', '.0...', '.00..', '..0..', '.....'], [
-    '.....', '......', '..00..', '.00...', '.....'], ['.....', '..0..', '..00.', '...0.', '.....']]
-Z = [['.....', '.00..', '..00.', '.....', '.....'], ['.....', '...0.', '..00.', '..0..', '.....'], [
-    '.....', '.....', '.00..', '..00.', '.....'], ['.....', '..0..', '.00..', '.0...', '.....']]
-T = [['.....', '..0..', '.000.', '.....', '.....'], ['.....', '..0..', '..00.', '..0..', '.....'], [
-    '.....', '.....', '.000.', '..0..', '.....'], ['.....', '..0..', '.00..', '..0..', '.....']]
-
-PIECES = {"I": I, "J": J, "L": L, "O": O, "S": S, "Z": Z, "T": T}
-
-# recently changed, added . and black
-COLOURS_DICT = {  # turtle-compatible colors
-    "I": "cyan",
-    "J": "blue",
-    "L": "orange",
-    "O": "yellow",
-    "S": "lime",
-    "Z": "red",
-    "T": "magenta",
-    ".": "black",
-    # x is used for garbage
-    "x": "grey"
-}
 
 
 def create_grid(locked_positions={}):
@@ -177,7 +146,7 @@ def board_notation_to_dict(notation):
         for index in range(len(row)):
             item = row[index]
             # Whether it's S or . check color dict and append the respective colour
-            output_list.append(COLOURS_DICT[item])
+            output_list.append(storage.colours_dict[item])
     indices = [(x, y) for x in range(rows) for y in range(10)]
     try:
         items_list = [(indices[i], output_list[i]) for i in range(rows * 10)]
@@ -388,7 +357,7 @@ class Board():
         # Starts the clock immediately
         self.last_action_time = time()
 
-    #TODO: Write hold
+    # TODO: Write hold
     def update_pb_notation(self):
         self.piece_board_notation = construct_piece_board_notation(
             self.piece.value, self.boardstate)
@@ -520,7 +489,8 @@ class Board():
                 f"Impossible piece lock, piece: '{self.piece.value}', board: '{self.boardstate}'")
         b, number_of_cleared_lines, list_of_cleared_lines = check_line_clears(
             b)
-        tspin = check_t_spin(self.piece_board_notation, self.replay_notation, self.last_kick_number)
+        tspin = check_t_spin(self.piece_board_notation,
+                             self.replay_notation, self.last_kick_number)
         self.line_clear_history += f"{number_of_cleared_lines} {tspin}"
         self.boardstate = b
         self.spawn_next_piece()
@@ -754,7 +724,7 @@ def _find_center(piecestate: Piece):
     'Given a Piece, returns the coordinates of its actual center (x, y)'
     if piecestate.type == "O":
         # If piece is an O-piece, just check the spawn orientation (there's only 1)
-        shape = PIECES["O"][0]
+        shape = storage.pieces["O"][0]
     blx, bly = _findBLC(piecestate)
     # The x-offset from the actual x of the piece to the center is 2-blx, same for y
     # Therefore, the center is x+2-blx
@@ -765,7 +735,7 @@ def find_offset_list(piecestate: Piece):
     'Given a Piece, returns a list of offsets of each filled tile from the center [(x1, y1), (x2, y2)]'
     # TODO: Might be more efficient (time-wise) to use a lookup table, as there are only 28 possibilities of shapes
     # Accesses global variable pieces
-    shape = PIECES[piecestate.type][piecestate.orientation]
+    shape = storage.pieces[piecestate.type][piecestate.orientation]
     offset_list = []
     # Alternative list comprehension (might not be super readable)
     # return [[(cell-2, 2-r) for cell in range(5) if shape[r][cell] == "0"] for r in range(5)]
@@ -782,20 +752,11 @@ def update_boardstate_from_pb_notation(pb_notation):
     return update_boardstate(b1, Piece(p1))
 
 
-BLC = {"I": [(0, 3), (1, 1), (0, 2), (2, 1)],
-       "J": [(1, 2), (2, 1), (3, 1), (1, 1)],
-       "L": [(1, 2), (2, 1), (1, 1), (2, 1)],
-       "O": [(1, 1)],
-       "S": [(1, 2), (2, 1), (1, 1), (3, 1)],
-       "Z": [(2, 2), (2, 1), (2, 1), (1, 1)],
-       "T": [(1, 2), (2, 1), (2, 1), (2, 1)]}
-
-
 def _findBLC(piece: Piece):
     'Given a shape, finds its bottom left corner relative to a 5x5 grid (helper function to update_boardstate)'
     if piece.type == "O":
         return (1, 1)
-    return BLC[piece.type][piece.orientation]
+    return storage.blc_table[piece.type][piece.orientation]
 
 
 def _find_difference2(piece: Piece, new_piece: Piece):
@@ -816,14 +777,14 @@ def _find_kick_table(old_piece: Piece, new_piece: Piece):
     'Given a old piece and a new piece, returns the appropriate kick table'
     # Table for 180 kicks (from tetr.io) if difference in orientation is 2 or -2
     if old_piece.orientation - new_piece.orientation in [2, -2]:
-        return kicktables.flip_table
+        return storage.flip_table
     # Table for I piece kicks
     elif new_piece.type == "I":
-        return kicktables.i_table
+        return storage.i_table
     else:
         # Table for JLSZT piece kicks
         assert new_piece.type in "JLSZT"
-        return kicktables.jlszt_table
+        return storage.jlszt_table
 
 
 def _get_coord_from_kick(x_or_y, kick_tuple):
@@ -913,7 +874,8 @@ def rotate_and_update(pb_notation, direction):
     # Finds the new direction based on the original direction and the rotation
     new_direction = (int(piece_n.orientation) + rotation_factor) % 4
     piece_message = _find_piece_message(piece_n, new_direction)
-    final_piece_notation, kick_number = _check_kick_tables(piece_n.value, piece_message, b)
+    final_piece_notation, kick_number = _check_kick_tables(
+        piece_n.value, piece_message, b)
     # If the piece cannot be rotated (all kicks are checked or it is an O piece)
     if final_piece_notation == False:
         # Make the piece notation the original value
@@ -956,7 +918,7 @@ def check_line_clears(b_notation):
     return "*" + "/".join(b_notation), len(filled_rows), filled_rows
 
 
-def _access_corners(p: Piece, b:str) -> List[bool]:
+def _access_corners(p: Piece, b: str) -> List[bool]:
     'Given a t-Piece, and the board it is in, this accesses and returns the four corners around the center\nReturns True if there is something there and False if the cell is empty'
     center_x, center_y = _find_center(p)
     # Corner offsets (from center) in a clockwise direction from the top left
@@ -966,7 +928,7 @@ def _access_corners(p: Piece, b:str) -> List[bool]:
     for x_offset, y_offset in offset_list:
         new_x, new_y = center_x+x_offset, center_y+y_offset
         # If cell is a wall (considered filled)
-        if new_x < 0 or new_x > 9 or  new_y < 0:
+        if new_x < 0 or new_x > 9 or new_y < 0:
             output_list.append(True)
         # If cell is empty
         elif access_cell(b, new_y, new_x) == ".":
@@ -975,12 +937,15 @@ def _access_corners(p: Piece, b:str) -> List[bool]:
             output_list.append(True)
     return output_list
 
-def _check_corners(p: Piece, b:str):
+
+def _check_corners(p: Piece, b: str):
     filled_list = _access_corners(p, b)
     orientation = p.orientation
     # Magic to access the front and back two corners (e.g. orientation 2, front = 2 and 3, back = 0 and 1)
-    front_two_corners = [filled_list[orientation], filled_list[(orientation+1)%4]]
-    back_two_corners = [filled_list[(orientation+2)%4], filled_list[(orientation+3)%4]]
+    front_two_corners = [filled_list[orientation],
+                         filled_list[(orientation+1) % 4]]
+    back_two_corners = [
+        filled_list[(orientation+2) % 4], filled_list[(orientation+3) % 4]]
     # Check if the front two corners are filled and at least one in the back in empty
     if front_two_corners == [True, True] and True in back_two_corners:
         return "t-spin"
@@ -1056,6 +1021,3 @@ def slideshow(slides, t, screen):
     screen.onkey(go_back, "Left")
     screen.listen()
     screen.mainloop()
-
-
-
