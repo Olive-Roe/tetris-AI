@@ -9,6 +9,18 @@ t, screen = init_screen()
 
 # """
 
+'test function for t-spin detection'
+# names = ["tsd", "tss", "tsm", "stsd", "tst", "fin-tsd", "neo-tsd", "iso-tsd"]
+# boards = ['*I1IIIIIIII/3IIIIIII/2IIIIIIII',
+#           '*I1IIIIIIII/3IIIIIII/2IIIIIIII', '*1IIIIIIIII', '*2IIIIIIII/2IIIIIIII/1IIIIIIIII//I9', '*1IIIIIIIII/2IIIIIIII/1IIIIIIIII//I9', '*IIIIIIII1I/IIIIIII2I/9I/9I/7III', '*IIIIIII1II/IIIIII2II/8II/9I/7III', '*IIIIIII1II/IIIIIII2I/8II/9I/6IIII']
+# actions = ['CW 0.5\nL 0.5\nd 0.5\nCW 0.5\nlock', 'CCW 0.5\nL 0.5\nd 0.5\n180 0.5\nlock', 'd 0.5\nL 0.5\nCW 0.5\nlock', 'd 0.5\nL 0.5\nCW 0.5\nlock', 'd 0.5\nL 0.5\nCW 0.5\nlock', 'd 0.5\n180 0.5\nR 0.5\nCW 0.5\nlock', 'd 0.5\n180 0.5\nR 0.5\nCW 0.5\nlock', 'd 0.5\n180 0.5\nR 0.5\nCCW 0.5\nlock']
+# for i in range(len(boards)):
+#     b = Board(t, screen, "T0322", boards[i])
+#     b.do_actions_from_input(actions[i])
+#     print(f"{names[i]}: {b.line_clear_history}")
+#     sleep(1)
+
+
 '''silly test function for random gameplay (game might be ok)'''
 # try:
 #     directions = ["CW", "CCW", "180"]

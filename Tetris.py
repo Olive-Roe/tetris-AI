@@ -380,9 +380,11 @@ class Board():
         # Non-dynamic init piece board notation
         self.piece_board_notation = self.piece.value + ":" + self.boardstate
         # Initializes an empty replay notation
-        self.replay_notation = ""
+        self.replay_notation = "start"
         # Initializes the last kick number (for t-spin detection)
         self.last_kick_number = 0
+        # Initializes the history of line clears
+        self.line_clear_history = ""
         # Starts the clock immediately
         self.last_action_time = time()
 
@@ -519,6 +521,7 @@ class Board():
         b, number_of_cleared_lines, list_of_cleared_lines = check_line_clears(
             b)
         tspin = check_t_spin(self.piece_board_notation, self.replay_notation, self.last_kick_number)
+        self.line_clear_history += f"{number_of_cleared_lines} {tspin}"
         self.boardstate = b
         self.spawn_next_piece()
         self.update_pb_notation()
@@ -594,7 +597,10 @@ class Board():
         delay_list = []
         b1 = Board(self.t, self.screen)
         output_list.append(f"{b1.piece_board_notation} 0")
-        for item in replay:
+        for item in replay.split("\n"):
+            if item == "start":
+                # First line should always be start
+                continue
             i, delay = _get_data_from_replay_line(item)
             b1.update_pb_notation()
             b1.do_action(i)
@@ -684,7 +690,7 @@ class Board():
         else:
             # Delay is automatically casted to a string
             # Add the action and the delay to a new line in the replay notation
-            self.replay_notation += f'{action_notation} {delay}\n'
+            self.replay_notation += f'\n{action_notation} {delay}'
 
 
 def init_screen():
@@ -858,7 +864,8 @@ def _check_kick_tables(old_piece_notation, new_piece_notation, board_notation):
     # Finds the corresponding kick table
     table = _find_kick_table(old_piece, new_piece)[direction_message]
     # Generate a list with the new coordinates, offsetted with each of the kicks
-    coords_list = _generate_coords_list(new_piece, table)
+    # [1:] is to remove first kick (0, 0) that has already been checked
+    coords_list = _generate_coords_list(new_piece, table)[1:]
     # Uses a kick_counter (via enumerate) to keep track of which kick this is on (starts on 1st kick)
     for kick_counter, (new_x, new_y) in enumerate(coords_list, start=1):
         # Generate a piece message with the new orientation, and x and y values
@@ -957,7 +964,12 @@ def _access_corners(p: Piece, b:str) -> List[bool]:
     output_list = []
     # Check each offset to see if it's filled
     for x_offset, y_offset in offset_list:
-        if access_cell(b, center_y+y_offset, center_x+x_offset) == ".":
+        new_x, new_y = center_x+x_offset, center_y+y_offset
+        # If cell is a wall (considered filled)
+        if new_x < 0 or new_x > 9 or  new_y < 0:
+            output_list.append(True)
+        # If cell is empty
+        elif access_cell(b, new_y, new_x) == ".":
             output_list.append(False)
         else:
             output_list.append(True)
@@ -967,8 +979,8 @@ def _check_corners(p: Piece, b:str):
     filled_list = _access_corners(p, b)
     orientation = p.orientation
     # Magic to access the front and back two corners (e.g. orientation 2, front = 2 and 3, back = 0 and 1)
-    front_two_corners = filled_list[orientation:(orientation+1)%4]
-    back_two_corners = filled_list[(orientation+2)%4:(orientation+3)%4]
+    front_two_corners = [filled_list[orientation], filled_list[(orientation+1)%4]]
+    back_two_corners = [filled_list[(orientation+2)%4], filled_list[(orientation+3)%4]]
     # Check if the front two corners are filled and at least one in the back in empty
     if front_two_corners == [True, True] and True in back_two_corners:
         return "t-spin"
