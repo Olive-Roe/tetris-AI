@@ -1,44 +1,25 @@
 from Tetris import *
+t, screen = init_screen()
 
-''' test function for garbage '''
-dtc = "*OO1LLLIJJJ/OO1SSLIJZZ/J3SSIZZI/J2TTTIOOI/JJ1LTZZOOI/3LZZZSSI/2LL2ZZSS/7Z2"
-g1 = "*g0/g0/g0/g0/g1/g1/g1/g1/g1/OO1LLLIJJJ/OO1SSLIJZZ/J3SSIZZI/J2TTTIOOI/JJ1LTZZOOI/3LZZZSSI/2LL2ZZSS/7Z2"
-b1 = Board(t, screen, "T1022", dtc, "TITIOJZLSJLOZ")
-actions = """g1x5 0.5
-g0x4 0.5
-d
-CCW
-CCW
-d
-CCW
-lock
-CW
-L
-d
-CCW
-CCW
-lock
-L
-CW
-d
-lock
-CW
-L
-d
-CW
-lock
-CW
-L
-d
-lock"""
+'test function for dt cannon (not working yet'
+# b1 = Board(t, screen, "", "*", "dt")
+# print(b1.bag.value)
+# actions = """d
+# lock
 
-b1.do_actions_from_input(actions)
-for _ in range(5):
-    with_delay = b1.replay_notation
-    print(with_delay, end="\nending\n")
-    b1 = Board(t, screen, "T1022", dtc, "TITIOJZLSJLOZ")
-    b1.do_actions_from_input(with_delay)
-    sleep(1)
+# """
+
+'test function for t-spin detection'
+# names = ["tsd", "tss", "tsm", "stsd", "tst", "fin-tsd", "neo-tsd", "iso-tsd"]
+# boards = ['*I1IIIIIIII/3IIIIIII/2IIIIIIII',
+#           '*I1IIIIIIII/3IIIIIII/2IIIIIIII', '*1IIIIIIIII', '*2IIIIIIII/2IIIIIIII/1IIIIIIIII//I9', '*1IIIIIIIII/2IIIIIIII/1IIIIIIIII//I9', '*IIIIIIII1I/IIIIIII2I/9I/9I/7III', '*IIIIIII1II/IIIIII2II/8II/9I/7III', '*IIIIIII1II/IIIIIII2I/8II/9I/6IIII']
+# actions = ['CW 0.5\nL 0.5\nd 0.5\nCW 0.5\nlock', 'CCW 0.5\nL 0.5\nd 0.5\n180 0.5\nlock', 'd 0.5\nL 0.5\nCW 0.5\nlock', 'd 0.5\nL 0.5\nCW 0.5\nlock', 'd 0.5\nL 0.5\nCW 0.5\nlock', 'd 0.5\n180 0.5\nR 0.5\nCW 0.5\nlock', 'd 0.5\n180 0.5\nR 0.5\nCW 0.5\nlock', 'd 0.5\n180 0.5\nR 0.5\nCCW 0.5\nlock']
+# for i in range(len(boards)):
+#     b = Board(t, screen, "T0322", boards[i])
+#     b.do_actions_from_input(actions[i])
+#     print(f"{names[i]}: {b.line_clear_history}")
+#     sleep(1)
+
 
 '''silly test function for random gameplay (game might be ok)'''
 # try:
@@ -262,3 +243,43 @@ for _ in range(5):
 #           ]
 # slideshow(slides, t, screen)
 # screen.mainloop()
+
+''' test function for garbage and actions (deprecated)'''
+# dtc = "*OO1LLLIJJJ/OO1SSLIJZZ/J3SSIZZI/J2TTTIOOI/JJ1LTZZOOI/3LZZZSSI/2LL2ZZSS/7Z2"
+# g1 = "*g0/g0/g0/g0/g1/g1/g1/g1/g1/OO1LLLIJJJ/OO1SSLIJZZ/J3SSIZZI/J2TTTIOOI/JJ1LTZZOOI/3LZZZSSI/2LL2ZZSS/7Z2"
+# b1 = Board(t, screen, "T1022", dtc, "dtc")
+# actions = """g1x5 0.5
+# g0x4 0.5
+# d
+# CCW
+# CCW
+# d
+# CCW
+# lock
+# CW
+# L
+# d
+# CCW
+# CCW
+# lock
+# L
+# CW
+# d
+# lock
+# CW
+# L
+# d
+# CW
+# lock
+# CW
+# L
+# d
+# lock"""
+
+# b1.do_actions_from_input(actions)
+# for _ in range(5):
+#     with_delay = b1.replay_notation
+#     print(with_delay, end="\nending\n")
+#     b1 = Board(t, screen, "T1022", dtc, "TITIOJZLSJLOZ")
+#     b1.do_actions_from_input(with_delay)
+#     sleep(1)

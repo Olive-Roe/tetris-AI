@@ -1,6 +1,6 @@
 import kicktables
 import display
-from random import choice, seed
+from random import choice, seed, shuffle
 from typing import List, Tuple, Any, Generator
 from turtle import Screen, Turtle
 from time import sleep, time
@@ -255,7 +255,8 @@ def return_x_y(piece_notation):
         y_loc = int(piece_notation[3:])
     return str(x_loc), str(y_loc)
 
-def produce_bag_generator(generator_seed:str ="") -> Generator[str, None, None]:
+
+def produce_bag_generator(generator_seed: str = "") -> Generator[str, None, None]:
     'Creates a generator for bags, which will return seeded bags\nIf generator seed is kept as default (empty str), it will produce random, unseeded bags'
     if generator_seed == "":
         yield generate_new_bag()
@@ -263,12 +264,9 @@ def produce_bag_generator(generator_seed:str ="") -> Generator[str, None, None]:
         seed(generator_seed)
     while True:
         pieces = list("IJLOSZT")
-        output = []
-        for _ in range(7):
-            chosen_piece = choice(pieces)
-            output.append(chosen_piece)
-            pieces.remove(chosen_piece)
-        yield "".join(output)
+        shuffle(pieces)
+        yield "".join(pieces)
+
 
 def generate_new_bag():
     'Generates a 14-long sequence of two bags'
@@ -317,6 +315,7 @@ def check_type_notation(notation):
         else:
             return False
 
+
 def _get_data_from_replay_line(item: str):
     'Given a line from a replay notation, return the action and the delay in a tuple'
     # float(0) is used to appease mypy
@@ -329,6 +328,7 @@ def _get_data_from_replay_line(item: str):
         time = float(item.split(" ")[1])
         time = float(default_time) if time == " " else float(time)
     return i, time
+
 
 class Piece():
     def __init__(self, piece_notation: str = ""):
@@ -347,7 +347,7 @@ class Piece():
 
 
 class Bag():
-    def __init__(self, seed = ""):
+    def __init__(self, seed=""):
         self.gen = produce_bag_generator(seed)
         initial_bag = next(self.gen) + next(self.gen) + next(self.gen)
         self.value = initial_bag
@@ -380,10 +380,15 @@ class Board():
         # Non-dynamic init piece board notation
         self.piece_board_notation = self.piece.value + ":" + self.boardstate
         # Initializes an empty replay notation
-        self.replay_notation = ""
+        self.replay_notation = "start"
+        # Initializes the last kick number (for t-spin detection)
+        self.last_kick_number = 0
+        # Initializes the history of line clears
+        self.line_clear_history = ""
         # Starts the clock immediately
         self.last_action_time = time()
 
+    #TODO: Write hold
     def update_pb_notation(self):
         self.piece_board_notation = construct_piece_board_notation(
             self.piece.value, self.boardstate)
@@ -413,7 +418,7 @@ class Board():
             self.piece.update(new_piece_type + orientation + str(x) + str(y))
         self.update_pb_notation()
 
-    def move_piece_down(self, subfunction = False):
+    def move_piece_down(self, subfunction=False):
         if self.piece.y < 1:
             # Piece is too low (touching ground) to be moved down
             return False
@@ -421,7 +426,8 @@ class Board():
             str(self.piece.orientation) + \
             str(self.piece.x) + str(self.piece.y-1)
         # Updates replay notation if this is being called by itself
-        if not subfunction: self.update_replay_notation("d1")
+        if not subfunction:
+            self.update_replay_notation("d1")
         return self.check_if_valid(piece_message)
 
     def change_x(self, value: int):
@@ -449,7 +455,7 @@ class Board():
                 break
         return True
 
-    def move_piece_left(self, subfunction = False):
+    def move_piece_left(self, subfunction=False):
         # Create a new piece moved left one cell
         if self.piece.x < 1:
             # Piece cannot be moved left
@@ -458,11 +464,12 @@ class Board():
         piece_message = self.piece.type + \
             str(self.piece.orientation) + \
             str(self.piece.x-1) + str(self.piece.y)
-         # Updates replay notation if this is being called by itself
-        if not subfunction: self.update_replay_notation("r")
+        # Updates replay notation if this is being called by itself
+        if not subfunction:
+            self.update_replay_notation("r")
         return self.check_if_valid(piece_message)
 
-    def move_piece_right(self, subfunction = False):
+    def move_piece_right(self, subfunction=False):
         # Create a new piece moved right one cell
         if self.piece.x > 8:
             # Piece cannot be moved right
@@ -472,7 +479,8 @@ class Board():
             str(self.piece.orientation) + \
             str(self.piece.x+1) + str(self.piece.y)
         # Updates replay notation if this is being called by itself
-        if not subfunction: self.update_replay_notation("r")
+        if not subfunction:
+            self.update_replay_notation("r")
         return self.check_if_valid(piece_message)
 
     def check_if_valid(self, piece_message):
@@ -485,14 +493,16 @@ class Board():
         self.update_pb_notation()
         return True
 
-    def rotate_piece(self, direction:str):  # sourcery skip: class-extract-method
+    def rotate_piece(self, direction: str):  # sourcery skip: class-extract-method
         #self.piece_board_notation = self.piece.value + ":/" + self.boardstate
-        pb = rotate_and_update(
+        pb, kick_number = rotate_and_update(
             self.piece_board_notation, direction)
+        # Updates last kick number
+        self.last_kick_number = kick_number
         p, b = separate_piece_board_notation(pb)
         # Check if piece cannot rotate
         if p == self.piece.value:
-            # Piece cannot rotate, return False 
+            # Piece cannot rotate, return False
             # (piece and board have not changed)
             return False
         # Piece has rotated
@@ -508,7 +518,10 @@ class Board():
         if b in ["out of bounds", "occupied cell"]:
             raise ValueError(
                 f"Impossible piece lock, piece: '{self.piece.value}', board: '{self.boardstate}'")
-        b, number_of_cleared_lines, list_of_cleared_lines = check_line_clears(b)
+        b, number_of_cleared_lines, list_of_cleared_lines = check_line_clears(
+            b)
+        tspin = check_t_spin(self.piece_board_notation, self.replay_notation, self.last_kick_number)
+        self.line_clear_history += f"{number_of_cleared_lines} {tspin}"
         self.boardstate = b
         self.spawn_next_piece()
         self.update_pb_notation()
@@ -578,21 +591,24 @@ class Board():
         self.update_replay_notation(replay_message)
         return True
 
-    def load_replay(self, replay:str) -> Tuple[List[str], List[Any]]:
+    def load_replay(self, replay: str) -> Tuple[List[str], List[Any]]:
         'Given a replay, simulates it and returns a list of piece-board notations, and a list of delays'
         output_list = []
         delay_list = []
         b1 = Board(self.t, self.screen)
         output_list.append(f"{b1.piece_board_notation} 0")
-        for item in replay:
+        for item in replay.split("\n"):
+            if item == "start":
+                # First line should always be start
+                continue
             i, delay = _get_data_from_replay_line(item)
             b1.update_pb_notation()
             b1.do_action(i)
             output_list.append(b1.piece_board_notation)
             delay_list.append(delay)
         return output_list, delay_list
-    
-    def play_replay(self, replay:str):
+
+    def play_replay(self, replay: str):
         # TODO: Make this play any replay with any starting bag seed
         pb_list, delay_list = self.load_replay(replay)
         for index, delay in enumerate(delay_list):
@@ -601,9 +617,8 @@ class Board():
             # possibly simulate this
             # or put it in the Game class
             # or make display board take a piece-board notation as an argument
-            
-        
-    def do_action(self, i:str):
+
+    def do_action(self, i: str):
         flag = False
         # Ignores empty lines (does nothing)
         # Checking the different cases
@@ -650,7 +665,7 @@ class Board():
             sleep(delay)
             self.do_action(i)
             self.display_board()
-    
+
     def get_current_delay(self) -> float:
         'Returns the delay from the time of the last action in seconds (float)\nand updates self.last_action_time'
         # Creates a deep copy of the attribute
@@ -667,7 +682,7 @@ class Board():
         else:
             return delay
 
-    def update_replay_notation(self, action_notation:str):
+    def update_replay_notation(self, action_notation: str):
         delay = self.get_current_delay()
         # Hide delay is delay = 0 (understood)
         if delay == 0:
@@ -675,7 +690,8 @@ class Board():
         else:
             # Delay is automatically casted to a string
             # Add the action and the delay to a new line in the replay notation
-            self.replay_notation += f'{action_notation} {delay}\n'
+            self.replay_notation += f'\n{action_notation} {delay}'
+
 
 def init_screen():
     screen = Screen()
@@ -686,6 +702,7 @@ def init_screen():
     screen.tracer(0)
     return t, screen
 
+
 class Game():
     def __init__(self, mode="vs ai", players=2, replay=""):
         self.mode = mode
@@ -695,7 +712,7 @@ class Game():
         self.t_list = [Turtle() for _ in range(self.players)]
         self.board_list = [Board(t, self.screen) for t in self.t_list]
         # TODO: Write replay notation (gets appended to in input)
-    
+
     def input(self):
         # TODO: Find keybinds
         pass
@@ -712,7 +729,7 @@ def update_boardstate(boardstate, piecestate: Piece):
     # Gets a list of offsets from the Piece
     offset_list = find_offset_list(piecestate)
     # Finds the center x and y coordinates
-    center_x, center_y = find_center(piecestate)
+    center_x, center_y = _find_center(piecestate)
     # Combining offset and center list to find the list of the actual coordinates
     coord_list = [(x_offset + center_x, y_offset + center_y)
                   for (x_offset, y_offset) in offset_list]
@@ -733,14 +750,12 @@ def update_boardstate(boardstate, piecestate: Piece):
     return extended_boardstate_to_boardstate(nbs)
 
 
-def find_center(piecestate: Piece):
+def _find_center(piecestate: Piece):
     'Given a Piece, returns the coordinates of its actual center (x, y)'
     if piecestate.type == "O":
         # If piece is an O-piece, just check the spawn orientation (there's only 1)
         shape = PIECES["O"][0]
-    else:
-        shape = PIECES[piecestate.type][piecestate.orientation]
-    blx, bly = _findBLC(shape)
+    blx, bly = _findBLC(piecestate)
     # The x-offset from the actual x of the piece to the center is 2-blx, same for y
     # Therefore, the center is x+2-blx
     return piecestate.x + 2 - blx, piecestate.y + 2 - bly
@@ -767,29 +782,33 @@ def update_boardstate_from_pb_notation(pb_notation):
     return update_boardstate(b1, Piece(p1))
 
 
-def _findBLC(shape):  # finding bottom left corner of a shape
+BLC = {"I": [(0, 3), (1, 1), (0, 2), (2, 1)],
+       "J": [(1, 2), (2, 1), (3, 1), (1, 1)],
+       "L": [(1, 2), (2, 1), (1, 1), (2, 1)],
+       "O": [(1, 1)],
+       "S": [(1, 2), (2, 1), (1, 1), (3, 1)],
+       "Z": [(2, 2), (2, 1), (2, 1), (1, 1)],
+       "T": [(1, 2), (2, 1), (2, 1), (2, 1)]}
+
+
+def _findBLC(piece: Piece):
     'Given a shape, finds its bottom left corner relative to a 5x5 grid (helper function to update_boardstate)'
-    for r in range(5):
-        for c in range(5):
-            if shape[4-r][c] == "0":
-                return (c, r)
+    if piece.type == "O":
+        return (1, 1)
+    return BLC[piece.type][piece.orientation]
 
 
-def _find_difference2(piece, new_piece):
+def _find_difference2(piece: Piece, new_piece: Piece):
     'Takes the type of piece and orientation (e.g. T0) of two pieces and returns their difference in x and y coordinates'
     # FIXME: Hacky fix, might not work
-    if piece[0] == "O":
+    if piece.type == "O":
         # If piece is an O-piece, make the orientation 0 because all orientations are the same
         # (for the purpose of this function)
-        piece = piece[0] + "0" + piece[2:]
-    # same goes for new_piece (optimize this later)
-    # TODO: if new_piece is O, piece is also O and vice versa
-    if new_piece[0] == "O":
-        new_piece = new_piece[0] + "0" + new_piece[2:]
-    shape = PIECES[piece[0]][int(piece[1])]
-    new_shape = PIECES[new_piece[0]][int(new_piece[1])]
-    x, y = _findBLC(shape)
-    x2, y2 = _findBLC(new_shape)
+        piece.update(piece.type + "0" + str(piece.x) + str(piece.y))
+        new_piece.update(new_piece.type + "0" +
+                         str(new_piece.x) + str(new_piece.y))
+    x, y = _findBLC(piece)
+    x2, y2 = _findBLC(new_piece)
     return x2 - x, y2 - y
 
 
@@ -826,35 +845,38 @@ def _generate_coords_list(new_piece: Piece, table):
 
 def _check_kick_tables(old_piece_notation, new_piece_notation, board_notation):
     '''Takes a piece notation, board notation, direction and returns the piece notation 
-    after checking kicktables, or False if rotation is impossible'''
+    after checking kicktables, or False if rotation is impossible. Also returns the number
+    of the kick that was used, or False if rotation is impossible'''
     # Create new Pieces for future reference
     old_piece = Piece(old_piece_notation)
     new_piece = Piece(new_piece_notation)
     # If the piece is O, the rotation will always work, so return the new piece notation
     if new_piece.type == "O":
-        return new_piece_notation
+        return new_piece_notation, 0
     # First, check the original notation if it works
     b = update_boardstate(board_notation, new_piece)
     if b not in ["out of bounds", "occupied cell"]:
         # If there is no problem, return immediately
-        return new_piece_notation
+        return new_piece_notation, 0
     # If it doesn't work, check the kicks
     # Gets a message for the directions that will be looked up later
     direction_message = str(old_piece.orientation) + str(new_piece.orientation)
     # Finds the corresponding kick table
     table = _find_kick_table(old_piece, new_piece)[direction_message]
     # Generate a list with the new coordinates, offsetted with each of the kicks
-    coords_list = _generate_coords_list(new_piece, table)
-    for new_x, new_y in coords_list:
+    # [1:] is to remove first kick (0, 0) that has already been checked
+    coords_list = _generate_coords_list(new_piece, table)[1:]
+    # Uses a kick_counter (via enumerate) to keep track of which kick this is on (starts on 1st kick)
+    for kick_counter, (new_x, new_y) in enumerate(coords_list, start=1):
         # Generate a piece message with the new orientation, and x and y values
         new_piece_message = new_piece.type + \
             str(new_piece.orientation) + str(new_x) + str(new_y)
         b = update_boardstate(board_notation, Piece(new_piece_message))
         if b not in ["out of bounds", "occupied cell"]:
-            return new_piece_message
+            return new_piece_message, kick_counter
     # This means all kicks have been checked, and none work
     # Return false, meaning rotation is impossible
-    return False
+    return False, False
 
 
 def _find_rotation_factor(rotation_direction):
@@ -872,10 +894,10 @@ def _find_rotation_factor(rotation_direction):
 
 def _find_piece_message(piece: Piece, new_direction: int):
     'Takes a Piece and new direction, and returns the new piece message with updated x and y coordinates'
-    po1 = piece.type + str(piece.orientation)
-    po2 = piece.type + str(new_direction)
+    new_piece = Piece(piece.type + str(new_direction) +
+                      str(piece.x) + str(piece.y))
     # Finds the difference in the two shapes
-    x_diff, y_diff = _find_difference2(po1, po2)
+    x_diff, y_diff = _find_difference2(piece, new_piece)
     # Finds the new x and y coordinates
     new_x, new_y = str(int(piece.x)+x_diff), str(int(piece.y)+y_diff)
     # Returns the new piece message
@@ -891,12 +913,12 @@ def rotate_and_update(pb_notation, direction):
     # Finds the new direction based on the original direction and the rotation
     new_direction = (int(piece_n.orientation) + rotation_factor) % 4
     piece_message = _find_piece_message(piece_n, new_direction)
-    final_piece_notation = _check_kick_tables(piece_n.value, piece_message, b)
+    final_piece_notation, kick_number = _check_kick_tables(piece_n.value, piece_message, b)
     # If the piece cannot be rotated (all kicks are checked or it is an O piece)
     if final_piece_notation == False:
         # Make the piece notation the original value
         final_piece_notation = piece_n.value
-    return construct_piece_board_notation(final_piece_notation, b)
+    return construct_piece_board_notation(final_piece_notation, b), kick_number
 
 
 def check_line_clears(b_notation):
@@ -934,12 +956,55 @@ def check_line_clears(b_notation):
     return "*" + "/".join(b_notation), len(filled_rows), filled_rows
 
 
-def check_t_spin(pb_notation, replay_notation):
-    'Given a piece-board notation and replay notation, return whether this was a t-spin, t-spin mini, or not a t-spin'
+def _access_corners(p: Piece, b:str) -> List[bool]:
+    'Given a t-Piece, and the board it is in, this accesses and returns the four corners around the center\nReturns True if there is something there and False if the cell is empty'
+    center_x, center_y = _find_center(p)
+    # Corner offsets (from center) in a clockwise direction from the top left
+    offset_list = [(-1, 1), (1, 1), (1, -1), (-1, -1)]
+    output_list = []
+    # Check each offset to see if it's filled
+    for x_offset, y_offset in offset_list:
+        new_x, new_y = center_x+x_offset, center_y+y_offset
+        # If cell is a wall (considered filled)
+        if new_x < 0 or new_x > 9 or  new_y < 0:
+            output_list.append(True)
+        # If cell is empty
+        elif access_cell(b, new_y, new_x) == ".":
+            output_list.append(False)
+        else:
+            output_list.append(True)
+    return output_list
+
+def _check_corners(p: Piece, b:str):
+    filled_list = _access_corners(p, b)
+    orientation = p.orientation
+    # Magic to access the front and back two corners (e.g. orientation 2, front = 2 and 3, back = 0 and 1)
+    front_two_corners = [filled_list[orientation], filled_list[(orientation+1)%4]]
+    back_two_corners = [filled_list[(orientation+2)%4], filled_list[(orientation+3)%4]]
+    # Check if the front two corners are filled and at least one in the back in empty
+    if front_two_corners == [True, True] and True in back_two_corners:
+        return "t-spin"
+    elif True in front_two_corners and back_two_corners == [True, True]:
+        return "t-spin mini"
+    else:
+        return False
+
+
+def check_t_spin(pb_notation, replay_notation, last_kick_number):
+    'Given a piece-board notation and replay notation, return whether this was a t-spin ("t-spin"), t-spin mini ("t-spin mini"), or not a t-spin (False)'
     p, b = separate_piece_board_notation(pb_notation)
     p = Piece(p)
-    if p.type != "T":
+    # Verifies that the piece is a t-piece and that the last movement was a rotation
+    # replay notation.split("\n")[-1] will be {action} {delay}, so finds the action
+    if p.type != "T" or replay_notation.split("\n")[-1].split(" ")[0] not in {'CW', 'CCW', '180'}:
         return False
+    message = _check_corners(p, b)
+    # Message will be t-spin, t-spin mini, or False
+    if message == "t-spin mini" and last_kick_number == 4:
+        # If the last kick is 4, this is a t-spin, not a t-spin mini (e.g. STSD)
+        return "t-spin"
+    return message
+
     # TODO: Write this function
 
 
@@ -993,7 +1058,4 @@ def slideshow(slides, t, screen):
     screen.mainloop()
 
 
-t, screen = init_screen()
 
-bag1 = Bag()
-display.draw_next_queue(bag1.value, screen)
