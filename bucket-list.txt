@@ -1,9 +1,7 @@
 Bucket list for priority tasks (ordered)
- Add support for hold and next queue in Tetris.py
  Make graphical hold display
  Make graphical next queue display
  Make game over checks
- Make pieces able to be held
  Make replays playable
 
 Unordered:
