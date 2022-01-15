@@ -2,12 +2,43 @@ from Tetris import *
 t, screen = init_screen()
 
 'test function for dt cannon (not working yet'
-# b1 = Board(t, screen, "", "*", "dt")
-# print(b1.bag.value)
-# actions = """d
-# lock
-
-# """
+b1 = Board(t, screen, "", "*", "dt")
+print(b1.bag.value)
+# 'ILTSJZO/JTISLOZ/IOLZSJT'
+actions = """CW
+r
+r
+hd
+hd
+hold
+hd
+R
+hd
+R
+hd
+L
+hd
+CW
+L
+hd
+hd
+CW
+R
+hd
+CW
+r
+hd
+CCW
+l
+hd
+R
+l
+hd
+CW
+r
+r
+hd"""
+b1.do_actions_from_input(actions)
 
 'test function for t-spin detection'
 # names = ["tsd", "tss", "tsm", "stsd", "tst", "fin-tsd", "neo-tsd", "iso-tsd"]

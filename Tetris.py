@@ -333,7 +333,7 @@ class Bag():
 class Board():
     'A Tetris board, with a turtle, screen, and data'
 
-    def __init__(self, t, screen, piece_notation="", boardstate="*", bag_seed="", hold=""):
+    def __init__(self, t, screen, piece_notation="", boardstate="*", bag_seed="", hold="", hold_locked=False):
         self.t = t
         self.screen = screen
         self.boardstate = boardstate
@@ -341,6 +341,8 @@ class Board():
             self.boardstate)
         self.bag = Bag(bag_seed)
         self.hold = hold
+        # Boolean for whether the hold is locked or not
+        self.hold_locked = hold_locked
         # Weird how you can call functions written after __init__
         if piece_notation == "":
             self.piece = Piece(self.spawn_next_piece(init=True))
@@ -357,7 +359,29 @@ class Board():
         # Starts the clock immediately
         self.last_action_time = time()
 
-    # TODO: Write hold
+    def hold_piece(self):
+        if self.hold_locked:
+            # If hold is locked, function shouldn't work
+            return False
+        # Hold can work, check if hold is empty
+        if self.hold == "":
+            self.hold = self.piece.type
+            self.hold_locked = True
+            self.spawn_next_piece()
+            # (updates piece board notation in here already)
+        else:
+            current_piece = self.piece.type
+            held_piece = self.hold
+            if held_piece in ["L", "J", "S", "T", "I"]:
+                x, y = 3, 22
+            elif held_piece in ["Z", "O"]:
+                x, y = 4, 22
+            self.piece.update(held_piece + "0" + str(x) + str(y))
+            self.hold = current_piece
+            self.hold_locked = True
+            self.update_pb_notation()
+        return True
+
     def update_pb_notation(self):
         self.piece_board_notation = construct_piece_board_notation(
             self.piece.value, self.boardstate)
@@ -372,6 +396,9 @@ class Board():
             raise ValueError(
                 f"Impossible piece lock, piece: '{self.piece.value}', board: '{self.boardstate}'")
         draw_grid(boardstate, self.t, self.screen)
+        # Displays the hold slot and next queue
+        display.draw_hold_slot(self.hold, self.hold_locked)
+        display.draw_next_queue(self.bag, self.screen)
 
     def spawn_next_piece(self, init=""):
         new_piece_type = self.bag.update()
@@ -494,6 +521,8 @@ class Board():
         self.line_clear_history += f"{number_of_cleared_lines} {tspin}"
         self.boardstate = b
         self.spawn_next_piece()
+        # Unlocks hold
+        self.hold_locked = False
         self.update_pb_notation()
         # Inverts the game over check (returns True if check is False)
         self.update_replay_notation("lock")
@@ -611,8 +640,15 @@ class Board():
             flag = self.move_piece_down()
             for _ in range(int(i[1])):
                 self.move_piece_down()
+        elif i == "hd":
+            flag1 = self.move_down_as_much_as_possible()
+            flag2 = self.lock_piece()
+            # Only sets flag to true if both actions are completed successfully
+            flag = flag1 and flag2
         elif i == "lock":
-            self.lock_piece()
+            flag = self.lock_piece()
+        elif i == "hold":
+            flag = self.hold_piece()
         elif i[0] == "g":
             # e.g. g0x5
             # i[1] is the column, i[3] is the amount of garbage
@@ -625,9 +661,12 @@ class Board():
         # l/r -> moves current piece left/right
         # L/R -> moves current piece as much left/right as possible
         # d -> moves current piece down as much as possible
+        # hd -> d + lock
         # d(n) -> moves current piece by n tiles
         # lock -> locks current piece
+        # hold -> holds current piece
         # g0x5 -> receives 5 rows of garbage in column 0
+        # TODO: Change the format to be (time since start)
         # separated by a space, and then (time) -> time since last action
         input_list = input.split("\n")
         for item in input_list:
