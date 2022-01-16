@@ -266,8 +266,7 @@ def display_as_text(notation):
 def check_type_notation(notation):
     'Takes a (valid) notation and returns its type, or False if it\'s unrecognizable.'
     n_list = list(notation)
-    # FIXME: len == 4 no longer applies, change this
-    if len(n_list) == 4:
+    if len(n_list) >= 4:
         return "piece notation"
     elif ":" in n_list:
         return "piece-board notation"
