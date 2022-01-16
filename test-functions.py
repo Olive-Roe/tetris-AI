@@ -1,44 +1,23 @@
 from Tetris import *
+start = time()
 t, screen = init_screen()
+end = time()
+#print(end - start)
+# 10.9 second delay
 
-'test function for dt cannon (not working yet'
-b1 = Board(t, screen, "", "*", "dt")
-print(b1.bag.value)
-# 'ILTSJZO/JTISLOZ/IOLZSJT'
-actions = """CW
-r
-r
-hd
-hd
-hold
-hd
-R
-hd
-R
-hd
-L
-hd
-CW
-L
-hd
-hd
-CW
-R
-hd
-CW
-r
-hd
-CCW
-l
-hd
-R
-l
-hd
-CW
-r
-r
-hd"""
-b1.do_actions_from_input(actions)
+'test function for game over check'
+b1 = Board(t, screen)
+while b1.game_over == False:
+    b1.display_board()
+    b1.hard_drop()
+print("game over")
+
+'test function for dt cannon'
+# b1 = Board(t, screen, "", "*", "dt")
+# print(b1.bag.value)
+# # 'ILTSJZO/JTISLOZ/IOLZSJT'
+# actions = """CW\nr\nr\nhd\nhd\nhold\nhd\nR\nhd\nR\nhd\nL\nhd\nCW\nL\nhd\nhd\nCW\nR\nhd\nCW\nr\nhd\nCCW\nl\nhd\nR\nl\nhd\nCW\nr\nr\nhd"""
+# b1.do_actions_from_input(actions)
 
 'test function for t-spin detection'
 # names = ["tsd", "tss", "tsm", "stsd", "tst", "fin-tsd", "neo-tsd", "iso-tsd"]

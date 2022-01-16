@@ -357,6 +357,7 @@ class Board():
         self.line_clear_history = ""
         # Starts the clock immediately
         self.last_action_time = time()
+        self.game_over = False
 
     def hold_piece(self):
         if self.hold_locked:
@@ -390,7 +391,6 @@ class Board():
         # Creates a temporary variable to display the current piece/boardstate
         boardstate = update_boardstate(self.boardstate, self.piece)
         if boardstate in ["out of bounds", "occupied cell"]:
-            # TODO: Do validation if the piece locks at the 21st row or up
             # Meaning the game is over
             raise ValueError(
                 f"Impossible piece lock, piece: '{self.piece.value}', board: '{self.boardstate}'")
@@ -401,17 +401,22 @@ class Board():
 
     def spawn_next_piece(self, init=""):
         new_piece_type = self.bag.update()
-        orientation = "0"  # spawn orientation
         # Adjusting spawn coordinates based on piece
         if new_piece_type in ["L", "J", "S", "T", "I"]:
             x, y = 3, 22
         elif new_piece_type in ["Z", "O"]:
             x, y = 4, 22
         if init != "":
-            return new_piece_type + orientation + str(x) + str(y)
-        else:
-            self.piece.update(new_piece_type + orientation + str(x) + str(y))
+            return new_piece_type + "0" + str(x) + str(y)
+        self.piece.update(new_piece_type + "0" + str(x) + str(y))
+        # Checks if the piece can spawn
+        b = update_boardstate(self.boardstate, self.piece)
+        if b == 'occupied cell':
+            # Piece spawn overlaps something, game is over
+            self.game_over = True
+            return False
         self.update_pb_notation()
+        return True
 
     def move_piece_down(self, subfunction=False):
         if self.piece.y < 1:
@@ -508,17 +513,31 @@ class Board():
         return True
 
     def lock_piece(self):
-        # TODO: Check for t-spin, perfect clear
+        # TODO: Check for perfect clear
         b = update_boardstate(self.boardstate, self.piece)
+        if self.piece.y >= 20:
+            # Game is over if piece locks over 21st row (do things and then set game_over to True)
+            b, number_of_cleared_lines, list_of_cleared_lines = check_line_clears(
+            b)
+            tspin = check_t_spin(self.piece_board_notation,
+                                self.replay_notation, self.last_kick_number)
+            self.line_clear_history += f"{number_of_cleared_lines} {tspin}\n"
+            # Displays the board
+            self.display_board()
+            self.boardstate = b
+            self.hold_locked = False
+            self.game_over = True
+            return False
         if b in ["out of bounds", "occupied cell"]:
             raise ValueError(
-                f"Impossible piece lock, piece: '{self.piece.value}', board: '{self.boardstate}'")
+            f"Impossible piece lock, piece: '{self.piece.value}', board: '{self.boardstate}'")
         b, number_of_cleared_lines, list_of_cleared_lines = check_line_clears(
             b)
         tspin = check_t_spin(self.piece_board_notation,
                              self.replay_notation, self.last_kick_number)
-        self.line_clear_history += f"{number_of_cleared_lines} {tspin}"
+        self.line_clear_history += f"{number_of_cleared_lines} {tspin}\n"
         self.boardstate = b
+        # Spawns next piece and updates self.piece
         self.spawn_next_piece()
         # Unlocks hold
         self.hold_locked = False
@@ -545,10 +564,10 @@ class Board():
 
     def hard_drop(self):
         # Will update replay notation as 'd [newline] lock, not as harddrop'
-        flag = self.move_down_as_much_as_possible()
-        self.lock_piece()
+        flag1 = self.move_down_as_much_as_possible()
+        flag2 = self.lock_piece()
         # Returns False if moving down at all was impossible
-        return flag
+        return flag1 and flag2
 
     def move_piece_leftmost(self):
         # Checks the first left movement
@@ -581,6 +600,7 @@ class Board():
         # Removes starting asterisk
         # Multiplies the garbage row with the amount
         b = "*" + amount * (garbage + "/") + self.boardstate[1:]
+        # TODO: Check for game_over in receive_garbage
         self.boardstate = b
         self.update_pb_notation()
         # Formats the message (e.g. g0x5)
@@ -640,10 +660,7 @@ class Board():
             for _ in range(int(i[1])):
                 self.move_piece_down()
         elif i == "hd":
-            flag1 = self.move_down_as_much_as_possible()
-            flag2 = self.lock_piece()
-            # Only sets flag to true if both actions are completed successfully
-            flag = flag1 and flag2
+            flag1 = self.hard_drop()
         elif i == "lock":
             flag = self.lock_piece()
         elif i == "hold":
@@ -703,8 +720,9 @@ class Board():
 
 def init_screen():
     screen = Screen()
+    # screen = Screen() takes about 11 seconds on my computer for some reason
     screen.bgcolor("black")
-    screen.setup(width=300, height=600)
+    screen.setup(width=600, height=600)
     screen.title("Tetris")
     t = Turtle()
     screen.tracer(0)
@@ -1007,8 +1025,6 @@ def check_t_spin(pb_notation, replay_notation, last_kick_number):
         # If the last kick is 4, this is a t-spin, not a t-spin mini (e.g. STSD)
         return "t-spin"
     return message
-
-    # TODO: Write this function
 
 
 def draw_grid(board_notation, t, screen):
