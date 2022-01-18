@@ -5,12 +5,24 @@ end = time()
 #print(end - start)
 # 10.9 second delay
 
+'test function for 40 row game over check'
+# b1 = Board(t, screen, "",
+#            "*I9/I9/I9/I9/I9/I9/I9/I9/I9/I9/I9/I9/I9/I9/I9/I9/I9/I9/I9/I9/I9/I9/I9/I9/I9/")
+# b1.display_board()
+# sleep(0.5)
+# while b1.game_over == False:
+#     b1.receive_garbage(5, 1)
+#     b1.display_board()
+#     sleep(0.01)
+# b1.display_board()
+# sleep(0.5)
+
 'test function for game over check'
-b1 = Board(t, screen)
-while b1.game_over == False:
-    b1.display_board()
-    b1.hard_drop()
-print("game over")
+# b1 = Board(t, screen)
+# while b1.game_over == False:
+#     b1.display_board()
+#     b1.hard_drop()
+# print("game over")
 
 'test function for dt cannon'
 # b1 = Board(t, screen, "", "*", "dt")

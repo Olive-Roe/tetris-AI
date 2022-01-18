@@ -600,7 +600,9 @@ class Board():
         # Removes starting asterisk
         # Multiplies the garbage row with the amount
         b = "*" + amount * (garbage + "/") + self.boardstate[1:]
-        # TODO: Check for game_over in receive_garbage
+        # Check if blocks are pushed over the 40th row
+        if len(b[1:].split("/")) > 40:
+            self.game_over = True
         self.boardstate = b
         self.update_pb_notation()
         # Formats the message (e.g. g0x5)
