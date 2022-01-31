@@ -18,6 +18,7 @@ blc_table = {"I": [(0, 3), (1, 1), (0, 2), (2, 1)],
        "T": [(1, 2), (2, 1), (2, 1), (2, 1)]}
 
 # Dictionary for what symbols correspond to what colors (turtle)
+#TODO: Make transparent colors for ghost pieces (see if rgba can be implemented)
 colours_dict = {
     "I": "cyan",
     "J": "blue",

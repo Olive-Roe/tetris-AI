@@ -2,7 +2,7 @@ import storage
 import display
 from random import choice, seed, shuffle
 from typing import List, Tuple, Any, Generator
-from turtle import Screen, Turtle
+from turtle import Screen, Turtle, update
 from time import sleep, time
 
 
@@ -356,7 +356,7 @@ class Board():
         # Initializes the history of line clears
         self.line_clear_history = ""
         # Starts the clock immediately
-        self.last_action_time = time()
+        self.start_time = time()
         self.game_over = False
 
     def hold_piece(self):
@@ -386,8 +386,21 @@ class Board():
         self.piece_board_notation = construct_piece_board_notation(
             self.piece.value, self.boardstate)
 
-    def display_board(self):
+    def display_board(self, pb="", queue="", hold="", hold_locked=""):
         'Displays the current board through Turtle'
+        if pb != "":
+            b, p = separate_piece_board_notation(pb)
+            boardstate = update_boardstate(b, p)
+            if boardstate in ["out of bounds", "occupied cell"]:
+            # Meaning the game is over
+                raise ValueError(
+                f"Impossible piece lock, piece: '{self.piece.value}', board: '{self.boardstate}'")
+            draw_grid(boardstate, self.t, self.screen)
+            # Displays the hold slot and next queue
+            display.draw_hold_slot(hold, hold_locked)
+            display.draw_next_queue(queue, self.screen)
+            return True
+
         # Creates a temporary variable to display the current piece/boardstate
         boardstate = update_boardstate(self.boardstate, self.piece)
         if boardstate in ["out of bounds", "occupied cell"]:
@@ -398,6 +411,7 @@ class Board():
         # Displays the hold slot and next queue
         display.draw_hold_slot(self.hold, self.hold_locked)
         display.draw_next_queue(self.bag, self.screen)
+        return True
 
     def spawn_next_piece(self, init=""):
         new_piece_type = self.bag.update()
@@ -518,9 +532,9 @@ class Board():
         if self.piece.y >= 20:
             # Game is over if piece locks over 21st row (do things and then set game_over to True)
             b, number_of_cleared_lines, list_of_cleared_lines = check_line_clears(
-            b)
+                b)
             tspin = check_t_spin(self.piece_board_notation,
-                                self.replay_notation, self.last_kick_number)
+                                 self.replay_notation, self.last_kick_number)
             self.line_clear_history += f"{number_of_cleared_lines} {tspin}\n"
             # Displays the board
             self.display_board()
@@ -530,7 +544,7 @@ class Board():
             return False
         if b in ["out of bounds", "occupied cell"]:
             raise ValueError(
-            f"Impossible piece lock, piece: '{self.piece.value}', board: '{self.boardstate}'")
+                f"Impossible piece lock, piece: '{self.piece.value}', board: '{self.boardstate}'")
         b, number_of_cleared_lines, list_of_cleared_lines = check_line_clears(
             b)
         tspin = check_t_spin(self.piece_board_notation,
@@ -611,32 +625,42 @@ class Board():
         self.update_replay_notation(replay_message)
         return True
 
-    def load_replay(self, replay: str) -> Tuple[List[str], List[Any]]:
+    def load_replay(self, replay: str, seed) -> Tuple[List[str], List[Any], List[Any], List[Any], List[Any]]:
         'Given a replay, simulates it and returns a list of piece-board notations, and a list of delays'
-        output_list = []
-        delay_list = []
-        b1 = Board(self.t, self.screen)
-        output_list.append(f"{b1.piece_board_notation} 0")
+        timestamp_list = []
+        b1 = Board(self.t, self.screen, "", "*", seed)
+        pb_notation_list = [f"{b1.piece_board_notation} 0"]
+        next_queue_list = []
+        hold_list = []
+        hold_locked_list = []
         for item in replay.split("\n"):
             if item == "start":
                 # First line should always be start
                 continue
-            i, delay = _get_data_from_replay_line(item)
+            i, timestamp = _get_data_from_replay_line(item)
             b1.update_pb_notation()
             b1.do_action(i)
-            output_list.append(b1.piece_board_notation)
-            delay_list.append(delay)
-        return output_list, delay_list
+            pb_notation_list.append(b1.piece_board_notation)
+            next_queue_list.append(b1.bag.value)
+            hold_list.append(b1.hold)
+            hold_locked_list.append(b1.hold_locked)
+            timestamp_list.append(timestamp)
+        return pb_notation_list, timestamp_list, next_queue_list, hold_list, hold_locked_list
 
-    def play_replay(self, replay: str):
+    def play_replay(self, replay: str, seed):
         # TODO: Make this play any replay with any starting bag seed
-        pb_list, delay_list = self.load_replay(replay)
-        for index, delay in enumerate(delay_list):
-            sleep(delay)
-            piece, board = separate_piece_board_notation(pb_list[index])
-            # possibly simulate this
-            # or put it in the Game class
-            # or make display board take a piece-board notation as an argument
+        pb_list, timestamp_list, next_queue_list, hold_list, hold_locked_list = self.load_replay(replay, seed)
+        t = time()
+        for i, timestamp in enumerate(timestamp_list):
+            # Sleep until the timestamp is correct
+            while True:
+                c = time()
+                if c - t >= timestamp:
+                    break
+            # Then display the board
+            self.display_board(pb_list[i], next_queue_list[i], hold_list[i], hold_locked_list[i])
+        # When replay is finished
+        return True
 
     def do_action(self, i: str):
         flag = False
@@ -662,7 +686,7 @@ class Board():
             for _ in range(int(i[1])):
                 self.move_piece_down()
         elif i == "hd":
-            flag1 = self.hard_drop()
+            flag = self.hard_drop()
         elif i == "lock":
             flag = self.lock_piece()
         elif i == "hold":
@@ -694,20 +718,15 @@ class Board():
             self.display_board()
 
     def get_current_delay(self) -> float:
-        'Returns the delay from the time of the last action in seconds (float)\nand updates self.last_action_time'
+        'Returns the delay from the time of the start time in seconds (float)'
         # Creates a deep copy of the attribute
-        t = float(self.last_action_time)
+        t = float(self.start_time)
         c = time()
-        # Updates the last action time to be now
-        self.last_action_time = c
         # Returns the delay as a float (rounded to 3 d.p.)
         delay = round(c - t, 2)
         # Trying to correct for processing time
         processing_delay = 0.1
-        if delay < processing_delay:
-            return 0
-        else:
-            return delay
+        return 0 if delay < processing_delay else delay
 
     def update_replay_notation(self, action_notation: str):
         delay = self.get_current_delay()
