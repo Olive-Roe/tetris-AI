@@ -25,11 +25,12 @@ end = time()
 # print("game over")
 
 'test function for dt cannon'
-# b1 = Board(t, screen, "", "*", "dt")
-# print(b1.bag.value)
-# # 'ILTSJZO/JTISLOZ/IOLZSJT'
-# actions = """CW\nr\nr\nhd\nhd\nhold\nhd\nR\nhd\nR\nhd\nL\nhd\nCW\nL\nhd\nhd\nCW\nR\nhd\nCW\nr\nhd\nCCW\nl\nhd\nR\nl\nhd\nCW\nr\nr\nhd"""
-# b1.do_actions_from_input(actions)
+b1 = Board(t, screen, "", "*", "dt")
+print(b1.bag.value)
+'ILTSJZO/JTISLOZ/IOLZSJT'
+actions = """CW\nr\nr\nhd\nhd\nhold\nhd\nR\nhd\nR\nhd\nL\nhd\nCW\nL\nhd\nhd\nCW\nR\nhd\nCW\nr\nhd\nCCW\nl\nhd\nR\nl\nhd\nCW\nr\nr\nhd"""
+b1.do_actions_from_input(actions)
+screen.mainloop()
 
 'test function for t-spin detection'
 # names = ["tsd", "tss", "tsm", "stsd", "tst", "fin-tsd", "neo-tsd", "iso-tsd"]

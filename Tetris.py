@@ -397,8 +397,9 @@ class Board():
                 f"Impossible piece lock, piece: '{self.piece.value}', board: '{self.boardstate}'")
             draw_grid(boardstate, self.t, self.screen)
             # Displays the hold slot and next queue
-            display.draw_hold_slot(hold, hold_locked)
-            display.draw_next_queue(queue, self.screen)
+            # TODO: Change this to non-temporary functions
+            display.temp_draw_hold_slot(hold, hold_locked)
+            display.temp_draw_next_queue(queue, self.screen, self.t)
             return True
 
         # Creates a temporary variable to display the current piece/boardstate
@@ -409,8 +410,9 @@ class Board():
                 f"Impossible piece lock, piece: '{self.piece.value}', board: '{self.boardstate}'")
         draw_grid(boardstate, self.t, self.screen)
         # Displays the hold slot and next queue
-        display.draw_hold_slot(self.hold, self.hold_locked)
-        display.draw_next_queue(self.bag, self.screen)
+        # TODO: Change this to non-temporary functions
+        display.temp_draw_hold_slot(self.hold, self.hold_locked, self.t)
+        display.temp_draw_next_queue(self.bag.value, self.screen, self.t)
         return True
 
     def spawn_next_piece(self, init=""):
