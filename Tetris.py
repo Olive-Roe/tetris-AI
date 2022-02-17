@@ -6,8 +6,10 @@ from turtle import Screen, Turtle, update
 from time import sleep, time
 
 
-def create_grid(locked_positions={}):
-    grid = [["black" for x in range(10)] for x in range(40)]
+def create_grid(locked_positions=None):
+    if locked_positions is None:
+        locked_positions = {}
+    grid = [["black" for _ in range(10)] for _ in range(40)]
     for row in range(len(grid)):
         for col in range(len(grid[1])):
             if (row, col) in locked_positions:
@@ -338,6 +340,7 @@ class Board():
         self.boardstate = boardstate
         self.extended_boardstate = boardstate_to_extended_boardstate(
             self.boardstate)
+        self.seed = bag_seed
         self.bag = Bag(bag_seed)
         self.hold = hold
         # Boolean for whether the hold is locked or not
@@ -392,9 +395,9 @@ class Board():
             b, p = separate_piece_board_notation(pb)
             boardstate = update_boardstate(b, p)
             if boardstate in ["out of bounds", "occupied cell"]:
-            # Meaning the game is over
+                # Meaning the game is over
                 raise ValueError(
-                f"Impossible piece lock, piece: '{self.piece.value}', board: '{self.boardstate}'")
+                    f"Impossible piece lock, piece: '{self.piece.value}', board: '{self.boardstate}'")
             draw_grid(boardstate, self.t, self.screen)
             # Displays the hold slot and next queue
             # TODO: Change this to non-temporary functions
@@ -651,7 +654,8 @@ class Board():
 
     def play_replay(self, replay: str, seed):
         # TODO: Make this play any replay with any starting bag seed
-        pb_list, timestamp_list, next_queue_list, hold_list, hold_locked_list = self.load_replay(replay, seed)
+        pb_list, timestamp_list, next_queue_list, hold_list, hold_locked_list = self.load_replay(
+            replay, seed)
         t = time()
         for i, timestamp in enumerate(timestamp_list):
             # Sleep until the timestamp is correct
@@ -660,7 +664,8 @@ class Board():
                 if c - t >= timestamp:
                     break
             # Then display the board
-            self.display_board(pb_list[i], next_queue_list[i], hold_list[i], hold_locked_list[i])
+            self.display_board(
+                pb_list[i], next_queue_list[i], hold_list[i], hold_locked_list[i])
         # When replay is finished
         return True
 
@@ -759,12 +764,43 @@ class Game():
         # T is unused
         t, self.screen = init_screen()
         self.t_list = [Turtle() for _ in range(self.players)]
+        # FIXME: A turtle appears in the middle of the screen, hide all turtles
         self.board_list = [Board(t, self.screen) for t in self.t_list]
+        self.main_board = self.board_list[0]
         # TODO: Write replay notation (gets appended to in input)
 
+    def display_screens(self):
+        for board in self.board_list:
+            # TODO: Add support for displaying multiple boards
+            board.display_board()
+
+    def mainloop(self):
+        self.input()
+        self.screen.mainloop()
+
+    def restart_board(self):
+        "Restarts main board with the same seed as before"
+        self.main_board = Board(
+            self.main_board.t, self.screen, "", "*", self.main_board.seed)
+
     def input(self):
-        # TODO: Find keybinds
-        pass
+        b = self.board_list[0]
+        keybinds = {
+            "Up": lambda: b.rotate_piece("CW"),
+            "Down": b.move_piece_down,
+            "Left": b.move_piece_left,
+            "Right": b.move_piece_right,
+            "Shift_L": b.hold_piece,
+            "c": b.hold_piece,
+            "z": lambda: b.rotate_piece("CCW"),
+            "a": lambda: b.rotate_piece("180"),
+            "space": b.hard_drop,
+            "r": self.restart_board,
+        }
+        for key, action in keybinds.items():
+            # should be working keybinds?
+            self.screen.onkey(action, key)
+        self.screen.listen()
 
 
 def update_boardstate(boardstate, piecestate: Piece):

@@ -5,6 +5,10 @@ end = time()
 #print(end - start)
 # 10.9 second delay
 
+'test function for keybinds'
+g = Game(players=1)
+g.mainloop()
+
 'test function for 40 row game over check'
 # b1 = Board(t, screen, "",
 #            "*I9/I9/I9/I9/I9/I9/I9/I9/I9/I9/I9/I9/I9/I9/I9/I9/I9/I9/I9/I9/I9/I9/I9/I9/I9/")
