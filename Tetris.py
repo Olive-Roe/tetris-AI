@@ -776,7 +776,9 @@ class Game():
 
     def mainloop(self):
         self.input()
-        self.screen.mainloop()
+        while self.main_board.game_over == False:
+            self.display_screens()
+        
 
     def restart_board(self):
         "Restarts main board with the same seed as before"
