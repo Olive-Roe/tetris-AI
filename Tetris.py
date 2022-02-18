@@ -26,7 +26,7 @@ def boardstate_to_extended_boardstate(boardstate: str):
     if boardstate == "*":
         # Asterisk + 40 rows with slashes in between
         # but without the last slash
-        return "*" + ("........../"*40)[:-1]
+        return f'*{("........../"*40)[:-1]}'
     # Removes starting asterisk
     if boardstate[0] == "*":
         boardstate = boardstate[1:]
@@ -57,8 +57,7 @@ def boardstate_to_extended_boardstate(boardstate: str):
             item = row[index]
             if item.isnumeric() == True:
                 num_of_empty_cells = int(row[index])
-                for _ in range(num_of_empty_cells):
-                    output_list2.append(".")
+                output_list2.extend("." for _ in range(num_of_empty_cells))
             else:
                 output_list2.append(item)
         if len(output_list2) != 10:
@@ -69,8 +68,8 @@ def boardstate_to_extended_boardstate(boardstate: str):
     rows = len(notation.split("/"))
     # Adds empty rows at the end of a board notation
     for _ in range(40-rows):
-        notation = notation + "/.........."
-    return "*" + notation
+        notation = f'{notation}/..........'
+    return f'*{notation}'
 
 
 def extended_boardstate_to_boardstate(extended_boardstate: str):
@@ -532,15 +531,15 @@ class Board():
         return True
 
     def lock_piece(self):
-        # TODO: Check for perfect clear
         b = update_boardstate(self.boardstate, self.piece)
         if self.piece.y >= 20:
             # Game is over if piece locks over 21st row (do things and then set game_over to True)
             b, number_of_cleared_lines, list_of_cleared_lines = check_line_clears(
                 b)
+            pc_message = "pc" if b == "*" else "False" # Check for perfect clear
             tspin = check_t_spin(self.piece_board_notation,
                                  self.replay_notation, self.last_kick_number)
-            self.line_clear_history += f"{number_of_cleared_lines} {tspin}\n"
+            self.line_clear_history += f"{number_of_cleared_lines} {tspin} {pc_message}\n"
             # Displays the board
             self.display_board()
             self.boardstate = b
@@ -552,9 +551,10 @@ class Board():
                 f"Impossible piece lock, piece: '{self.piece.value}', board: '{self.boardstate}'")
         b, number_of_cleared_lines, list_of_cleared_lines = check_line_clears(
             b)
+        pc_message = "pc" if b == "*" else "False" # Check for perfect clear
         tspin = check_t_spin(self.piece_board_notation,
-                             self.replay_notation, self.last_kick_number)
-        self.line_clear_history += f"{number_of_cleared_lines} {tspin}\n"
+                                self.replay_notation, self.last_kick_number)
+        self.line_clear_history += f"{number_of_cleared_lines} {tspin} {pc_message}\n"
         self.boardstate = b
         # Spawns next piece and updates self.piece
         self.spawn_next_piece()
