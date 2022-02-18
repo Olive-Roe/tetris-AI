@@ -5,9 +5,20 @@ end = time()
 #print(end - start)
 # 10.9 second delay
 
+'test function for perfect clear'
+# g = Game(players=1)
+# g.input()
+# while g.main_board.game_over == False:
+#     g.display_screens()
+#     print(g.main_board.line_clear_history)
+# PC detection works
+
+# FIXME: S-spins aren't working
+
+
 'test function for keybinds'
-g = Game(players=1)
-g.mainloop()
+# g = Game(players=1)
+# g.mainloop()
 
 'test function for 40 row game over check'
 # b1 = Board(t, screen, "",
@@ -56,9 +67,9 @@ g.mainloop()
 #         b.display_board()
 #         sleep(0.5)
 #         for _ in range(20):
-#             b.rotate_piece(random.choice(directions))
+#             b.rotate_piece(choice(directions))
 #             b.display_board()
-#             b.change_x(random.randint(-5, 5))
+#             b.change_x(choice(range(-5, 5)))
 #             b.display_board()
 #             a = ""
 #             while a is not False:
@@ -90,7 +101,7 @@ g.mainloop()
 # t, screen = init_screen()
 # tests = ["T140", "Z140", "S150"]
 # for test in tests:
-#     b = Board(test, "JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS")
+#     b = Board(t, screen, test, "*JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS")
 #     b.display_board()
 #     sleep(0.5)
 #     b.rotate_piece("CCW")
