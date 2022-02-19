@@ -774,9 +774,11 @@ class Game():
             # TODO: Add support for displaying multiple boards
             board.display_board()
 
-    def mainloop(self):
+    def mainloop(self, func=lambda:None):
+        'Displays all screens while the main board is still going.\nfunc: An optional function that this function will continously print the output of'
         self.input()
         while self.main_board.game_over == False:
+            print(func())
             self.display_screens()
         
 

@@ -7,10 +7,7 @@ end = time()
 
 'test function for perfect clear'
 # g = Game(players=1)
-# g.input()
-# while g.main_board.game_over == False:
-#     g.display_screens()
-#     print(g.main_board.line_clear_history)
+# g.mainloop(lambda: g.main_board.line_clear_history)
 # PC detection works
 
 # FIXME: S-spins aren't working
