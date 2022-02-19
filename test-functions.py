@@ -10,7 +10,11 @@ end = time()
 # g.mainloop(lambda: g.main_board.line_clear_history)
 # PC detection works
 
-# FIXME: S-spins aren't working
+'test function for s-spins' # works now
+# b = Board(t, screen, "S0322", "*JJJJJ2JJJ/JJJJJJ2JJ")
+# actions = "CW 0.1\nr 0.1\nd 0.5\nCW 0.1"
+# b.do_actions_from_input(actions)
+# sleep(3)
 
 
 'test function for keybinds'
