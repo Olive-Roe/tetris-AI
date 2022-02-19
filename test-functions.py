@@ -1,9 +1,14 @@
 from Tetris import *
-start = time()
 t, screen = init_screen()
-end = time()
-#print(end - start)
-# 10.9 second delay
+
+'test function for replays'
+g = Game(players=1)
+g.mainloop()
+screen.clear()
+t, screen = init_screen()
+b = Board(t, screen)
+b.play_replay(g.main_board.replay_notation, g.main_board.seed)
+
 
 'test function for perfect clear'
 # g = Game(players=1)

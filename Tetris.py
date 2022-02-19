@@ -1,3 +1,4 @@
+from cmath import pi
 import storage
 import display
 from random import choice, seed, shuffle
@@ -75,7 +76,7 @@ def boardstate_to_extended_boardstate(boardstate: str):
 def extended_boardstate_to_boardstate(extended_boardstate: str):
     output_list = []
     # Check if board is empty and return empty board
-    if extended_boardstate == ("*" + ("........../"*40)[:-1]):
+    if extended_boardstate == f'*{("........../"*40)[:-1]}':
         return "*"
     # Remove starting asterisk
     if extended_boardstate[0] == "*":
@@ -142,8 +143,7 @@ def board_notation_to_dict(notation):
     rows = len(notation.split("/"))
     for row in notation.split("/"):
         if row == "":
-            for _ in range(10):
-                output_list.append("black")
+            output_list.extend("black" for _ in range(10))
         for index in range(len(row)):
             item = row[index]
             # Whether it's S or . check color dict and append the respective colour
@@ -162,10 +162,7 @@ def board_notation_to_dict(notation):
 def type_of_boardstate(boardstate):
     if type(boardstate) == list:
         return "list form"
-    if "." in boardstate:
-        return "extended boardstate"
-    else:
-        return "boardstate"
+    return "extended boardstate" if "." in boardstate else "boardstate"
 
 
 def boardstate_to_list_form(boardstate: str):
@@ -227,6 +224,7 @@ def return_x_y(piece_notation):
 
 
 def produce_bag_generator(generator_seed: str = "") -> Generator[str, None, None]:
+    # sourcery skip: simplify-empty-collection-comparison
     'Creates a generator for bags, which will return seeded bags\nIf generator seed is kept as default (empty str), it will produce random, unseeded bags'
     if generator_seed == "":
         yield generate_new_bag()
@@ -350,7 +348,7 @@ class Board():
         else:
             self.piece = Piece(piece_notation)
         # Non-dynamic init piece board notation
-        self.piece_board_notation = self.piece.value + ":" + self.boardstate
+        self.piece_board_notation = f'{self.piece.value}:{self.boardstate}'
         # Initializes an empty replay notation
         self.replay_notation = "start"
         # Initializes the last kick number (for t-spin detection)
@@ -391,8 +389,8 @@ class Board():
     def display_board(self, pb="", queue="", hold="", hold_locked=""):
         'Displays the current board through Turtle'
         if pb != "":
-            b, p = separate_piece_board_notation(pb)
-            boardstate = update_boardstate(b, p)
+            p, b = separate_piece_board_notation(pb)
+            boardstate = update_boardstate(b, Piece(p))
             if boardstate in ["out of bounds", "occupied cell"]:
                 # Meaning the game is over
                 raise ValueError(
@@ -400,7 +398,7 @@ class Board():
             draw_grid(boardstate, self.t, self.screen)
             # Displays the hold slot and next queue
             # TODO: Change this to non-temporary functions
-            display.temp_draw_hold_slot(hold, hold_locked)
+            display.temp_draw_hold_slot(hold, hold_locked, self.t)
             display.temp_draw_next_queue(queue, self.screen, self.t)
             return True
 
@@ -563,11 +561,7 @@ class Board():
         self.update_pb_notation()
         # Inverts the game over check (returns True if check is False)
         self.update_replay_notation("lock")
-        return self.game_over_check() != True
-
-    def game_over_check(self):
-        # TODO: Write game over check
-        return False
+        return True
 
     def move_down_as_much_as_possible(self):
         # Checks the first down movement
@@ -632,9 +626,10 @@ class Board():
 
     def load_replay(self, replay: str, seed) -> Tuple[List[str], List[Any], List[Any], List[Any], List[Any]]:
         'Given a replay, simulates it and returns a list of piece-board notations, and a list of delays'
+        # FIXME: Incorrectly loads replays (seeding issue?)
         timestamp_list = []
         b1 = Board(self.t, self.screen, "", "*", seed)
-        pb_notation_list = [f"{b1.piece_board_notation} 0"]
+        pb_notation_list = [f"{b1.piece_board_notation}"]
         next_queue_list = []
         hold_list = []
         hold_locked_list = []
@@ -653,7 +648,6 @@ class Board():
         return pb_notation_list, timestamp_list, next_queue_list, hold_list, hold_locked_list
 
     def play_replay(self, replay: str, seed):
-        # TODO: Make this play any replay with any starting bag seed
         pb_list, timestamp_list, next_queue_list, hold_list, hold_locked_list = self.load_replay(
             replay, seed)
         t = time()
@@ -778,7 +772,8 @@ class Game():
         'Displays all screens while the main board is still going.\nfunc: An optional function that this function will continously print the output of'
         self.input()
         while self.main_board.game_over == False:
-            print(func())
+            if func != (lambda:None):
+                print(func())
             self.display_screens()
         
 
@@ -854,15 +849,16 @@ def find_offset_list(piecestate: Piece):
     'Given a Piece, returns a list of offsets of each filled tile from the center [(x1, y1), (x2, y2)]'
     # TODO: Might be more efficient (time-wise) to use a lookup table, as there are only 28 possibilities of shapes
     # Accesses global variable pieces
-    shape = storage.pieces[piecestate.type][piecestate.orientation]
-    offset_list = []
     # Alternative list comprehension (might not be super readable)
     # return [[(cell-2, 2-r) for cell in range(5) if shape[r][cell] == "0"] for r in range(5)]
-    for r in range(5):
-        for cell in range(5):
-            if shape[r][cell] == "0":
-                offset_list.append((cell-2, 2-r))
-    return offset_list
+    ## Previous code:
+    # for r in range(5):
+    #     for cell in range(5):
+    #         if shape[r][cell] == "0":
+    #             offset_list.append((cell-2, 2-r))
+    # return offset_list
+    return storage.offset_list_table[piecestate.type][piecestate.orientation]
+    
 
 
 def update_boardstate_from_pb_notation(pb_notation):
