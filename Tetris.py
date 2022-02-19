@@ -263,6 +263,7 @@ def display_as_text(notation):
 
 
 def check_type_notation(notation):
+    # sourcery skip: merge-else-if-into-elif, reintroduce-else, use-next
     'Takes a (valid) notation and returns its type, or False if it\'s unrecognizable.'
     n_list = list(notation)
     if len(n_list) >= 4:
@@ -423,8 +424,8 @@ class Board():
         elif new_piece_type in ["Z", "O"]:
             x, y = 4, 22
         if init != "":
-            return new_piece_type + "0" + str(x) + str(y)
-        self.piece.update(new_piece_type + "0" + str(x) + str(y))
+            return f'{new_piece_type}0{x}{y}'
+        self.piece.update(f'{new_piece_type}0{x}{y}')
         # Checks if the piece can spawn
         b = update_boardstate(self.boardstate, self.piece)
         if b == 'occupied cell':
