@@ -286,8 +286,7 @@ def check_type_notation(notation):
 
 def _get_data_from_replay_line(item: str):
     'Given a line from a replay notation, return the action and the delay in a tuple'
-    # float(0) is used to appease mypy
-    default_time = float(0)
+    default_time:float = 0
     i = item.split(" ")[0]
     if len(item.split(" ")) == 1:
         # Setting a default delay value
