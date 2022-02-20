@@ -1,14 +1,13 @@
 Bucket list for priority tasks (ordered)
  Make graphical hold display
  Make graphical next queue display
- Make ghost pieces
  Make replays playable
+ Make ghost pieces
 
 Unordered:
  Make Game class
 
 Future plans:
-- Make keybinds
 - Implement DAS, ARR, SDF
 - Implement sending lines/combo table
 - Implement score table
@@ -24,6 +23,7 @@ Priority list values (triage):
 4. Writing completely new code with large changes
 
 Done:
+Make keybinds
 Make t-spin detection
 Make hard drop function
 Make line clear function
