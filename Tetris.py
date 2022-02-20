@@ -1,9 +1,8 @@
-from cmath import pi
 import storage
 import display
 from random import choice, seed, shuffle
 from typing import List, Tuple, Any, Generator
-from turtle import Screen, Turtle, update
+from turtle import Screen, Turtle
 from time import sleep, time
 
 
@@ -337,8 +336,12 @@ class Board():
         self.boardstate = boardstate
         self.extended_boardstate = boardstate_to_extended_boardstate(
             self.boardstate)
-        self.seed = bag_seed
-        self.bag = Bag(bag_seed)
+        if bag_seed == "":
+            self.seed = time()
+            self.bag = Bag(self.seed)
+        else:
+            self.seed = bag_seed
+            self.bag = Bag(bag_seed)
         self.hold = hold
         # Boolean for whether the hold is locked or not
         self.hold_locked = hold_locked
@@ -376,7 +379,7 @@ class Board():
                 x, y = 3, 22
             elif held_piece in ["Z", "O"]:
                 x, y = 4, 22
-            self.piece.update(held_piece + "0" + str(x) + str(y))
+            self.piece.update(f'{held_piece}0{x}{y}')
             self.hold = current_piece
             self.hold_locked = True
             self.update_pb_notation()
@@ -442,8 +445,6 @@ class Board():
             str(self.piece.orientation) + \
             str(self.piece.x) + str(self.piece.y-1)
         # Updates replay notation if this is being called by itself
-        if not subfunction:
-            self.update_replay_notation("d1")
         return self.check_if_valid(piece_message)
 
     def change_x(self, value: int):
@@ -480,9 +481,6 @@ class Board():
         piece_message = self.piece.type + \
             str(self.piece.orientation) + \
             str(self.piece.x-1) + str(self.piece.y)
-        # Updates replay notation if this is being called by itself
-        if not subfunction:
-            self.update_replay_notation("r")
         return self.check_if_valid(piece_message)
 
     def move_piece_right(self, subfunction=False):
@@ -494,9 +492,6 @@ class Board():
         piece_message = self.piece.type + \
             str(self.piece.orientation) + \
             str(self.piece.x+1) + str(self.piece.y)
-        # Updates replay notation if this is being called by itself
-        if not subfunction:
-            self.update_replay_notation("r")
         return self.check_if_valid(piece_message)
 
     def check_if_valid(self, piece_message):
@@ -525,7 +520,6 @@ class Board():
         self.piece.update(p)
         self.boardstate = b
         self.update_pb_notation()
-        self.update_replay_notation(direction)
         return True
 
     def lock_piece(self):
@@ -559,8 +553,6 @@ class Board():
         # Unlocks hold
         self.hold_locked = False
         self.update_pb_notation()
-        # Inverts the game over check (returns True if check is False)
-        self.update_replay_notation("lock")
         return True
 
     def move_down_as_much_as_possible(self):
@@ -572,7 +564,6 @@ class Board():
         flag = True
         while flag:
             flag = self.move_piece_down(subfunction=True)
-        self.update_replay_notation("d")
         return True
 
     def hard_drop(self):
@@ -591,7 +582,6 @@ class Board():
         flag = True
         while flag:
             flag = self.move_piece_left(subfunction=True)
-        self.update_replay_notation("L")
         return True
 
     def move_piece_rightmost(self):
@@ -603,7 +593,6 @@ class Board():
         flag = True
         while flag:
             flag = self.move_piece_right(subfunction=True)
-        self.update_replay_notation("R")
         return True
 
     def receive_garbage(self, column: int, amount: int):
@@ -612,7 +601,7 @@ class Board():
         garbage = "x"*column + "." + "x"*(9-column)
         # Removes starting asterisk
         # Multiplies the garbage row with the amount
-        b = "*" + amount * (garbage + "/") + self.boardstate[1:]
+        b = "*" + amount * f'{garbage}/' + self.boardstate[1:]
         # Check if blocks are pushed over the 40th row
         if len(b[1:].split("/")) > 40:
             self.game_over = True
@@ -620,13 +609,10 @@ class Board():
         self.update_pb_notation()
         # Formats the message (e.g. g0x5)
         replay_message = f"g{column}x{amount}"
-        # Updates the replay notation
-        self.update_replay_notation(replay_message)
         return True
 
     def load_replay(self, replay: str, seed) -> Tuple[List[str], List[Any], List[Any], List[Any], List[Any]]:
         'Given a replay, simulates it and returns a list of piece-board notations, and a list of delays'
-        # FIXME: Incorrectly loads replays (seeding issue?)
         timestamp_list = []
         b1 = Board(self.t, self.screen, "", "*", seed)
         pb_notation_list = [f"{b1.piece_board_notation}"]
@@ -639,7 +625,10 @@ class Board():
                 continue
             i, timestamp = _get_data_from_replay_line(item)
             b1.update_pb_notation()
-            b1.do_action(i)
+            try:
+                b1.do_action(i)
+            except ValueError: # Impossible piece lock
+                continue # Skip this line
             pb_notation_list.append(b1.piece_board_notation)
             next_queue_list.append(b1.bag.value)
             hold_list.append(b1.hold)
@@ -696,21 +685,11 @@ class Board():
             # e.g. g0x5
             # i[1] is the column, i[3] is the amount of garbage
             self.receive_garbage(int(i[1]), int(i[3]))
+        self.update_replay_notation(i)
         return flag
 
     def do_actions_from_input(self, input: str):
         'Given an input of a string separated by newlines, performs actions accordingly'
-        # CW/CCW/180 -> rotates current piece
-        # l/r -> moves current piece left/right
-        # L/R -> moves current piece as much left/right as possible
-        # d -> moves current piece down as much as possible
-        # hd -> d + lock
-        # d(n) -> moves current piece by n tiles
-        # lock -> locks current piece
-        # hold -> holds current piece
-        # g0x5 -> receives 5 rows of garbage in column 0
-        # TODO: Change the format to be (time since start)
-        # separated by a space, and then (time) -> time since last action
         input_list = input.split("\n")
         for item in input_list:
             i, delay = _get_data_from_replay_line(item)
@@ -768,11 +747,11 @@ class Game():
             # TODO: Add support for displaying multiple boards
             board.display_board()
 
-    def mainloop(self, func=lambda:None):
+    def mainloop(self, func=None):
         'Displays all screens while the main board is still going.\nfunc: An optional function that this function will continously print the output of'
         self.input()
         while self.main_board.game_over == False:
-            if func != (lambda:None):
+            if func != None:
                 print(func())
             self.display_screens()
         
@@ -784,19 +763,18 @@ class Game():
 
     def input(self):
         b = self.board_list[0]
-        keybinds = {
-            "Up": lambda: b.rotate_piece("CW"),
-            "Down": b.move_piece_down,
-            "Left": b.move_piece_left,
-            "Right": b.move_piece_right,
-            "Shift_L": b.hold_piece,
-            "c": b.hold_piece,
-            "z": lambda: b.rotate_piece("CCW"),
-            "a": lambda: b.rotate_piece("180"),
-            "space": b.hard_drop,
-            "r": self.restart_board,
+        keybinds2 = {
+            "Up": lambda: b.do_action("CW"),
+            "Down": lambda: b.do_action("d"),
+            "Left": lambda: b.do_action("l"),
+            "Right": lambda: b.do_action("r"),
+            "Shift_L": lambda: b.do_action("hold"),
+            "c": lambda: b.do_action("hold"),
+            "z": lambda: b.do_action("CCW"),
+            "a": lambda: b.do_action("180"),
+            "space": lambda: b.do_action("hd")
         }
-        for key, action in keybinds.items():
+        for key, action in keybinds2.items():
             # should be working keybinds?
             self.screen.onkey(action, key)
         self.screen.listen()

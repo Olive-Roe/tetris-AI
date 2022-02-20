@@ -40,3 +40,16 @@ Bag (str)
 Consists of 13/14 pieces represented by letters
 Used for showing the next queue
 "OLIZTSJSLZTJOI"
+
+Action notation (str)
+Consists of different codes for different actions:
+CW/CCW/180 -> rotates current piece
+l/r -> moves current piece left/right
+L/R -> moves current piece as much left/right as possible
+d -> moves current piece down as much as possible
+hd -> d + lock
+d(n) -> moves current piece by n tiles
+lock -> locks current piece
+hold -> holds current piece
+g0x5 -> receives 5 rows of garbage in column 0
+separated by a space, and then (time) -> time since start
