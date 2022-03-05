@@ -607,8 +607,6 @@ class Board():
             self.game_over = True
         self.boardstate = b
         self.update_pb_notation()
-        # Formats the message (e.g. g0x5)
-        replay_message = f"g{column}x{amount}"
         return True
 
     def load_replay(self, replay: str, seed) -> Tuple[List[str], List[Any], List[Any], List[Any], List[Any]]:
@@ -683,8 +681,8 @@ class Board():
             flag = self.hold_piece()
         elif i[0] == "g":
             # e.g. g0x5
-            # i[1] is the column, i[3] is the amount of garbage
-            self.receive_garbage(int(i[1]), int(i[3]))
+            # i[1] is the column (0-9), i[3:] is the amount of garbage (can be more than 1 digit)
+            self.receive_garbage(int(i[1]), int(i[3:]))
         self.update_replay_notation(i)
         return flag
 
