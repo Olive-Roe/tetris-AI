@@ -19,8 +19,26 @@ def create_grid(locked_positions=None):
 
 # TODO: Refactor into smaller methods
 
+def _get_line_from_garbage_message(message):
+    # allows for g0L meaning a garbage line with orange
+    type_of_piece = message[2] if len(message) == 3 else "."
+    # message[1] is the garbage_index (3 in g3)
+    return f'{"x"*int(message[1])}{type_of_piece}{"x"*(9-int(message[1]))}'
+
+# FIXME: some pieces cannot softdrop (line 229, in change_cell/new_boardstate[row][column] = val/IndexError: list assignment index out of range)
+def boardstate_to_extended_boardstate2(boardstate:str):
+    # TODO: this function is getting called multiple times for the same boardstate, either fix things or use dynamic programming
+    if boardstate == "*":
+        return f'*{("........../"*40)[:-1]}'
+    # a one liner, basically iterates through each char in each line, if it's numerical, adds "." * char to the line, else just adds char to the line. if line is garbage notation, adds that garbage notation
+    a = "/".join([".........." if line == "" else _get_line_from_garbage_message(line) if line[0] == "g" else "".join(["." * int(character) if character.isnumeric() else character for character in line]) for line in boardstate.split("/")])
+    # adds empty rows up to 40
+    for _ in range(40 - len(a.split("/"))):
+        a += "/.........."
+    return a
 
 def boardstate_to_extended_boardstate(boardstate: str):
+    # TODO: Short-circuit this function to run faster even if there are more pieces
     # Strict input: must have a starting *
     # Empty boardstate
     if boardstate == "*":
@@ -73,6 +91,7 @@ def boardstate_to_extended_boardstate(boardstate: str):
 
 
 def extended_boardstate_to_boardstate(extended_boardstate: str):
+    # TODO: Short-circuit this function to run faster even if there are more pieces
     output_list = []
     # Check if board is empty and return empty board
     if extended_boardstate == f'*{("........../"*40)[:-1]}':
@@ -104,7 +123,7 @@ def extended_boardstate_to_boardstate(extended_boardstate: str):
                 # All cells are x, which shouldn't happen
                 raise ValueError(
                     f"Filled garbage row in boardstate: {extended_boardstate}")
-            message = "g" + str(index) + piece_type
+            message = f"g{str(index)}{piece_type}"
             output_list.append(message)
             continue
         output_list2 = []
@@ -165,7 +184,6 @@ def type_of_boardstate(boardstate):
 
 
 def boardstate_to_list_form(boardstate: str):
-    # sourcery skip: inline-immediately-returned-variable
     'Returns a 2D array of cells inside rows from a boardstate'
     type_b = type_of_boardstate(boardstate)
     if type_b == "boardstate":
@@ -173,13 +191,13 @@ def boardstate_to_list_form(boardstate: str):
         a = boardstate_to_extended_boardstate(str(boardstate))
     elif type_b == "extended boardstate":
         # boardstate is already extended, shorten it and extend it again
+        # TODO: check whether this is necessary as it slows whole program down
         a = boardstate_to_extended_boardstate(
             extended_boardstate_to_boardstate(str(boardstate)))
     # if neither of these an error will be thrown
     # Remove starting asterisk and split a
     a = a[1:].split("/")
-    output = [list(item) for item in a]
-    return output
+    return [list(item) for item in a] # output
 
 
 def list_form_to_boardstate(list_form: list):
@@ -204,6 +222,7 @@ def access_cell(boardstate: str, row: int, column: int):
 
 
 def change_cell(boardstate: str, row: int, column: int, val: str):
+    # sourcery skip: use-fstring-for-concatenation
     'Given a boardstate, row, column of a cell (starting from index 0), and a value, update the boardstate and return it.'
     row = int(row)
     column = int(column)
@@ -785,9 +804,9 @@ def update_boardstate(boardstate, piecestate: Piece):
         return "out of bounds"
     # Check whether the piece is an O piece and set its orientation to 0 (doesn't matter in updating boardstate)
     if piecestate.type == "O":
-        piecestate = Piece("O0" + str(piecestate.x) + str(piecestate.y))
+        piecestate = Piece(f"O0{str(piecestate.x)}{str(piecestate.y)}")
     # Gets a list of offsets from the Piece
-    offset_list = find_offset_list(piecestate)
+    offset_list = _find_offset_list(piecestate)
     # Finds the center x and y coordinates
     center_x, center_y = _find_center(piecestate)
     # Combining offset and center list to find the list of the actual coordinates
@@ -812,27 +831,14 @@ def update_boardstate(boardstate, piecestate: Piece):
 
 def _find_center(piecestate: Piece):
     'Given a Piece, returns the coordinates of its actual center (x, y)'
-    if piecestate.type == "O":
-        # If piece is an O-piece, just check the spawn orientation (there's only 1)
-        shape = storage.pieces["O"][0]
     blx, bly = _findBLC(piecestate)
     # The x-offset from the actual x of the piece to the center is 2-blx, same for y
     # Therefore, the center is x+2-blx
     return piecestate.x + 2 - blx, piecestate.y + 2 - bly
 
 
-def find_offset_list(piecestate: Piece):
+def _find_offset_list(piecestate: Piece):
     'Given a Piece, returns a list of offsets of each filled tile from the center [(x1, y1), (x2, y2)]'
-    # TODO: Might be more efficient (time-wise) to use a lookup table, as there are only 28 possibilities of shapes
-    # Accesses global variable pieces
-    # Alternative list comprehension (might not be super readable)
-    # return [[(cell-2, 2-r) for cell in range(5) if shape[r][cell] == "0"] for r in range(5)]
-    ## Previous code:
-    # for r in range(5):
-    #     for cell in range(5):
-    #         if shape[r][cell] == "0":
-    #             offset_list.append((cell-2, 2-r))
-    # return offset_list
     return storage.offset_list_table[piecestate.type][piecestate.orientation]
     
 
@@ -845,8 +851,6 @@ def update_boardstate_from_pb_notation(pb_notation):
 
 def _findBLC(piece: Piece):
     'Given a shape, finds its bottom left corner relative to a 5x5 grid (helper function to update_boardstate)'
-    if piece.type == "O":
-        return (1, 1)
     return storage.blc_table[piece.type][piece.orientation]
 
 
