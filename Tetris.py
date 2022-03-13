@@ -329,10 +329,18 @@ class Board():
         self.last_kick_number = 0
         # Initializes the history of line clears
         self.line_clear_history = ""
+        # Initalizes the history of piece placements
+        self.piece_placement_history = []
+        # Initializes the number of pieces placed
+        self.pieces_placed = 0
         # Starts the clock immediately
         self.start_time = time()
         self.game_over = False
 
+    def pps(self):
+        'Returns the number of pieces per second (to 3dp) as of this function being called'
+        return round(self.pieces_placed/(time()-self.start_time), 3)
+    
     def hold_piece(self):
         if self.hold_locked:
             # If hold is locked, function shouldn't work
@@ -503,6 +511,8 @@ class Board():
             tspin = check_t_spin(self.piece_board_notation,
                                  self.replay_notation, self.last_kick_number)
             self.line_clear_history += f"{number_of_cleared_lines} {tspin} {pc_message}\n"
+            self.piece_placement_history.append(self.piece.value)
+            self.pieces_placed += 1
             # Displays the board
             self.display_board()
             self.boardstate = b
@@ -512,12 +522,13 @@ class Board():
         if b in ["out of bounds", "occupied cell"]:
             raise ValueError(
                 f"Impossible piece lock, piece: '{self.piece.value}', board: '{self.boardstate}'")
-        b, number_of_cleared_lines, list_of_cleared_lines = check_line_clears(
-            b)
+        b, number_of_cleared_lines, list_of_cleared_lines = check_line_clears(b)
         pc_message = "pc" if b == "*" else "False"  # Check for perfect clear
         tspin = check_t_spin(self.piece_board_notation,
                              self.replay_notation, self.last_kick_number)
         self.line_clear_history += f"{number_of_cleared_lines} {tspin} {pc_message}\n"
+        self.piece_placement_history.append(self.piece.value)
+        self.pieces_placed += 1
         self.boardstate = b
         # Spawns next piece and updates self.piece
         self.spawn_next_piece()
@@ -706,6 +717,8 @@ class Game():
         # T is unused
         t, self.screen = init_screen()
         self.t_list = [Turtle() for _ in range(self.players)]
+        for t in self.t_list:
+            t.hideturtle()
         # FIXME: A turtle appears in the middle of the screen, hide all turtles
         self.board_list = [Board(t, self.screen) for t in self.t_list]
         self.main_board = self.board_list[0]
@@ -744,7 +757,7 @@ class Game():
         }
         for key, action in keybinds2.items():
             # should be working keybinds?
-            self.screen.onkey(action, key)
+            self.screen.onkeypress(action, key)
         self.screen.listen()
 
 

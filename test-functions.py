@@ -1,6 +1,10 @@
 from Tetris import *
 t, screen = init_screen()
 
+'test function for pps'
+# g = Game(players=1)
+# g.mainloop(lambda: g.main_board.pps())
+
 'test function for replays'
 g = Game(players=1)
 g.mainloop()
