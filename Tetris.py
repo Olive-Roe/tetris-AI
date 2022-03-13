@@ -26,9 +26,40 @@ def _get_line_from_garbage_message(message):
     # message[1] is the garbage_index (3 in g3)
     return f'{"x"*int(message[1])}{type_of_piece}{"x"*(9-int(message[1]))}'
 
+
+def _get_message_from_garbage_line(line):
+    'Gets the shortened message from a garbage line (e.g. g6 from xxxxxx.xxx, or g2L from xxLxxxxxxx'
+    index = 0
+    # Default piece type is ., which isn't shown
+    piece_type = ""
+    for i, cell in enumerate(line):
+        if cell != "x":
+            # Finds the non garbage cell
+            index = i
+            if cell != ".":
+                # Sets the piece type to the contents of the cell
+                piece_type = cell
+            break
+    return f"g{str(index)}{piece_type}"
+
+
+def _get_message_from_normal_line(line):
+    lineStr = ""
+    counter = 0
+    for c in line:
+        if c == ".":
+            counter += 1
+        else:
+            lineStr += str(counter) + c if counter != 0 else c
+            counter = 0
+    # Add the counter one last time if it is still not 0
+    lineStr += str(counter) if counter != 0 else ""
+    return lineStr
+
+
 def boardstate_to_extended_boardstate(boardstate: str):
     if boardstate == "*":
-        return f'*{("........../"*40)[:-1]}'
+        return '*' + ("........../"*40)[:-1]
     # Remove starting asterisk
     boardstate = boardstate[1:]
     outputList = []
@@ -48,63 +79,28 @@ def boardstate_to_extended_boardstate(boardstate: str):
 
 def extended_boardstate_to_boardstate(extended_boardstate: str):
     # TODO: Short-circuit this function to run faster even if there are more pieces
-    output_list = []
-    # Check if board is empty and return empty board
-    if extended_boardstate == f'*{("........../"*40)[:-1]}':
+    if extended_boardstate == '*' + ("........../"*40)[:-1]:
         return "*"
-    # Remove starting asterisk
-    if extended_boardstate[0] == "*":
-        extended_boardstate = extended_boardstate[1:]
-    for row in extended_boardstate.split("/"):
-        if row == "..........":
-            # If row is empty, add an empty row to the output list
-            output_list.append("")
-            continue
-        # Checking if it is a garbage row:
-        if "x" in row:
-            # Converts row to a list, finds the index of the non-garbage cell,
-            # and appends "g" and the index to the outputlist (e.g g2 for xx.xxxxxxx)
-            index = 0
-            # Default piece type is ., which isn't shown
-            piece_type = ""
-            for i, cell in enumerate(row):
-                if cell != "x":
-                    # Finds the non garbage cell
-                    index = i
-                    if cell != ".":
-                        # Sets the piece type to the contents of the cell
-                        piece_type = cell
-                    break
-            else:
-                # All cells are x, which shouldn't happen
-                raise ValueError(
-                    f"Filled garbage row in boardstate: {extended_boardstate}")
-            message = f"g{str(index)}{piece_type}"
-            output_list.append(message)
-            continue
-        output_list2 = []
-        counter = 0
-        for item in row:
-            if item == ".":
-                counter += 1
-            else:
-                if counter != 0:
-                    output_list2.append(str(counter))
-                    counter = 0
-                output_list2.append(item)
-        if counter != 0:
-            output_list2.append(str(counter))
-        output_list.append("".join(output_list2))
-    # Removes extra lines at the end of a boardstate
-    # reverses output list
-    for row in output_list[::-1]:
-        # As long as the rows (from the end) are empty, remove them
-        if row == "":
-            output_list.pop(-1)
+    # Remove asterisk
+    extended_boardstate = extended_boardstate[1:]
+    outputList = []
+    # Look at list in reverse order to remove unnecessary empty lines
+    emptyRows = True
+    for line in extended_boardstate.split("/")[::-1]:
+        if line == "..........":
+            if emptyRows:
+                # Skip the empty row
+                continue
+            outputList.append("")
         else:
-            break
-    # Strict format: there is an extra * at the beginning
-    return "*" + "/".join(output_list)
+            emptyRows = False
+            # The rows up until now are empty, now we have some non-empty rows
+            if "x" in line:
+                outputList.append(_get_message_from_garbage_line(line))
+            else:
+                outputList.append(_get_message_from_normal_line(line))
+    # Un-reverse the list to get the correct order
+    return "*" + "/".join(outputList[::-1])
 
 # TODO: Refactor into smaller functions, make more readable
 
@@ -157,7 +153,7 @@ def boardstate_to_list_form(boardstate: str):
 
 
 def list_form_to_boardstate(list_form: list):
-    return "/".join(["".join(item) for item in (list_form)])
+    return "*" + "/".join(["".join(item) for item in (list_form)])
 
 
 def construct_piece_board_notation(piece_notation, board_notation):
@@ -183,6 +179,7 @@ def change_cell(boardstate: str, row: int, column: int, val: str):
     row = int(row)
     column = int(column)
     new_boardstate = boardstate_to_list_form(boardstate)
+    new_boardstate[row][column] = val
     return list_form_to_boardstate(new_boardstate)
 
 

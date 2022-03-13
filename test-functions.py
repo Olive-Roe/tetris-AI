@@ -9,6 +9,10 @@ t, screen = init_screen()
 b = Board(t, screen)
 b.play_replay(g.main_board.replay_notation, g.main_board.seed)
 
+'test function for ext board->board'
+# b = "*JJJI...ZZT/OOJI..ZZTT/OOLI...SST/LLLI....SS/........../........../........../........../........../........../........../........../........../........../........../........../........../........../........../........../........../........../........../........../........../........../........../........../........../........../........../........../........../........../........../........../........../........../........../.........."
+# print(extended_boardstate_to_boardstate2(b))
+
 'test function for board->ext board'
 # b = "*JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS"
 # print(boardstate_to_extended_boardstate(b))
