@@ -19,75 +19,31 @@ def create_grid(locked_positions=None):
 
 # TODO: Refactor into smaller methods
 
+
 def _get_line_from_garbage_message(message):
     # allows for g0L meaning a garbage line with orange
     type_of_piece = message[2] if len(message) == 3 else "."
     # message[1] is the garbage_index (3 in g3)
     return f'{"x"*int(message[1])}{type_of_piece}{"x"*(9-int(message[1]))}'
 
-# FIXME: some pieces cannot softdrop (line 229, in change_cell/new_boardstate[row][column] = val/IndexError: list assignment index out of range)
-def boardstate_to_extended_boardstate2(boardstate:str):
-    # TODO: this function is getting called multiple times for the same boardstate, either fix things or use dynamic programming
-    if boardstate == "*":
-        return f'*{("........../"*40)[:-1]}'
-    # a one liner, basically iterates through each char in each line, if it's numerical, adds "." * char to the line, else just adds char to the line. if line is garbage notation, adds that garbage notation
-    a = "/".join([".........." if line == "" else _get_line_from_garbage_message(line) if line[0] == "g" else "".join(["." * int(character) if character.isnumeric() else character for character in line]) for line in boardstate.split("/")])
-    # adds empty rows up to 40
-    for _ in range(40 - len(a.split("/"))):
-        a += "/.........."
-    return a
-
 def boardstate_to_extended_boardstate(boardstate: str):
-    # TODO: Short-circuit this function to run faster even if there are more pieces
-    # Strict input: must have a starting *
-    # Empty boardstate
     if boardstate == "*":
-        # Asterisk + 40 rows with slashes in between
-        # but without the last slash
         return f'*{("........../"*40)[:-1]}'
-    # Removes starting asterisk
-    if boardstate[0] == "*":
-        boardstate = boardstate[1:]
-    else:
-        raise ValueError(
-            f"Bad boardstate (no starting asterisk): '{boardstate}'")
-    output_list = []
-    for i in range(len(boardstate.split("/"))):
-        row = boardstate.split("/")[i]
-        if row == "":
-            output_list2 = [".........."]
-            output_list.append("".join(output_list2))
-            # Skips to next row as row is empty
-            continue
-        # Checking if row is a garbage row (e.g. "g6")
-        if row[0] == "g":
-            garbage_index = int(row[1])
-            type_of_piece = row[2] if len(row) == 3 else "."
-            assert garbage_index >= 0 and garbage_index <= 9
-            # g6 becomes xxxxxx.xxx as the . is in index 6
-            message = "x" * garbage_index + \
-                type_of_piece + "x" * (9 - garbage_index)
-            # Appends the message to the outputlist
-            output_list.append(message)
-            continue
-        output_list2 = []
-        for index in range(len(row)):
-            item = row[index]
-            if item.isnumeric() == True:
-                num_of_empty_cells = int(row[index])
-                output_list2.extend("." for _ in range(num_of_empty_cells))
-            else:
-                output_list2.append(item)
-        if len(output_list2) != 10:
-            print(boardstate, output_list2)
-            raise ValueError(output_list2)
-        output_list.append("".join(output_list2))
-    notation = "/".join(output_list)
-    rows = len(notation.split("/"))
-    # Adds empty rows at the end of a board notation
-    for _ in range(40-rows):
-        notation = f'{notation}/..........'
-    return f'*{notation}'
+    # Remove starting asterisk
+    boardstate = boardstate[1:]
+    outputList = []
+    for line in boardstate.split("/"):
+        if line == "":
+            outputList.append("..........")
+        elif line[0] == "g":
+            outputList.append(_get_line_from_garbage_message(line))
+        else:
+            outputList.append("".join(
+                ["." * int(character) if character.isnumeric() else character for character in line]))
+    outputStr = "*" + "/".join(outputList)
+    for _ in range(40 - len(outputStr.split("/"))):
+        outputStr += "/.........."
+    return outputStr
 
 
 def extended_boardstate_to_boardstate(extended_boardstate: str):
@@ -197,7 +153,7 @@ def boardstate_to_list_form(boardstate: str):
     # if neither of these an error will be thrown
     # Remove starting asterisk and split a
     a = a[1:].split("/")
-    return [list(item) for item in a] # output
+    return [list(item) for item in a]  # output
 
 
 def list_form_to_boardstate(list_form: list):
@@ -227,7 +183,6 @@ def change_cell(boardstate: str, row: int, column: int, val: str):
     row = int(row)
     column = int(column)
     new_boardstate = boardstate_to_list_form(boardstate)
-    new_boardstate[row][column] = val
     return list_form_to_boardstate(new_boardstate)
 
 
@@ -304,7 +259,7 @@ def check_type_notation(notation):
 
 def _get_data_from_replay_line(item: str):
     'Given a line from a replay notation, return the action and the delay in a tuple'
-    default_time:float = 0
+    default_time: float = 0
     i = item.split(" ")[0]
     if len(item.split(" ")) == 1:
         # Setting a default delay value
@@ -547,7 +502,7 @@ class Board():
             # Game is over if piece locks over 21st row (do things and then set game_over to True)
             b, number_of_cleared_lines, list_of_cleared_lines = check_line_clears(
                 b)
-            pc_message = "pc" if b == "*" else "False" # Check for perfect clear
+            pc_message = "pc" if b == "*" else "False"  # Check for perfect clear
             tspin = check_t_spin(self.piece_board_notation,
                                  self.replay_notation, self.last_kick_number)
             self.line_clear_history += f"{number_of_cleared_lines} {tspin} {pc_message}\n"
@@ -562,9 +517,9 @@ class Board():
                 f"Impossible piece lock, piece: '{self.piece.value}', board: '{self.boardstate}'")
         b, number_of_cleared_lines, list_of_cleared_lines = check_line_clears(
             b)
-        pc_message = "pc" if b == "*" else "False" # Check for perfect clear
+        pc_message = "pc" if b == "*" else "False"  # Check for perfect clear
         tspin = check_t_spin(self.piece_board_notation,
-                                self.replay_notation, self.last_kick_number)
+                             self.replay_notation, self.last_kick_number)
         self.line_clear_history += f"{number_of_cleared_lines} {tspin} {pc_message}\n"
         self.boardstate = b
         # Spawns next piece and updates self.piece
@@ -644,8 +599,8 @@ class Board():
             b1.update_pb_notation()
             try:
                 b1.do_action(i)
-            except ValueError: # Impossible piece lock
-                continue # Skip this line
+            except ValueError:  # Impossible piece lock
+                continue  # Skip this line
             pb_notation_list.append(b1.piece_board_notation)
             next_queue_list.append(b1.bag.value)
             hold_list.append(b1.hold)
@@ -771,7 +726,6 @@ class Game():
             if func != None:
                 print(func())
             self.display_screens()
-        
 
     def restart_board(self):
         "Restarts main board with the same seed as before"
@@ -840,7 +794,6 @@ def _find_center(piecestate: Piece):
 def _find_offset_list(piecestate: Piece):
     'Given a Piece, returns a list of offsets of each filled tile from the center [(x1, y1), (x2, y2)]'
     return storage.offset_list_table[piecestate.type][piecestate.orientation]
-    
 
 
 def update_boardstate_from_pb_notation(pb_notation):

@@ -9,13 +9,16 @@ t, screen = init_screen()
 b = Board(t, screen)
 b.play_replay(g.main_board.replay_notation, g.main_board.seed)
 
+'test function for board->ext board'
+# b = "*JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS"
+# print(boardstate_to_extended_boardstate(b))
 
 'test function for perfect clear'
 # g = Game(players=1)
 # g.mainloop(lambda: g.main_board.line_clear_history)
 # PC detection works
 
-'test function for s-spins' # works now
+'test function for s-spins'  # works now
 # b = Board(t, screen, "S0322", "*JJJJJ2JJJ/JJJJJJ2JJ")
 # actions = "CW 0.1\nr 0.1\nd 0.5\nCW 0.1"
 # b.do_actions_from_input(actions)
