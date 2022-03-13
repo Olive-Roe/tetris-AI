@@ -340,7 +340,7 @@ class Board():
     def pps(self):
         'Returns the number of pieces per second (to 3dp) as of this function being called'
         return round(self.pieces_placed/(time()-self.start_time), 3)
-    
+
     def hold_piece(self):
         if self.hold_locked:
             # If hold is locked, function shouldn't work
@@ -367,6 +367,9 @@ class Board():
     def update_pb_notation(self):
         self.piece_board_notation = construct_piece_board_notation(
             self.piece.value, self.boardstate)
+    
+    def display_message(self, message):
+        display.write_text(self.t, self.screen, message)
 
     def display_board(self, pb="", queue="", hold="", hold_locked=""):
         'Displays the current board through Turtle'
@@ -522,7 +525,8 @@ class Board():
         if b in ["out of bounds", "occupied cell"]:
             raise ValueError(
                 f"Impossible piece lock, piece: '{self.piece.value}', board: '{self.boardstate}'")
-        b, number_of_cleared_lines, list_of_cleared_lines = check_line_clears(b)
+        b, number_of_cleared_lines, list_of_cleared_lines = check_line_clears(
+            b)
         pc_message = "pc" if b == "*" else "False"  # Check for perfect clear
         tspin = check_t_spin(self.piece_board_notation,
                              self.replay_notation, self.last_kick_number)
@@ -730,11 +734,11 @@ class Game():
             board.display_board()
 
     def mainloop(self, func=None):
-        'Displays all screens while the main board is still going.\nfunc: An optional function that this function will continously print the output of'
+        'Displays all screens while the main board is still going.\nfunc: An optional function that this function will continously display the output of'
         self.input()
         while self.main_board.game_over == False:
             if func != None:
-                print(func())
+                self.main_board.display_message(func())
             self.display_screens()
 
     def restart_board(self):

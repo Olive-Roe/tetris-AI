@@ -1,17 +1,20 @@
 from Tetris import *
 t, screen = init_screen()
 
-'test function for pps'
-# g = Game(players=1)
-# g.mainloop(lambda: g.main_board.pps())
+'test function for displaying pps'
+b = Board(t, screen)
+g = Game(players=1)
+g.mainloop(
+    func=lambda: f"PPS: {str(g.main_board.pps())}\nAPM: ???\nHotel: Trivago")
+screen.exitonclick()
 
 'test function for replays'
-g = Game(players=1)
-g.mainloop()
-screen.clear()
-t, screen = init_screen()
-b = Board(t, screen)
-b.play_replay(g.main_board.replay_notation, g.main_board.seed)
+# g = Game(players=1)
+# g.mainloop()
+# screen.clear()
+# t, screen = init_screen()
+# b = Board(t, screen)
+# b.play_replay(g.main_board.replay_notation, g.main_board.seed)
 
 'test function for ext board->board'
 # b = "*JJJI...ZZT/OOJI..ZZTT/OOLI...SST/LLLI....SS/........../........../........../........../........../........../........../........../........../........../........../........../........../........../........../........../........../........../........../........../........../........../........../........../........../........../........../........../........../........../........../........../........../........../........../.........."

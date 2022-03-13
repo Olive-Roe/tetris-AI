@@ -1,3 +1,5 @@
+from asyncore import write
+from random import randint
 from turtle import Screen, Turtle
 
 color_dict = {(0, 0, 0): "black",
@@ -34,9 +36,10 @@ def draw_square(width, color, t):
     t.end_fill()
 
 
-def draw_outline(t: Turtle, screen, startX, startY):
+def draw_outline(t: Turtle, screen, startX, startY, color="white"):
     # Draws outline (200x400 rectangle)
-    t.pencolor("white")
+    t.setheading(0)
+    t.pencolor(color)
     t.penup()
     t.goto(startX, startY)
     t.pendown()
@@ -48,17 +51,18 @@ def draw_outline(t: Turtle, screen, startX, startY):
     t.penup()
 
 
-def draw_grid(rgb, t: Turtle, screen):
+def draw_grid(rgb, t: Turtle, screen, x=0, y=0):
     '''Draws a grid, given a dictionary of colors and coordinates
-    'rgb', and provided the turtle 't' and screen 'screen'. '''
+    'rgb', and provided the turtle 't' and screen 'screen'.
+    Optional argument x, y are the coordinates of the center of the grid.'''
     # Hide the turtle
     t.hideturtle()
     # Clear the current board
     t.clear()
     # Set the pencolor to black (black outline of squares)
     t.pencolor("black")
-    startX = -100
-    startY = -200
+    startX = x-100
+    startY = y-200
     # Make turtle fastest (doesn't matter with screen update)
     t.speed(0)
     # Go to the set starting location
@@ -72,18 +76,33 @@ def draw_grid(rgb, t: Turtle, screen):
         for j in range(10):
             draw_square(20, rgb[i][j], t)
             t.forward(20)
-    draw_outline(t, screen, startX, startY)
+    # Draw white grid lines
+    t.penup()
+    t.goto(startX, startY)
+    t.pendown()
+    t.setheading(90)
+    t.color("#808080")
+    for _ in range(10):
+        t.fd(20)
+        t.right(90)
+        t.fd(200)
+        t.left(90)
+        t.fd(20)
+        t.left(90)
+        t.fd(200)
+        t.right(90)
+    t.setheading(90)
+    for _ in range(5):
+        t.right(90)
+        t.fd(20)
+        t.right(90)
+        t.fd(400)
+        t.left(90)
+        t.fd(20)
+        t.left(90)
+        t.fd(400)
+    draw_outline(t, screen, startX, startY, "#808080")
     # Updates the screen when it is done
-    screen.update()
-
-
-def write_text(message: str, screen, color="white"):
-  # FIXME: Not working
-    FONT = ('Verdana', 16, 'normal')
-    t = Turtle()
-    t.color(color)
-    t.write(message, font=FONT, align='center')
-    t.hideturtle()
     screen.update()
 
 
@@ -92,12 +111,12 @@ def draw_hold_slot(piece: str, locked: bool):
     pass
 
 
-def temp_draw_hold_slot(piece: str, locked: bool, t:Turtle):
+def temp_draw_hold_slot(piece: str, locked: bool, t: Turtle, x=0, y=0):
     t = Turtle()
     t.hideturtle()
     t.speed(0)
     t.penup()
-    t.setposition(-200, 200)
+    t.goto(x-250, y+200)
     t.setheading(0)
     t.color("white")
     t.fillcolor("black")
@@ -114,22 +133,22 @@ def temp_draw_hold_slot(piece: str, locked: bool, t:Turtle):
     t.end_fill()
     t.penup()
     t.penup()
-    t.setposition(-200, 170)
+    t.goto(x-200, y+160)
     FONT = ('Verdana', 12, 'normal')
     t.color('white')
     t.pendown()
-    t.write(f'Hold: {piece}\nLocked: {locked}', font=FONT, align='left')
+    t.write(f'Hold: {piece}\nLocked: {locked}', font=FONT, align='center')
     t.penup()
 
 
-def temp_draw_next_queue(bag_notation: str, screen, t:Turtle, n_of_previews=3):
+def temp_draw_next_queue(bag_notation: str, screen, t: Turtle, n_of_previews=3, x=0, y=0):
     t = Turtle()
     t.hideturtle()
     t.speed(0)
-    #Draw black rectangle to mask
+    # Draw black rectangle to mask
     t.penup()
-    t.setposition(145, 215)
-    #Face east
+    t.setposition(x+145, y+200)
+    # Face east
     t.setheading(0)
     t.color("white")
     t.fillcolor("black")
@@ -145,15 +164,14 @@ def temp_draw_next_queue(bag_notation: str, screen, t:Turtle, n_of_previews=3):
     t.right(90)
     t.end_fill()
     t.penup()
-    t.setposition(200, 180)
     FONT = ('Verdana', 12, 'normal')
     t.color('white')
-    t.penup()
-    t.setposition(200, 180)
+    t.goto(x+200, y+180)
     t.pendown()
     t.write(
         f'Next Pieces: {bag_notation[:n_of_previews]}', font=FONT, align='center')
     t.penup()
+
 
 def draw_next_queue(bag_notation: str, screen, n_of_previews=3):
     # TODO: Make next queue
@@ -187,6 +205,40 @@ def draw_next_queue(bag_notation: str, screen, n_of_previews=3):
     screen.update()
 
 
+def write_text(t: Turtle, screen, text, x=0, y=0):
+    'Draws a box and displays text'
+    t = Turtle()
+    text = str(text)
+    line_length = 12*len(text.split("\n"))
+    FONT = ('Verdana', 12, 'normal')
+    t.speed(0)
+    t.penup()
+    t.goto(x+145, y+100)
+    t.pendown()
+    t.color("white")
+    t.fillcolor("black")
+    t.begin_fill()
+    t.fd(100)
+    t.right(90)
+    t.fd(line_length+20)
+    t.right(90)
+    t.fd(100)
+    t.right(90)
+    t.fd(line_length+20)
+    t.end_fill()
+    t.penup()
+    t.goto(x+155, y+80)
+    t.pendown()
+    t.setheading(270)
+    for line in text.split("\n"):
+        t.write(line, font=FONT, align="left")
+        t.penup()
+        t.fd(12)
+        t.pendown()
+    t.penup()
+    screen.update()
+
+
 def main():
     # Testing function that won't get run,
     # feel free to modify to test your own code inside here.
@@ -199,8 +251,10 @@ def main():
     rgb = [['blue', 'blue', 'blue', 'cyan', 'black', 'black', 'black', 'red', 'red', 'magenta'], ['yellow', 'yellow', 'blue', 'cyan', 'black', 'black', 'red', 'red', 'magenta', 'magenta'], ['yellow', 'yellow', 'orange', 'cyan', 'black', 'black', 'black', 'lime', 'lime', 'magenta'], ['orange', 'orange', 'orange', 'cyan', 'black', 'black', 'black', 'black', 'lime', 'lime'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], [
         'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ['black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black', 'black'], ]
     draw_grid(rgb, t, screen)
-    draw_next_queue("JLIOSZTSTZOLI", screen)
-    screen.mainloop()
+    temp_draw_next_queue("JLIOSZTSTZOLI", screen, t)
+    temp_draw_hold_slot("T", True, t)
+    write_text(t, screen, "woohoo\n"*randint(1, 10))
+    screen.exitonclick()
 
 
 if __name__ == "__main__":
