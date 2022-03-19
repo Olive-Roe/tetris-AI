@@ -31,5 +31,12 @@ colours_dict = {
     "Z": "red",
     "T": "magenta",
     ".": "black",
-    "x": "grey"
+    "x": "grey",
+    "i": "teal",
+    "j": "navy",
+    "l": "dark orange",
+    "o": "olive",
+    "s": "green",
+    "z": "maroon",
+    "t": "purple",
 }

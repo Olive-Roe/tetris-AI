@@ -2,7 +2,7 @@ import storage
 import display
 from random import choice, seed, shuffle
 from typing import List, Tuple, Any, Generator
-from turtle import Screen, Turtle
+from turtle import Screen, Turtle, update
 from time import sleep, time
 
 
@@ -236,9 +236,7 @@ def check_type_notation(notation):
     # sourcery skip: merge-else-if-into-elif, reintroduce-else, use-next
     'Takes a (valid) notation and returns its type, or False if it\'s unrecognizable.'
     n_list = list(notation)
-    if len(n_list) >= 4:
-        return "piece notation"
-    elif ":" in n_list:
+    if ":" in n_list:
         return "piece-board notation"
     elif "*" in n_list:
         if "." in n_list:
@@ -247,11 +245,10 @@ def check_type_notation(notation):
             if item.isnumeric() == True:
                 return "board notation"
         return False
+    elif len(n_list) > 13 and len(n_list) < 21:
+        return "bag notation"
     else:
-        if len(n_list) > 13 and len(n_list) < 21:
-            return "bag notation"
-        else:
-            return False
+        return "piece_notation"
 
 
 def _get_data_from_replay_line(item: str):
@@ -265,6 +262,7 @@ def _get_data_from_replay_line(item: str):
         time = float(item.split(" ")[1])
         time = float(default_time) if time == " " else float(time)
     return i, time
+
 
 class Piece():
     def __init__(self, piece_notation: str = ""):
@@ -366,7 +364,7 @@ class Board():
     def update_pb_notation(self):
         self.piece_board_notation = construct_piece_board_notation(
             self.piece.value, self.boardstate)
-    
+
     def display_message(self, message):
         display.write_text(self.t, self.screen, message)
 
@@ -374,7 +372,7 @@ class Board():
         'Displays the current board through Turtle'
         if pb != "":
             p, b = separate_piece_board_notation(pb)
-            boardstate = update_boardstate(b, Piece(p))
+            boardstate = add_ghost_piece_and_update(p, b), Piece(p)
             if boardstate in ["out of bounds", "occupied cell"]:
                 # Meaning the game is over
                 raise ValueError(
@@ -387,7 +385,7 @@ class Board():
             return True
 
         # Creates a temporary variable to display the current piece/boardstate
-        boardstate = update_boardstate(self.boardstate, self.piece)
+        boardstate = add_ghost_piece_and_update(self.piece, self.boardstate)
         if boardstate in ["out of bounds", "occupied cell"]:
             # Meaning the game is over
             raise ValueError(
@@ -712,6 +710,21 @@ def init_screen():
     return t, screen
 
 
+def add_ghost_piece_and_update(piece: Piece, boardstate):
+    "Takes a Piece and a boardstate, and returns a boardstate with the two combined, with ghost pieces"
+    output = ""
+    if piece.y == 0:
+        return update_boardstate(output, piece)
+    for index in range(piece.y, -1, -1):
+        check = update_boardstate(boardstate, Piece(
+            f"{piece.type.lower()}{piece.orientation}{piece.x}{index}"))
+        if check in ["out of bounds", "occupied cell"]:
+            return update_boardstate(boardstate, piece) if index + 1 == piece.y else update_boardstate(output, piece)
+        else:
+            output = check
+    return update_boardstate(output, piece)
+
+
 class Game():
     def __init__(self, mode="vs ai", players=2, replay=""):
         self.mode = mode
@@ -764,7 +777,7 @@ class Game():
 
 
 def update_boardstate(boardstate, piecestate: Piece):
-    'Takes a boardstate and a Piece, and returns the boardstate with the piece in it, or False if it is impossible'
+    'Takes a boardstate and a Piece, and returns the boardstate with the piece in it, or "out of bouunds"/"occupied cell" if it is impossible'
     # Immediate check whether the piece is out of bounds (to save time)
     if piecestate.x < 0 or piecestate.x > 9 or piecestate.y < 0 or piecestate.y > 39:
         return "out of bounds"
@@ -805,7 +818,8 @@ def _find_center(piecestate: Piece):
 
 def _find_offset_list(piecestate: Piece):
     'Given a Piece, returns a list of offsets of each filled tile from the center [(x1, y1), (x2, y2)]'
-    return storage.offset_list_table[piecestate.type][piecestate.orientation]
+    # Note: .upper() is used in case of ghost pieces
+    return storage.offset_list_table[piecestate.type.upper()][piecestate.orientation]
 
 
 def update_boardstate_from_pb_notation(pb_notation):
@@ -816,7 +830,8 @@ def update_boardstate_from_pb_notation(pb_notation):
 
 def _findBLC(piece: Piece):
     'Given a shape, finds its bottom left corner relative to a 5x5 grid (helper function to update_boardstate)'
-    return storage.blc_table[piece.type][piece.orientation]
+    # Note: .upper() is used in case of ghost pieces
+    return storage.blc_table[piece.type.upper()][piece.orientation]
 
 
 def _find_difference2(piece: Piece, new_piece: Piece):
@@ -825,9 +840,9 @@ def _find_difference2(piece: Piece, new_piece: Piece):
     if piece.type == "O":
         # If piece is an O-piece, make the orientation 0 because all orientations are the same
         # (for the purpose of this function)
-        piece.update(piece.type + "0" + str(piece.x) + str(piece.y))
-        new_piece.update(new_piece.type + "0" +
-                         str(new_piece.x) + str(new_piece.y))
+        piece.update(f'{piece.type}0{str(piece.x)}{str(piece.y)}')
+        new_piece.update(
+            f'{new_piece.type}0{str(new_piece.x)}{str(new_piece.y)}')
     x, y = _findBLC(piece)
     x2, y2 = _findBLC(new_piece)
     return x2 - x, y2 - y

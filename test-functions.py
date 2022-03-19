@@ -1,12 +1,17 @@
 from Tetris import *
 t, screen = init_screen()
 
-'test function for displaying pps'
-b = Board(t, screen)
+'test function for ghost pieces'
+# FIXME: soft drop on 0th row causes other pieces to disappear
 g = Game(players=1)
-g.mainloop(
-    func=lambda: f"PPS: {str(g.main_board.pps())}\nAPM: ???\nHotel: Trivago")
-screen.exitonclick()
+g.mainloop()
+
+'test function for displaying pps'
+# b = Board(t, screen)
+# g = Game(players=1)
+# g.mainloop(
+#     func=lambda: f"PPS: {str(g.main_board.pps())}\nAPM: ???\nHotel: Trivago")
+# screen.exitonclick()
 
 'test function for replays'
 # g = Game(players=1)
