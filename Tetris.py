@@ -266,7 +266,6 @@ def _get_data_from_replay_line(item: str):
         time = float(default_time) if time == " " else float(time)
     return i, time
 
-
 class Piece():
     def __init__(self, piece_notation: str = ""):
         self.value = piece_notation
@@ -705,7 +704,6 @@ class Board():
 
 def init_screen():
     screen = Screen()
-    # screen = Screen() takes about 11 seconds on my computer for some reason
     screen.bgcolor("black")
     screen.setup(width=600, height=600)
     screen.title("Tetris")
