@@ -2,7 +2,6 @@ Bucket list for priority tasks (ordered)
  Make graphical hold display
  Make graphical next queue display
  Make replays playable
- Make ghost pieces
 
 Unordered:
  Make Game class
