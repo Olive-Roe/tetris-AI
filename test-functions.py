@@ -2,9 +2,13 @@ from Tetris import *
 t, screen = init_screen()
 
 'test function for ghost pieces'
-# FIXME: soft drop on 0th row causes other pieces to disappear
 g = Game(players=1)
 g.mainloop()
+
+# b = Board(t, screen, "T",
+#           "*g1/g1/g1/g1/g1/OO1LLLIJJJ/OO1SSLIJZZ/J3SSIZZI/J2TTTIOOI/JJ1LTSZOOI/3LSSZZZI/2LLSIJZZZ/2OOLIJSSZ/2OOLIJJSS/3LLI4")
+# b.display_board()
+# screen.exitonclick()
 
 'test function for displaying pps'
 # b = Board(t, screen)
@@ -68,7 +72,7 @@ g.mainloop()
 # b1 = Board(t, screen, "", "*", "dt")
 # print(b1.bag.value)
 # 'ILTSJZO/JTISLOZ/IOLZSJT'
-# actions = """CW\nr\nr\nhd\nhd\nhold\nhd\nR\nhd\nR\nhd\nL\nhd\nCW\nL\nhd\nhd\nCW\nR\nhd\nCW\nr\nhd\nCCW\nl\nhd\nR\nl\nhd\nCW\nr\nr\nhd"""
+# actions = """CW\nr\nr\nhd\nhd\nhold\nhd\nR\nhd\nR\nhd\nL\nhd\nCW\nL\nhd\nhd\nCW\nR\nhd\nCW\nhd\nCCW\nl\nhd\nR\nl\nhd\nCW\nr\nr\nhd\nCW\nr\nhd\nl\nl\nhd\nCCW\nhd\nR\nCW\nhd\nR\nhd\nCW\nr\nr\ng1x5\nhd\nCW\nL\nd\nCCW\nCCW\nd\nCCW\nlock\nCW\nL\nd\nCCW\nCCW\nlock\nhold\nCW\nL\nd\nCW\nlock"""
 # b1.do_actions_from_input(actions)
 # screen.mainloop()
 

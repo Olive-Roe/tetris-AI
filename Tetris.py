@@ -140,12 +140,13 @@ def boardstate_to_list_form(boardstate: str):
     type_b = type_of_boardstate(boardstate)
     if type_b == "boardstate":
         # we need to extend the boardstate
-        a = boardstate_to_extended_boardstate(str(boardstate))
+        a = boardstate_to_extended_boardstate(boardstate)
     elif type_b == "extended boardstate":
         # boardstate is already extended, shorten it and extend it again
         # TODO: check whether this is necessary as it slows whole program down
         a = boardstate_to_extended_boardstate(
-            extended_boardstate_to_boardstate(str(boardstate)))
+            extended_boardstate_to_boardstate(boardstate))
+
     # if neither of these an error will be thrown
     # Remove starting asterisk and split a
     a = a[1:].split("/")
@@ -176,8 +177,8 @@ def access_cell(boardstate: str, row: int, column: int):
 def change_cell(boardstate: str, row: int, column: int, val: str):
     # sourcery skip: use-fstring-for-concatenation
     'Given a boardstate, row, column of a cell (starting from index 0), and a value, update the boardstate and return it.'
-    row = int(row)
-    column = int(column)
+    row = row
+    column = column
     new_boardstate = boardstate_to_list_form(boardstate)
     new_boardstate[row][column] = val
     return list_form_to_boardstate(new_boardstate)
@@ -260,7 +261,7 @@ def _get_data_from_replay_line(item: str):
         time = default_time
     else:
         time = float(item.split(" ")[1])
-        time = float(default_time) if time == " " else float(time)
+        time = default_time if time == " " else time
     return i, time
 
 
@@ -484,7 +485,7 @@ class Board():
         return True
 
     def rotate_piece(self, direction: str):  # sourcery skip: class-extract-method
-        #self.piece_board_notation = self.piece.value + ":/" + self.boardstate
+        # self.piece_board_notation = self.piece.value + ":/" + self.boardstate
         pb, kick_number = rotate_and_update(
             self.piece_board_notation, direction)
         # Updates last kick number
@@ -712,17 +713,24 @@ def init_screen():
 
 def add_ghost_piece_and_update(piece: Piece, boardstate):
     "Takes a Piece and a boardstate, and returns a boardstate with the two combined, with ghost pieces"
-    output = ""
+    output = boardstate
     if piece.y == 0:
         return update_boardstate(output, piece)
+    # Start on y below current piece, check until 0 going downwards.
     for index in range(piece.y, -1, -1):
-        check = update_boardstate(boardstate, Piece(
-            f"{piece.type.lower()}{piece.orientation}{piece.x}{index}"))
+        # Combine piece and ghost piece, giving piece the overlaps
+        coord_dict = _combine_coordlists(
+            [piece, Piece(f"{piece.type.lower()}{piece.orientation}{piece.x}{index}")])
+        # Try updating boardstate with this
+        check = update_boardstate(boardstate, piece, coord_dict)
         if check in ["out of bounds", "occupied cell"]:
-            return update_boardstate(boardstate, piece) if index + 1 == piece.y else update_boardstate(output, piece)
+            break
+            # return update_boardstate(boardstate, piece) if index + 1 == piece.y else update_boardstate(output, piece)
         else:
             output = check
-    return update_boardstate(output, piece)
+    # if index == piece.y-1:
+    #     return update_boardstate(output, piece)
+    return output
 
 
 class Game():
@@ -776,11 +784,45 @@ class Game():
         self.screen.listen()
 
 
-def update_boardstate(boardstate, piecestate: Piece):
-    'Takes a boardstate and a Piece, and returns the boardstate with the piece in it, or "out of bouunds"/"occupied cell" if it is impossible'
+def update_boardstate(boardstate, piecestate: Piece, coord_dict=""):
+    '''Takes a boardstate and a Piece, and returns the boardstate with the piece in it, or "out of bounds/occupied cell" if it is impossible
+    If coord_dict is given, this surpasses piecestate, and updates the boardstate with the given coord_dict.'''
     # Immediate check whether the piece is out of bounds (to save time)
     if piecestate.x < 0 or piecestate.x > 9 or piecestate.y < 0 or piecestate.y > 39:
         return "out of bounds"
+    if coord_dict == "":
+        coord_dict = _get_coord_dict(piecestate)
+    # Creates a temporary extended boardstate
+    nbs = boardstate_to_extended_boardstate(boardstate)
+    # Loops over each tile to check whether they are allowed
+    for xy, piece_type in coord_dict.items():
+        x_loc, y_loc = xy
+        # If the x/y coordinates are higher/lower than the size of the board
+        if x_loc < 0 or x_loc > 9 or y_loc < 0 or y_loc > 39:
+            return "out of bounds"
+        # If the cell is empty
+        if access_cell(boardstate, y_loc, x_loc) == ".":
+            # Updates the cell with the piece type (e.g. T)
+            nbs = change_cell(nbs, y_loc, x_loc, piece_type)
+        else:
+            return "occupied cell"
+    # Turn back into abbreviated boardstate
+    return extended_boardstate_to_boardstate(nbs)
+
+
+def _combine_coordlists(pieces: List[Piece]):
+    "Given a list of Pieces, generate a dict of coordinates with all the pieces, giving the earliest pieces most priority"
+    # Might be a bit inefficient (4n) for n number of pieces
+    output_dict = {}
+    for piece in pieces:
+        coord_dict = _get_coord_dict(piece)
+        for key, value in coord_dict.items():
+            if key not in output_dict.keys():
+                output_dict[key] = value
+    return output_dict
+
+
+def _get_coord_dict(piecestate: Piece):
     # Check whether the piece is an O piece and set its orientation to 0 (doesn't matter in updating boardstate)
     if piecestate.type == "O":
         piecestate = Piece(f"O0{str(piecestate.x)}{str(piecestate.y)}")
@@ -789,23 +831,7 @@ def update_boardstate(boardstate, piecestate: Piece):
     # Finds the center x and y coordinates
     center_x, center_y = _find_center(piecestate)
     # Combining offset and center list to find the list of the actual coordinates
-    coord_list = [(x_offset + center_x, y_offset + center_y)
-                  for (x_offset, y_offset) in offset_list]
-    # Creates a temporary extended boardstate
-    nbs = boardstate_to_extended_boardstate(boardstate)
-    # Loops over each tile to check whether they are allowed
-    for x_loc, y_loc in coord_list:
-        # If the x/y coordinates are higher/lower than the size of the board
-        if x_loc < 0 or x_loc > 9 or y_loc < 0 or y_loc > 39:
-            return "out of bounds"
-        # If the cell is empty
-        if access_cell(boardstate, y_loc, x_loc) == ".":
-            # Updates the cell with the piece type (e.g. T)
-            nbs = change_cell(nbs, y_loc, x_loc, piecestate.type)
-        else:
-            return "occupied cell"
-    # Turn back into abbreviated boardstate
-    return extended_boardstate_to_boardstate(nbs)
+    return {k: piecestate.type for k in [(x_offset + center_x, y_offset + center_y) for (x_offset, y_offset) in offset_list]}
 
 
 def _find_center(piecestate: Piece):
@@ -880,7 +906,7 @@ def _generate_coords_list(new_piece: Piece, table):
 
 
 def _check_kick_tables(old_piece_notation, new_piece_notation, board_notation):
-    '''Takes a piece notation, board notation, direction and returns the piece notation 
+    '''Takes a piece notation, board notation, direction and returns the piece notation
     after checking kicktables, or False if rotation is impossible. Also returns the number
     of the kick that was used, or False if rotation is impossible'''
     # Create new Pieces for future reference
