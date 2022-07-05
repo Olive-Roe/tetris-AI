@@ -707,6 +707,7 @@ def init_screen():
     screen.setup(width=600, height=600)
     screen.title("Tetris")
     t = Turtle()
+    t.hideturtle()
     screen.tracer(0)
     return t, screen
 

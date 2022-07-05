@@ -22,6 +22,7 @@ Priority list values (triage):
 4. Writing completely new code with large changes
 
 Done:
+Hide turtle in the middle of screen
 Make keybinds
 Make t-spin detection
 Make hard drop function
