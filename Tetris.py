@@ -369,7 +369,7 @@ class Board():
     def display_message(self, message):
         display.write_text(self.t, self.screen, message)
 
-    def display_board(self, pb="", queue="", hold="", hold_locked=""):
+    def display_board(self, pb="", queue="", hold="", hold_locked="", x=0, y=0):
         'Displays the current board through Turtle'
         if pb != "":
             p, b = separate_piece_board_notation(pb)
@@ -378,11 +378,11 @@ class Board():
                 # Meaning the game is over
                 raise ValueError(
                     f"Impossible piece lock, piece: '{self.piece.value}', board: '{self.boardstate}'")
-            draw_grid(boardstate, self.t, self.screen)
+            draw_grid(boardstate, self.t, self.screen, x, y)
             # Displays the hold slot and next queue
             # TODO: Change this to non-temporary functions
-            display.temp_draw_hold_slot(hold, hold_locked, self.t)
-            display.temp_draw_next_queue(queue, self.screen, self.t)
+            display.temp_draw_hold_slot(hold, hold_locked, self.t, x, y)
+            display.temp_draw_next_queue(queue, self.screen, self.t, x=x, y=y)
             return True
 
         # Creates a temporary variable to display the current piece/boardstate
@@ -391,11 +391,12 @@ class Board():
             # Meaning the game is over
             raise ValueError(
                 f"Impossible piece lock, piece: '{self.piece.value}', board: '{self.boardstate}'")
-        draw_grid(boardstate, self.t, self.screen)
+        draw_grid(boardstate, self.t, self.screen, x, y)
         # Displays the hold slot and next queue
         # TODO: Change this to non-temporary functions
-        display.temp_draw_hold_slot(self.hold, self.hold_locked, self.t)
-        display.temp_draw_next_queue(self.bag.value, self.screen, self.t)
+        display.temp_draw_hold_slot(self.hold, self.hold_locked, self.t, x, y)
+        display.temp_draw_next_queue(
+            self.bag.value, self.screen, self.t, x=x, y=y)
         return True
 
     def spawn_next_piece(self, init=""):
@@ -704,7 +705,7 @@ class Board():
 def init_screen():
     screen = Screen()
     screen.bgcolor("black")
-    screen.setup(width=600, height=600)
+    screen.setup(width=1200, height=600)
     screen.title("Tetris")
     t = Turtle()
     t.hideturtle()
@@ -743,15 +744,18 @@ class Game():
         self.t_list = [Turtle() for _ in range(self.players)]
         for t in self.t_list:
             t.hideturtle()
-        # FIXME: A turtle appears in the middle of the screen, hide all turtles
         self.board_list = [Board(t, self.screen) for t in self.t_list]
+        if players == 1:
+            self.positions = [(0, 0)]
+        if players == 2:
+            self.positions = [(-300, 0), (300, 0)]
         self.main_board = self.board_list[0]
         # TODO: Write replay notation (gets appended to in input)
 
     def display_screens(self):
-        for board in self.board_list:
-            # TODO: Add support for displaying multiple boards
-            board.display_board()
+        for index, board in enumerate(self.board_list):
+            xpos, ypos = self.positions[index]
+            board.display_board(x=xpos, y=ypos)
 
     def mainloop(self, func=None):
         'Displays all screens while the main board is still going.\nfunc: An optional function that this function will continously display the output of'
@@ -1073,9 +1077,9 @@ def check_t_spin(pb_notation, replay_notation, last_kick_number):
     return message
 
 
-def draw_grid(board_notation, t, screen):
+def draw_grid(board_notation, t, screen, x=0, y=0):
     display.draw_grid(create_grid(
-        board_notation_to_dict(board_notation)), t, screen)
+        board_notation_to_dict(board_notation)), t, screen, x, y)
 
 
 def smart_display(notation, t, screen):
