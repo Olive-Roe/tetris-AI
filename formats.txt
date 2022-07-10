@@ -56,7 +56,9 @@ separated by a space, and then (time) -> time since start
 
 Board.line_clear_history (str)
 Newline separated, each line is
-{number of cleared lines}/{t-spin message}/{pc message}
+{number_of_cleared_lines}/{b2b}/{combo}/{tspin}/{pc_message}
 number of cleared lines: int, can be 0
+b2b: int
+combo: int
 t-spin message: "t-spin", "t-spin mini", "False"
 pc message: "pc", "False"

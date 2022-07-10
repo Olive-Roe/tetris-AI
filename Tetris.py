@@ -1,7 +1,7 @@
 import storage
 import display
 from math import floor, log1p
-from random import choice, seed, shuffle
+from random import choice, randint, seed, shuffle
 from typing import List, Tuple, Any, Generator
 from turtle import Screen, Turtle, update
 from time import sleep, time
@@ -315,7 +315,6 @@ class Board():
         self.hold = hold
         # Boolean for whether the hold is locked or not
         self.hold_locked = hold_locked
-        # Weird how you can call functions written after __init__
         if piece_notation == "":
             self.piece = Piece(self.spawn_next_piece(init=True))
         else:
@@ -327,11 +326,13 @@ class Board():
         # Initializes the last kick number (for t-spin detection)
         self.last_kick_number = 0
         # Initializes the history of line clears
-        self.line_clear_history = ""
+        self.line_clear_history = []
         # Initalizes the history of piece placements
         self.piece_placement_history = []
         # Initializes the number of pieces placed
         self.pieces_placed = 0
+        # Initialize garbage queue
+        self.garbage_queue = 0
         # Starts the clock immediately
         self.start_time = time()
         self.game_over = False
@@ -508,12 +509,30 @@ class Board():
         b = update_boardstate(self.boardstate, self.piece)
         if self.piece.y >= 20:
             # Game is over if piece locks over 21st row (do things and then set game_over to True)
-            b, number_of_cleared_lines, list_of_cleared_lines = check_line_clears(
-                b)
-            pc_message = "pc" if b == "*" else "False"  # Check for perfect clear
-            tspin = check_t_spin(self.piece_board_notation,
-                                 self.replay_notation, self.last_kick_number)
-            self.line_clear_history += f"{number_of_cleared_lines}/{tspin}/{pc_message}\n"
+            # TODO: clean up messy code
+            if self.line_clear_history == []:
+                # first piece lock
+                self.line_clear_history.append("0/0/0/False/False")
+            else:
+                b, number_of_cleared_lines, list_of_cleared_lines = check_line_clears(
+                    b)
+                pc_message = "pc" if b == "*" else "False"  # Check for perfect clear
+                tspin = check_t_spin(self.piece_board_notation,
+                                     self.replay_notation, self.last_kick_number)
+                prev_line = self.line_clear_history[-1].split("/")
+                # previous values
+                plines, pb2b, pcombo, ptspin, ppc = prev_line
+                if number_of_cleared_lines == 0:
+                    self.line_clear_history.append(f"0/{pb2b}/0/{tspin}/False")
+                else:
+                    # work out combo
+                    combo = 0 if plines == 0 else int(pcombo) + 1
+                    # work out back to back
+                    b2b = int(pb2b) + \
+                        1 if int(
+                            number_of_cleared_lines) == 4 or tspin != "False" else 0
+                    self.line_clear_history.append(
+                        f"{number_of_cleared_lines}/{b2b}/{combo}/{tspin}/{pc_message}")
             self.piece_placement_history.append(self.piece.value)
             self.pieces_placed += 1
             # Displays the board
@@ -522,24 +541,42 @@ class Board():
             self.hold_locked = False
             self.game_over = True
             return False
-        if b in ["out of bounds", "occupied cell"]:
-            raise ValueError(
-                f"Impossible piece lock, piece: '{self.piece.value}', board: '{self.boardstate}'")
-        b, number_of_cleared_lines, list_of_cleared_lines = check_line_clears(
-            b)
-        pc_message = "pc" if b == "*" else "False"  # Check for perfect clear
-        tspin = check_t_spin(self.piece_board_notation,
-                             self.replay_notation, self.last_kick_number)
-        self.line_clear_history += f"{number_of_cleared_lines}/{tspin}/{pc_message}\n"
-        self.piece_placement_history.append(self.piece.value)
-        self.pieces_placed += 1
-        self.boardstate = b
-        # Spawns next piece and updates self.piece
-        self.spawn_next_piece()
-        # Unlocks hold
-        self.hold_locked = False
-        self.update_pb_notation()
-        return True
+        # game is still going
+        if self.line_clear_history == []:
+            # first piece lock
+            self.line_clear_history.append("0/0/0/False/False")
+        else:
+            if b in ["out of bounds", "occupied cell"]:
+                raise ValueError(
+                    f"Impossible piece lock, piece: '{self.piece.value}', board: '{self.boardstate}'")
+            b, number_of_cleared_lines, list_of_cleared_lines = check_line_clears(
+                b)
+            pc_message = "pc" if b == "*" else "False"  # Check for perfect clear
+            tspin = check_t_spin(self.piece_board_notation,
+                                 self.replay_notation, self.last_kick_number)
+            prev_line = self.line_clear_history[-1].split("/")
+            # previous values
+            plines, pb2b, pcombo, ptspin, ppc = prev_line
+            if number_of_cleared_lines == 0:
+                self.line_clear_history.append(f"0/{pb2b}/0/{tspin}/False")
+            else:
+                # work out combo
+                combo = 0 if plines == 0 else int(pcombo) + 1
+                # work out back to back
+                b2b = int(pb2b) + \
+                    1 if int(
+                        number_of_cleared_lines) == 4 or tspin != "False" else 0
+                self.line_clear_history.append(
+                    f"{number_of_cleared_lines}/{b2b}/{combo}/{tspin}/{pc_message}")
+            self.piece_placement_history.append(self.piece.value)
+            self.pieces_placed += 1
+            self.boardstate = b
+            # Spawns next piece and updates self.piece
+            self.spawn_next_piece()
+            # Unlocks hold
+            self.hold_locked = False
+            self.update_pb_notation()
+            return True
 
     def move_down_as_much_as_possible(self):
         # Checks the first down movement
@@ -742,9 +779,11 @@ def score_table(lines_cleared, b2b, tspin, table="tetrio"):
 # credit to chouhy/Tetrio-Attack-Table on github
 # https://github.com/chouhy/Tetrio-Attack-Table/blob/main/src/tetrioatk.js
 
+
 def _b2b_bonus(b2b: int, table="tetrio"):
     "Calculate tetrio b2b bonus attack"
     return floor(1+log1p(0.8*b2b)) + (0 if b2b == 1 else (1+(log1p(0.8*b2b) % 1)))/3
+
 
 def attack_table(lines_cleared, b2b, combo, tspin, pc, table="tetrio"):
     "Calculate lines sent given certain conditions"
@@ -784,6 +823,8 @@ class Game():
         if players == 2:
             self.positions = [(-300, 0), (300, 0)]
         self.main_board = self.board_list[0]
+        # TODO: targetting system
+        self.target_boards = [1, 0]
         # TODO: Write replay notation (gets appended to in input)
 
     def display_screens(self):
@@ -796,6 +837,8 @@ class Game():
         b_list = self.board_list
         if ai == "random":
             self.random_input(1)
+        elif ai == "none":
+            pass
 
     def random_input(self, board):
         actions = ["CW", "CCW", "d", "l", "r", "L", "R", "hold"]
@@ -807,20 +850,33 @@ class Game():
     def mainloop(self, func=None):
         'Displays all screens while the main board is still going.\nfunc: An optional function that this function will continously display the output of'
         self.manual_input()
-        if func != None:
-            while self.main_board.game_over == False:
+        while self.main_board.game_over == False:
+            if func != None:
                 self.main_board.display_message(func())
-                self.display_screens()
-                self.ai_input()
-        else:
-            while self.main_board.game_over == False:
-                self.display_screens()
-                self.ai_input()
+            self.display_screens()
+            if self.players == 2 and self.mode == "vs ai":
+                self.ai_input("none")
 
     def restart_board(self):
         "Restarts main board with the same seed as before"
         self.main_board = Board(
             self.main_board.t, self.screen, "", "*", self.main_board.seed)
+
+    def auto_lock_piece(self, board_index: int):
+        board = self.board_list[board_index]
+        board.do_action("hd")
+        # check if this will fail for first lock
+        clear = board.line_clear_history[-1]
+        lines, b2b, combo, tspin, pc = clear.split("/")
+        if lines == 0:
+            return False
+        # {number_of_cleared_lines}/{b2b}/{combo}/{tspin}/{pc_message}
+        attack = attack_table(int(lines), int(b2b), int(combo), tspin, pc)
+        # find target board
+        target_board = self.board_list[self.target_boards[board_index]]
+        # receive garbage on target board
+        # TODO: garbage queue
+        target_board.receive_garbage(randint(0, 9), attack)
 
     def manual_input(self):
         b = self.board_list[0]
@@ -833,18 +889,22 @@ class Game():
             "c": lambda: b.do_action("hold"),
             "z": lambda: b.do_action("CCW"),
             "a": lambda: b.do_action("180"),
-            "space": lambda: b.do_action("hd")
+            "space": lambda: self.auto_lock_piece(0)
         }
         for key, action in keybinds2.items():
             # should be working keybinds?
             self.screen.onkeypress(action, key)
         self.screen.listen()
 
-    def auto_input(self, action: str, board: int):
+    def auto_input(self, action: str, board_index: int):
+        # sourcery skip: remove-redundant-if
         "Takes an action string and board number (index of board lists), and automatically does that input"
-        assert board < len(self.board_list)
-        b = self.board_list[board]
-        b.do_action(action)
+        assert board_index < len(self.board_list)
+        b = self.board_list[board_index]
+        if action == "hd" or "lock":
+            self.auto_lock_piece(board_index)
+        else:
+            b.do_action(action)
 
 
 def update_boardstate(boardstate, piecestate: Piece, coord_dict=""):

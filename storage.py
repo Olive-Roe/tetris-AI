@@ -43,6 +43,7 @@ colours_dict = {
 
 
 tetrio_atk = {
+    "0": 0,
     "1": 0,
     "2": 1,
     "3": 2,
