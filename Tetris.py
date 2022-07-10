@@ -758,6 +758,19 @@ class Game():
             xpos, ypos = self.positions[index]
             board.display_board(x=xpos, y=ypos)
 
+    def ai_input(self, ai="random", board=1):
+        b = self.board_list[board]
+        b_list = self.board_list
+        if ai == "random":
+            self.random_input(1)
+
+    def random_input(self, board):
+        actions =["CW", "CCW", "d", "l", "r", "L", "R", "hold"]
+        self.auto_input(choice(actions), board)
+        self.auto_input(choice(actions), board)
+        self.auto_input(choice(actions), board)
+        self.auto_input("hd", board)
+
     def mainloop(self, func=None):
         'Displays all screens while the main board is still going.\nfunc: An optional function that this function will continously display the output of'
         self.manual_input()
@@ -765,9 +778,11 @@ class Game():
             while self.main_board.game_over == False:
                 self.main_board.display_message(func())
                 self.display_screens()
+                self.ai_input()
         else:
             while self.main_board.game_over == False:
                 self.display_screens()
+                self.ai_input()
 
     def restart_board(self):
         "Restarts main board with the same seed as before"

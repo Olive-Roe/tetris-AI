@@ -2,9 +2,8 @@ from Tetris import *
 t, screen = init_screen()
 
 'test function for playing a game'
-g = Game(players=1)
+g = Game(players=2)
 g.mainloop()
-
 
 # b = Board(t, screen, "T",
 #           "*g1/g1/g1/g1/g1/OO1LLLIJJJ/OO1SSLIJZZ/J3SSIZZI/J2TTTIOOI/JJ1LTSZOOI/3LSSZZZI/2LLSIJZZZ/2OOLIJSSZ/2OOLIJJSS/3LLI4")
