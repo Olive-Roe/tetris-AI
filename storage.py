@@ -40,3 +40,25 @@ colours_dict = {
     "z": "maroon",
     "t": "purple",
 }
+
+
+tetrio_atk = {
+    "1": 0,
+    "2": 1,
+    "3": 2,
+    "4": 4,
+}
+
+tetrio_tspin_mini = {
+    "0": 0,
+    "1": 0,
+    "2": 1,
+}
+
+tetrio_tspin = {
+    "0": 0,
+    "1": 2,
+    "2": 4,
+    "3": 6,
+    "4": 10 # no idea how tspin quad is possible
+}

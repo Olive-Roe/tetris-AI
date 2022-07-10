@@ -53,3 +53,10 @@ lock -> locks current piece
 hold -> holds current piece
 g0x5 -> receives 5 rows of garbage in column 0
 separated by a space, and then (time) -> time since start
+
+Board.line_clear_history (str)
+Newline separated, each line is
+{number of cleared lines}/{t-spin message}/{pc message}
+number of cleared lines: int, can be 0
+t-spin message: "t-spin", "t-spin mini", "False"
+pc message: "pc", "False"

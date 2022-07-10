@@ -1,9 +1,14 @@
 from Tetris import *
 t, screen = init_screen()
 
+
 'test function for playing a game'
 g = Game(players=2)
 g.mainloop()
+
+'test function for b2b bonus'
+# for i in range(20):
+#     print(i, b2b(i))
 
 # b = Board(t, screen, "T",
 #           "*g1/g1/g1/g1/g1/OO1LLLIJJJ/OO1SSLIJZZ/J3SSIZZI/J2TTTIOOI/JJ1LTSZOOI/3LSSZZZI/2LLSIJZZZ/2OOLIJSSZ/2OOLIJJSS/3LLI4")

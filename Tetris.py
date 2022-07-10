@@ -1,5 +1,6 @@
 import storage
 import display
+from math import floor, log1p
 from random import choice, seed, shuffle
 from typing import List, Tuple, Any, Generator
 from turtle import Screen, Turtle, update
@@ -512,7 +513,7 @@ class Board():
             pc_message = "pc" if b == "*" else "False"  # Check for perfect clear
             tspin = check_t_spin(self.piece_board_notation,
                                  self.replay_notation, self.last_kick_number)
-            self.line_clear_history += f"{number_of_cleared_lines} {tspin} {pc_message}\n"
+            self.line_clear_history += f"{number_of_cleared_lines}/{tspin}/{pc_message}\n"
             self.piece_placement_history.append(self.piece.value)
             self.pieces_placed += 1
             # Displays the board
@@ -529,7 +530,7 @@ class Board():
         pc_message = "pc" if b == "*" else "False"  # Check for perfect clear
         tspin = check_t_spin(self.piece_board_notation,
                              self.replay_notation, self.last_kick_number)
-        self.line_clear_history += f"{number_of_cleared_lines} {tspin} {pc_message}\n"
+        self.line_clear_history += f"{number_of_cleared_lines}/{tspin}/{pc_message}\n"
         self.piece_placement_history.append(self.piece.value)
         self.pieces_placed += 1
         self.boardstate = b
@@ -735,6 +736,38 @@ def add_ghost_piece_and_update(piece: Piece, boardstate):
     return output
 
 
+def score_table(lines_cleared, b2b, tspin, table="tetrio"):
+    return 0
+
+# credit to chouhy/Tetrio-Attack-Table on github
+# https://github.com/chouhy/Tetrio-Attack-Table/blob/main/src/tetrioatk.js
+
+def _b2b_bonus(b2b: int, table="tetrio"):
+    "Calculate tetrio b2b bonus attack"
+    return floor(1+log1p(0.8*b2b)) + (0 if b2b == 1 else (1+(log1p(0.8*b2b) % 1)))/3
+
+def attack_table(lines_cleared, b2b, combo, tspin, pc, table="tetrio"):
+    "Calculate lines sent given certain conditions"
+    # get initial attack given tspin
+    if tspin == "False":
+        atk = storage.tetrio_atk[str(lines_cleared)]
+    elif tspin == "t-spin":
+        atk = storage.tetrio_tspin[str(lines_cleared)]
+    elif tspin == "t-spin mini":
+        atk = storage.tetrio_tspin_mini[str(lines_cleared)]
+    # add b2b bonus
+    if b2b > 0:
+        atk += _b2b_bonus(b2b)
+    # combo multiplier
+    atk *= 1 + 0.25*combo
+    # combo minifier (no broken combo table)
+    atk = max(log1p(combo*1.25), atk)
+    # perfect clear bonus
+    if pc == "pc":
+        atk += 10
+    return floor(atk)
+
+
 class Game():
     def __init__(self, mode="vs ai", players=2, replay=""):
         self.mode = mode
@@ -765,7 +798,7 @@ class Game():
             self.random_input(1)
 
     def random_input(self, board):
-        actions =["CW", "CCW", "d", "l", "r", "L", "R", "hold"]
+        actions = ["CW", "CCW", "d", "l", "r", "L", "R", "hold"]
         self.auto_input(choice(actions), board)
         self.auto_input(choice(actions), board)
         self.auto_input(choice(actions), board)
