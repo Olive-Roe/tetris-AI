@@ -738,6 +738,7 @@ def add_ghost_piece_and_update(piece: Piece, boardstate):
 class Game():
     def __init__(self, mode="vs ai", players=2, replay=""):
         self.mode = mode
+        # modes = "vs ai", "sprint", "ultra", "cheese"
         self.players = players
         # T is unused
         t, self.screen = init_screen()
@@ -759,18 +760,21 @@ class Game():
 
     def mainloop(self, func=None):
         'Displays all screens while the main board is still going.\nfunc: An optional function that this function will continously display the output of'
-        self.input()
-        while self.main_board.game_over == False:
-            if func != None:
+        self.manual_input()
+        if func != None:
+            while self.main_board.game_over == False:
                 self.main_board.display_message(func())
-            self.display_screens()
+                self.display_screens()
+        else:
+            while self.main_board.game_over == False:
+                self.display_screens()
 
     def restart_board(self):
         "Restarts main board with the same seed as before"
         self.main_board = Board(
             self.main_board.t, self.screen, "", "*", self.main_board.seed)
 
-    def input(self):
+    def manual_input(self):
         b = self.board_list[0]
         keybinds2 = {
             "Up": lambda: b.do_action("CW"),
@@ -787,6 +791,12 @@ class Game():
             # should be working keybinds?
             self.screen.onkeypress(action, key)
         self.screen.listen()
+
+    def auto_input(self, action: str, board: int):
+        "Takes an action string and board number (index of board lists), and automatically does that input"
+        assert board < len(self.board_list)
+        b = self.board_list[board]
+        b.do_action(action)
 
 
 def update_boardstate(boardstate, piecestate: Piece, coord_dict=""):
