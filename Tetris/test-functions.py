@@ -1,4 +1,4 @@
-from Tetris import *
+from game import *
 t, screen = init_screen()
 
 
