@@ -4,32 +4,6 @@ from board_processing import *
 from typing import List
 
 
-def update_boardstate(boardstate, piecestate: Piece, coord_dict=""):
-    '''Takes a boardstate and a Piece, and returns the boardstate with the piece in it, or "out of bounds/occupied cell" if it is impossible
-    If coord_dict is given, this surpasses piecestate, and updates the boardstate with the given coord_dict.'''
-    # Immediate check whether the piece is out of bounds (to save time)
-    if piecestate.x < 0 or piecestate.x > 9 or piecestate.y < 0 or piecestate.y > 39:
-        return "out of bounds"
-    if coord_dict == "":
-        coord_dict = _get_coord_dict(piecestate)
-    # Creates a temporary extended boardstate
-    nbs = boardstate_to_extended_boardstate(boardstate)
-    # Loops over each tile to check whether they are allowed
-    for xy, piece_type in coord_dict.items():
-        x_loc, y_loc = xy
-        # If the x/y coordinates are higher/lower than the size of the board
-        if x_loc < 0 or x_loc > 9 or y_loc < 0 or y_loc > 39:
-            return "out of bounds"
-        # If the cell is empty
-        if access_cell(boardstate, y_loc, x_loc) == ".":
-            # Updates the cell with the piece type (e.g. T)
-            nbs = change_cell(nbs, y_loc, x_loc, piece_type)
-        else:
-            return "occupied cell"
-    # Turn back into abbreviated boardstate
-    return extended_boardstate_to_boardstate(nbs)
-
-
 def _combine_coordlists(pieces: List[Piece]):
     "Given a list of Pieces, generate a dict of coordinates with all the pieces, giving the earliest pieces most priority"
     # Might be a bit inefficient (4n) for n number of pieces
@@ -66,6 +40,32 @@ def _find_offset_list(piecestate: Piece):
     'Given a Piece, returns a list of offsets of each filled tile from the center [(x1, y1), (x2, y2)]'
     # Note: .upper() is used in case of ghost pieces
     return storage.offset_list_table[piecestate.type.upper()][piecestate.orientation]
+
+
+def update_boardstate(boardstate, piecestate: Piece, coord_dict=""):
+    '''Takes a boardstate and a Piece, and returns the boardstate with the piece in it, or "out of bounds/occupied cell" if it is impossible
+    If coord_dict is given, this surpasses piecestate, and updates the boardstate with the given coord_dict.'''
+    # Immediate check whether the piece is out of bounds (to save time)
+    if piecestate.x < 0 or piecestate.x > 9 or piecestate.y < 0 or piecestate.y > 39:
+        return "out of bounds"
+    if coord_dict == "":
+        coord_dict = _get_coord_dict(piecestate)
+    # Creates a temporary extended boardstate
+    nbs = boardstate_to_extended_boardstate(boardstate)
+    # Loops over each tile to check whether they are allowed
+    for xy, piece_type in coord_dict.items():
+        x_loc, y_loc = xy
+        # If the x/y coordinates are higher/lower than the size of the board
+        if x_loc < 0 or x_loc > 9 or y_loc < 0 or y_loc > 39:
+            return "out of bounds"
+        # If the cell is empty
+        if access_cell(boardstate, y_loc, x_loc) == ".":
+            # Updates the cell with the piece type (e.g. T)
+            nbs = change_cell(nbs, y_loc, x_loc, piece_type)
+        else:
+            return "occupied cell"
+    # Turn back into abbreviated boardstate
+    return extended_boardstate_to_boardstate(nbs)
 
 
 def update_boardstate_from_pb_notation(pb_notation):

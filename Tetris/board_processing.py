@@ -196,6 +196,7 @@ def display_as_text(notation):
     for row in (notation.split("/")):  # reverse list
         print(row)
 
+
 def check_type_notation(notation):
     # sourcery skip: merge-else-if-into-elif, reintroduce-else, use-next
     'Takes a (valid) notation and returns its type, or False if it\'s unrecognizable.'
