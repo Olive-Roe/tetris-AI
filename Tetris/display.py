@@ -1,4 +1,3 @@
-from asyncore import write
 from random import randint
 from turtle import Screen, Turtle
 
@@ -14,7 +13,7 @@ color_dict = {(0, 0, 0): "black",
               }
 
 
-def draw_square(width, color, t):
+def draw_square(width, color, t:Turtle):
     '''Process to draw a square on the upper right of turtle
     of color 'color' and width 'width', provided with the turtle 't'.'''
     global color_dict
