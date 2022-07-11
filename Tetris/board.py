@@ -1,10 +1,10 @@
 from time import time, sleep
-from board_processing import *
-from updating_board import *
+from board_processing import create_grid, board_notation_to_dict, check_type_notation, separate_piece_board_notation, extended_boardstate_to_boardstate, boardstate_to_extended_boardstate, construct_piece_board_notation
+from updating_board import update_boardstate, add_ghost_piece_and_update, rotate_and_update, check_line_clears, check_t_spin
 from bag import Bag
 from piece import Piece
 import display
-from typing import Any, Tuple
+from typing import Any, Tuple, List
 
 
 def draw_grid(board_notation, t, screen, x=0, y=0):
