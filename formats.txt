@@ -58,7 +58,8 @@ Board.line_clear_history (str)
 Newline separated, each line is
 {number_of_cleared_lines}/{b2b}/{combo}/{tspin}/{pc_message}
 number of cleared lines: int, can be 0
-b2b: int
+b2b: int (note: b2b 1 means b2b 0 in the attack table or a tspin/quad has just been done
+    b2b 0 means no b2b, b2b 2 means the second b2b attack, or b2b 1 in the attack table)
 combo: int
 t-spin message: "t-spin", "t-spin mini", "False"
 pc message: "pc", "False"
