@@ -77,8 +77,12 @@ class Game:
         # check if this will fail for first lock
         clear = board.line_clear_history[-1]
         lines, b2b, combo, tspin, pc = clear.split("/")
-        if lines == 0:
+        if int(lines) == 0:
             return False
+        # translate line clear history b2b into attack table b2b
+        if int(b2b) > 0:
+            b2b = int(b2b) - 1
+        # 0 -> 0, 1 -> 0, 2-> 1
         # {number_of_cleared_lines}/{b2b}/{combo}/{tspin}/{pc_message}
         attack = attack_table(int(lines), int(b2b), int(combo), tspin, pc)
         # find target board

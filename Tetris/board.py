@@ -299,11 +299,10 @@ class Board:
                     self.line_clear_history.append(f"0/{pb2b}/0/{tspin}/False")
                 else:
                     # work out combo
-                    combo = 0 if plines == 0 else int(pcombo) + 1
+                    combo = 0 if int(plines) == 0 else int(pcombo) + 1
                     # work out back to back
-                    b2b = int(pb2b) + \
-                        1 if int(
-                            number_of_cleared_lines) == 4 or tspin != "False" else 0
+                    b2b = int(pb2b) + 1 if int(
+                        number_of_cleared_lines) == 4 or str(tspin) != "False" else 0
                     self.line_clear_history.append(
                         f"{number_of_cleared_lines}/{b2b}/{combo}/{tspin}/{pc_message}")
             self.piece_placement_history.append(self.piece.value)
@@ -334,11 +333,10 @@ class Board:
                 self.line_clear_history.append(f"0/{pb2b}/0/{tspin}/False")
             else:
                 # work out combo
-                combo = 0 if plines == 0 else int(pcombo) + 1
+                combo = 0 if int(plines) == 0 else int(pcombo) + 1
                 # work out back to back
-                b2b = int(pb2b) + \
-                    1 if int(
-                        number_of_cleared_lines) == 4 or tspin != "False" else 0
+                b2b = int(pb2b) + 1 if int(
+                    number_of_cleared_lines) == 4 or str(tspin) != "False" else 0
                 self.line_clear_history.append(
                     f"{number_of_cleared_lines}/{b2b}/{combo}/{tspin}/{pc_message}")
             self.piece_placement_history.append(self.piece.value)
