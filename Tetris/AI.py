@@ -43,17 +43,6 @@ def find_possible_moves(board: str, piecetype: str, held_piece: str):
     return [f"{piecetype}{orientation}{x}{y}" for x, y, orientation in itertools.product(range(10), range(20), range(4)) if update_boardstate(board, Piece(f"{piecetype}{orientation}{x}{y}")) not in ["out of bounds", "occupied cell"] and update_boardstate(board, Piece(f"{piecetype}{orientation}{x}{y-1}")) in ["out of bounds", "occupied cell"]]
 
 
-new_dict = {}
-for piece in storage.blc_table:
-    new_dict[piece] = [[], [], [], []]
-    for orientation in range(4):
-        blx, bly = storage.blc_table[piece][orientation]
-        center_offset_list = storage.offset_list_table[piece][orientation]
-        for offset in center_offset_list:
-            offx, offy = offset
-            new_dict[piece][orientation].append((offx+2-blx, offy+2-bly))
-print(new_dict)
-
 if __name__ == "__main__":
     pass
     # a = board_to_bw("*JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS/")
