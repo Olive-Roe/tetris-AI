@@ -1,17 +1,18 @@
 Bucket list for priority tasks (ordered)
- Make graphical hold display
- Make graphical next queue display
- Make replays playable
+ Add garbage queue
+ Add garbage queue display
+ Make find_possible_moves function
+ Set up AI structure and formats
 
 Unordered:
- Make Game class
+ Make graphical hold display
+ Make graphical next queue display
 
 Future plans:
+- Add replay player
 - Implement DAS, ARR, SDF
-- Implement sending lines/combo table
 - Implement score table
 - Implement garbage multiplier, gravity
-- Make find_possible_moves function
 - Write evaluation function for board cleanliness
 - Make basic minimax AI
 
@@ -22,6 +23,9 @@ Priority list values (triage):
 4. Writing completely new code with large changes
 
 Done:
+Implement sending lines/combo table
+Make Game class
+Make replays playable
 Add support for displaying multiple boards
 Hide turtle in the middle of screen
 Make keybinds
