@@ -192,8 +192,9 @@ def type_of_boardstate(boardstate):
 
 
 def display_as_text(notation):
-    notation = boardstate_to_extended_boardstate(notation)
-    for row in (notation.split("/")):  # reverse list
+    notation = boardstate_to_extended_boardstate(
+        notation)[1:]
+    for row in notation.split("/")[::-1]:   # reverse list
         print(row)
 
 

@@ -28,6 +28,18 @@ def _get_coord_dict(piecestate: Piece):
     return {k: piecestate.type for k in [(x_offset + center_x, y_offset + center_y) for (x_offset, y_offset) in offset_list]}
 
 
+def _get_coord_list(piecestate: Piece):
+    # Check whether the piece is an O piece and set its orientation to 0 (doesn't matter in updating boardstate)
+    if piecestate.type == "O":
+        piecestate = Piece(f"O0{str(piecestate.x)}{str(piecestate.y)}")
+    # Gets a list of offsets from the Piece
+    offset_list = _find_offset_list(piecestate)
+    # Finds the center x and y coordinates
+    center_x, center_y = _find_center(piecestate)
+    # Combining offset and center list to find the list of the actual coordinates
+    return [(x_offset + center_x, y_offset + center_y) for (x_offset, y_offset) in offset_list]
+
+
 def _find_center(piecestate: Piece):
     'Given a Piece, returns the coordinates of its actual center (x, y)'
     blx, bly = _findBLC(piecestate)
@@ -40,6 +52,10 @@ def _find_offset_list(piecestate: Piece):
     'Given a Piece, returns a list of offsets of each filled tile from the center [(x1, y1), (x2, y2)]'
     # Note: .upper() is used in case of ghost pieces
     return storage.offset_list_table[piecestate.type.upper()][piecestate.orientation]
+
+
+def _find_blc_offset(piecestate: Piece):
+    pass
 
 
 def update_boardstate(boardstate, piecestate: Piece, coord_dict=""):
