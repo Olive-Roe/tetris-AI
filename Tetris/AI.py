@@ -1,7 +1,8 @@
-import itertools
+from game import init_screen
 from board_processing import boardstate_to_extended_boardstate, display_as_text
 from updating_board import update_boardstate, _get_coord_list
 from piece import Piece
+from board import Board
 import storage
 
 
@@ -46,6 +47,9 @@ def find_theoretical_moves(board: str, piecetype: str):
     for target_square in targets:
         tx, ty = target_square
         for orientation in range(4):
+            # skip orientations of O
+            if piecetype == "O" and orientation != 0:
+                continue
             offsets = storage.blc_offsets[piecetype][orientation]
             for off in offsets:
                 # find reverse offsets
@@ -58,12 +62,102 @@ def find_theoretical_moves(board: str, piecetype: str):
     return oL
 
 
-def pathfinding(board: str, piece: Piece):
+def _up_drop(board: str, piece: Piece):
+    """Takes a board and a piece, and tries to move the piece upwards as much as possible.
+    If it can move all the way to y=22, this function will return True"""
+    # iterate from current y to 22
+    for y in range(piece.y, 23):
+        test = update_boardstate(board, Piece(
+            f"{piece.type}{piece.orientation}{piece.x}{y}"))
+        if test in ["out of bounds", "occupied cell"]:
+            return f"{piece.type}{piece.orientation}{piece.x}{y-1}"
+    return True
+
+
+def _find_rotate(piece: Piece):
+    "Given a piece, find the rotation it takes to get it from spawn orientation to its current orientation"
+    if piece.orientation == 0:
+        # should not happen
+        return False
+    elif piece.orientation == 1:
+        return "CW"
+    elif piece.orientation == 2:
+        return "180"
+    elif piece.orientation == 3:
+        return "CCW"
+
+
+def _find_x_shift(piece: Piece):
+    x = 3 if piece.type in ["L", "J", "S", "T", "I"] else 4
+    shift = int(piece.x) - x
+    if shift > 0:
+        return ["r"]*shift
+    elif shift < 0:
+        return ["l"]*(-1*shift)
+    else:
+        return False
+
+
+def pathfinding(board: str, piece: Piece, seq=None):
     "Given a board and target piece, return sequence of actions to get the piece to there, or False if it's impossible"
-    # TODO: A* algorithm from target location to spawn
-    pass
+    if seq is None:
+        seq = []
+    if not (ud := _up_drop(board, piece)):
+        # TODO: kicks/tucks pathfinding
+        return False
+    seq.insert(0, "hd")
+    r = _find_rotate(piece)
+    if r != False:
+        seq.insert(0, r)
+    x = _find_x_shift(piece)
+    if x != False:
+        # insert each x shift into sequence
+        for i in x:
+            seq.insert(0, i)
+    return seq
+    # try actions
 
 
+def find_possible_moves(board: str, piecetype: str, held_piecetype: str):
+    oD = {}
+    for piece in [piecetype, held_piecetype]:
+        moves = find_theoretical_moves(board, piece)
+        for m in moves:
+            seq = pathfinding(board, Piece(m))
+            if seq != False:  # if there exists a path
+                oD[m] = seq
+    return oD
+
+
+t, screen = init_screen()
+
+
+def _return_spawn_piece(piece: Piece):
+    if piece.type in ["L", "J", "S", "T", "I"]:
+        x, y = 3, 22
+    elif piece.type in ["Z", "O"]:
+        x, y = 4, 22
+    return f"{piece.type}{piece.orientation}{x}{y}"
+
+
+def test_move(board, piece, actions):
+    b = Board(t, screen, _return_spawn_piece(Piece(piece)), board)
+    b.do_actions_from_input("\n".join(actions))
+    if b.piece.value == piece:
+        print(f"{piece} works")
+    else:
+        print(f"{piece} fail")
+
+
+def test_moves(board, dict):
+    for piece, actions in dict.items():
+        b = Board(t, screen, _return_spawn_piece(Piece(piece)), board)
+        b.do_actions_from_input("\n".join(actions))
+        # TODO: highlight target piece location
+        if b.piece.value == piece:
+            print(f"{piece} works")
+        else:
+            print(f"{piece} fail")
 # def find_possible_moves2(board: str, piece: str):
 #     # worst case fallback: iterating 400 times for all possibilities
 #     return [f"{piece}{orientation}{x}{y}" for x, y, orientation in itertools.product(range(10), range(20), range(4)) if update_boardstate(board, Piece(f"{piece}{orientation}{x}{y}")) not in ["out of bounds", "occupied cell"] and update_boardstate(board, Piece(f"{piece}{orientation}{x}{y-1}")) in ["out of bounds", "occupied cell"]]
@@ -72,4 +166,6 @@ def pathfinding(board: str, piece: Piece):
 if __name__ == "__main__":
     z = "*JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS/"
     a = board_to_bw(z)
-    print(find_theoretical_moves("*JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS/", "T"))
+    print(find_theoretical_moves(z, "T"))
+    d = find_possible_moves(z, "T", "O")
+    test_moves(z, d)
