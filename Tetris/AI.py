@@ -1,8 +1,11 @@
+from time import sleep
+from board_processing import separate_piece_board_notation
+from updating_board import rotate_and_update
 from game import init_screen
 from board_processing import boardstate_to_extended_boardstate, display_as_text
-from updating_board import update_boardstate, _get_coord_list
+from updating_board import update_boardstate, _combine_coordlists, construct_piece_board_notation
 from piece import Piece
-from board import Board
+from board import Board, draw_grid
 import storage
 
 
@@ -106,14 +109,20 @@ def pathfinding(board: str, piece: Piece, seq=None):
         # TODO: kicks/tucks pathfinding
         return False
     seq.insert(0, "hd")
-    r = _find_rotate(piece)
-    if r != False:
-        seq.insert(0, r)
+    piece.update(f"{piece.type}{piece.orientation}{piece.x}{22}")
     x = _find_x_shift(piece)
     if x != False:
         # insert each x shift into sequence
         for i in x:
             seq.insert(0, i)
+    r = _find_rotate(piece)
+    if r != False:
+        # TODO: adjust for wall kicks
+        seq.insert(0, r)
+        pb, kick = rotate_and_update(
+            construct_piece_board_notation(piece.value, board), r)
+        p, b = separate_piece_board_notation(pb)
+        piece = Piece(p)
     return seq
     # try actions
 
@@ -127,9 +136,6 @@ def find_possible_moves(board: str, piecetype: str, held_piecetype: str):
             if seq != False:  # if there exists a path
                 oD[m] = seq
     return oD
-
-
-t, screen = init_screen()
 
 
 def _return_spawn_piece(piece: Piece):
@@ -149,23 +155,33 @@ def test_move(board, piece, actions):
         print(f"{piece} fail")
 
 
+faildict = {'T104': ['l', 'l', 'CW', 'hd'], 'T114': ['l', 'l', 'CW', 'hd'], 'T214': ['l', 'l', 'l', '180', 'hd'], 'T314': ['l', 'l', 'CCW', 'hd'], 'T124': ['l', 'CW', 'hd'], 'T224': ['l', 'l', '180', 'hd'], 'T324': ['l', 'CCW', 'hd'], 'T134': ['CW', 'hd'], 'T243': ['180', 'hd'], 'T234': ['l', '180', 'hd'], 'T343': ['r', 'CCW', 'hd'], 'T334': ['CCW', 'hd'], 'T040': ['r', 'hd'], 'T140': ['r', 'CW', 'hd'], 'T350': ['r', 'r', 'CCW', 'hd'], 'T151': [
+    'r', 'r', 'CW', 'hd'], 'T162': ['r', 'r', 'r', 'CW', 'hd'], 'T251': ['r', '180', 'hd'], 'T262': ['r', 'r', '180', 'hd'], 'T362': ['r', 'r', 'r', 'CCW', 'hd'], 'T173': ['r', 'r', 'r', 'r', 'CW', 'hd'], 'T273': ['r', 'r', 'r', '180', 'hd'], 'T373': ['r', 'r', 'r', 'r', 'CCW', 'hd'], 'T184': ['r', 'r', 'r', 'r', 'r', 'CW', 'hd'], 'T284': ['r', 'r', 'r', 'r', '180', 'hd'], 'T384': ['r', 'r', 'r', 'r', 'r', 'CCW', 'hd'], 'T394': ['r', 'r', 'r', 'r', 'r', 'CCW', 'hd']}
+
+
 def test_moves(board, dict):
     for piece, actions in dict.items():
         b = Board(t, screen, _return_spawn_piece(Piece(piece)), board)
         b.do_actions_from_input("\n".join(actions))
+        # draw_grid(update_boardstate(z, Piece(piece)), t, screen)
+        # sleep(0.5)
         # TODO: highlight target piece location
         if b.piece.value == piece:
             print(f"{piece} works")
         else:
             print(f"{piece} fail")
+            faildict[piece] = actions
 # def find_possible_moves2(board: str, piece: str):
 #     # worst case fallback: iterating 400 times for all possibilities
 #     return [f"{piece}{orientation}{x}{y}" for x, y, orientation in itertools.product(range(10), range(20), range(4)) if update_boardstate(board, Piece(f"{piece}{orientation}{x}{y}")) not in ["out of bounds", "occupied cell"] and update_boardstate(board, Piece(f"{piece}{orientation}{x}{y-1}")) in ["out of bounds", "occupied cell"]]
 
 
 if __name__ == "__main__":
+    t, screen = init_screen()
     z = "*JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS/"
-    a = board_to_bw(z)
-    print(find_theoretical_moves(z, "T"))
+    # a = board_to_bw(z)
+    # print(find_theoretical_moves(z, "T"))
     d = find_possible_moves(z, "T", "O")
     test_moves(z, d)
+    print(faildict)
+    # b = Board(t, screen, "T0322")
