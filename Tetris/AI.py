@@ -25,7 +25,7 @@ def board_to_col(board):
 def _find_floor(board):
     "Given a board notation, returns a list of coordinates (x, y) of empty cells with filled cells directly underneath."
     oL = []
-    col_form = board_to_col(board)
+    col_form = board_to_col(boardstate_to_extended_boardstate(board))
     # remove starting asterisk, split by column
     for x, col in enumerate(col_form[1:].split("/")):
         # set the floor as filled
@@ -38,18 +38,38 @@ def _find_floor(board):
     return oL
 
 
-def find_possible_moves(board: str, piecetype: str, held_piece: str):
-    # worst case fallback: iterating 400 times for all possibilities
-    return [f"{piecetype}{orientation}{x}{y}" for x, y, orientation in itertools.product(range(10), range(20), range(4)) if update_boardstate(board, Piece(f"{piecetype}{orientation}{x}{y}")) not in ["out of bounds", "occupied cell"] and update_boardstate(board, Piece(f"{piecetype}{orientation}{x}{y-1}")) in ["out of bounds", "occupied cell"]]
+def find_theoretical_moves(board: str, piecetype: str):
+    "Find all locations for a piece given a board (that may not be accessible)"
+    oL = []
+    targets = _find_floor(board)
+    # check both current piece and held piece
+    for target_square in targets:
+        tx, ty = target_square
+        for orientation in range(4):
+            offsets = storage.blc_offsets[piecetype][orientation]
+            for off in offsets:
+                # find reverse offsets
+                rx, ry = -off[0], -off[1]
+                # find original blc
+                blcx, blcy = (tx+rx, ty+ry)
+                message = f"{piecetype}{orientation}{blcx}{blcy}"
+                if update_boardstate(board, Piece(message)) not in ["out of bounds", "occupied cell"] and message not in oL:
+                    oL.append(message)
+    return oL
+
+
+def pathfinding(board: str, piece: Piece):
+    "Given a board and target piece, return sequence of actions to get the piece to there, or False if it's impossible"
+    # TODO: A* algorithm from target location to spawn
+    pass
+
+
+# def find_possible_moves2(board: str, piece: str):
+#     # worst case fallback: iterating 400 times for all possibilities
+#     return [f"{piece}{orientation}{x}{y}" for x, y, orientation in itertools.product(range(10), range(20), range(4)) if update_boardstate(board, Piece(f"{piece}{orientation}{x}{y}")) not in ["out of bounds", "occupied cell"] and update_boardstate(board, Piece(f"{piece}{orientation}{x}{y-1}")) in ["out of bounds", "occupied cell"]]
 
 
 if __name__ == "__main__":
-    pass
-    # a = board_to_bw("*JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS/")
-    # print(find_possible_moves("*JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS/", "T", "O"))
-    # display_as_text(a)
-    # b = board_to_col(a)
-    # # print(b)
-    # c = _find_floor(a)
-    # print(c)
-    # print(_get_coord_dict(Piece("T000")))
+    z = "*JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS/"
+    a = board_to_bw(z)
+    print(find_theoretical_moves("*JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS/", "T"))
