@@ -23,6 +23,7 @@ Priority list values (triage):
 4. Writing completely new code with large changes
 
 Done:
+Make theoretical moves function
 Implement sending lines/combo table
 Make Game class
 Make replays playable
