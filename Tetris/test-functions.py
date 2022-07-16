@@ -3,7 +3,7 @@ t, screen = init_screen()
 
 
 'test function for playing a game'
-g = Game(players=2)
+g = Game(players=1)
 g.mainloop()
 
 'test function for b2b bonus'

@@ -3,7 +3,7 @@ from board_processing import separate_piece_board_notation
 from updating_board import rotate_and_update
 from game import init_screen
 from board_processing import boardstate_to_extended_boardstate, display_as_text
-from updating_board import update_boardstate, _combine_coordlists, construct_piece_board_notation
+from updating_board import update_boardstate, _combine_coordlists, construct_piece_board_notation, _find_rotation_direction
 from piece import Piece
 from board import Board, draw_grid
 import storage
@@ -91,7 +91,8 @@ def _find_rotate(piece: Piece):
 
 
 def _find_x_shift(piece: Piece):
-    x = 3 if piece.type in ["L", "J", "S", "T", "I"] else 4
+    spawn = Piece(_return_spawn_piece_with_rotate(piece))
+    x = spawn.x
     shift = int(piece.x) - x
     if shift > 0:
         return ["r"]*shift
@@ -105,24 +106,27 @@ def pathfinding(board: str, piece: Piece, seq=None):
     "Given a board and target piece, return sequence of actions to get the piece to there, or False if it's impossible"
     if seq is None:
         seq = []
-    if not (ud := _up_drop(board, piece)):
+    if _up_drop(board, piece) is not True:
         # TODO: kicks/tucks pathfinding
         return False
     seq.insert(0, "hd")
     piece.update(f"{piece.type}{piece.orientation}{piece.x}{22}")
-    x = _find_x_shift(piece)
-    if x != False:
-        # insert each x shift into sequence
-        for i in x:
-            seq.insert(0, i)
     r = _find_rotate(piece)
     if r != False:
         # TODO: adjust for wall kicks
+        # TODO: include DAS right/left (2-step finesse)
+        # TODO: remove symmetrical positions (s/z/i)
         seq.insert(0, r)
         pb, kick = rotate_and_update(
             construct_piece_board_notation(piece.value, board), r)
         p, b = separate_piece_board_notation(pb)
-        piece = Piece(p)
+        piece2 = Piece(p)
+
+    x = _find_x_shift(piece)
+    if x != False:
+        # insert each x shift into sequence
+        for i in x:
+            seq.insert(-1, i)
     return seq
     # try actions
 
@@ -143,7 +147,23 @@ def _return_spawn_piece(piece: Piece):
         x, y = 3, 22
     elif piece.type in ["Z", "O"]:
         x, y = 4, 22
-    return f"{piece.type}{piece.orientation}{x}{y}"
+    return f"{piece.type}{0}{x}{y}"
+
+
+def _return_spawn_piece_with_rotate(piece: Piece):
+    "Given a Piece, return the spawn piece value after rotation"
+    if piece.type in ["L", "J", "S", "T", "I"]:
+        x, y = 3, 22
+    elif piece.type in ["Z", "O"]:
+        x, y = 4, 22
+    if piece.orientation == 0:
+        return f"{piece.type}{0}{x}{y}"
+    new_piece = Piece(f"{piece.type}{0}{x}{y}")
+    direction = _find_rotation_direction(piece.orientation)
+    pb, kick = rotate_and_update(
+        construct_piece_board_notation(new_piece.value, "*"), direction)
+    p, b = separate_piece_board_notation(pb)
+    return p
 
 
 def test_move(board, piece, actions):
@@ -155,13 +175,16 @@ def test_move(board, piece, actions):
         print(f"{piece} fail")
 
 
-faildict = {'T104': ['l', 'l', 'CW', 'hd'], 'T114': ['l', 'l', 'CW', 'hd'], 'T214': ['l', 'l', 'l', '180', 'hd'], 'T314': ['l', 'l', 'CCW', 'hd'], 'T124': ['l', 'CW', 'hd'], 'T224': ['l', 'l', '180', 'hd'], 'T324': ['l', 'CCW', 'hd'], 'T134': ['CW', 'hd'], 'T243': ['180', 'hd'], 'T234': ['l', '180', 'hd'], 'T343': ['r', 'CCW', 'hd'], 'T334': ['CCW', 'hd'], 'T040': ['r', 'hd'], 'T140': ['r', 'CW', 'hd'], 'T350': ['r', 'r', 'CCW', 'hd'], 'T151': [
-    'r', 'r', 'CW', 'hd'], 'T162': ['r', 'r', 'r', 'CW', 'hd'], 'T251': ['r', '180', 'hd'], 'T262': ['r', 'r', '180', 'hd'], 'T362': ['r', 'r', 'r', 'CCW', 'hd'], 'T173': ['r', 'r', 'r', 'r', 'CW', 'hd'], 'T273': ['r', 'r', 'r', '180', 'hd'], 'T373': ['r', 'r', 'r', 'r', 'CCW', 'hd'], 'T184': ['r', 'r', 'r', 'r', 'r', 'CW', 'hd'], 'T284': ['r', 'r', 'r', 'r', '180', 'hd'], 'T384': ['r', 'r', 'r', 'r', 'r', 'CCW', 'hd'], 'T394': ['r', 'r', 'r', 'r', 'r', 'CCW', 'hd']}
+# faildict = {'T104': ['l', 'l', 'CW', 'hd'], 'T114': ['l', 'l', 'CW', 'hd'], 'T214': ['l', 'l', 'l', '180', 'hd'], 'T314': ['l', 'l', 'CCW', 'hd'], 'T124': ['l', 'CW', 'hd'], 'T224': ['l', 'l', '180', 'hd'], 'T324': ['l', 'CCW', 'hd'], 'T134': ['CW', 'hd'], 'T243': ['180', 'hd'], 'T234': ['l', '180', 'hd'], 'T343': ['r', 'CCW', 'hd'], 'T334': ['CCW', 'hd'], 'T040': ['r', 'hd'], 'T140': ['r', 'CW', 'hd'], 'T350': ['r', 'r', 'CCW', 'hd'], 'T151': [
+#    'r', 'r', 'CW', 'hd'], 'T162': ['r', 'r', 'r', 'CW', 'hd'], 'T251': ['r', '180', 'hd'], 'T262': ['r', 'r', '180', 'hd'], 'T362': ['r', 'r', 'r', 'CCW', 'hd'], 'T173': ['r', 'r', 'r', 'r', 'CW', 'hd'], 'T273': ['r', 'r', 'r', '180', 'hd'], 'T373': ['r', 'r', 'r', 'r', 'CCW', 'hd'], 'T184': ['r', 'r', 'r', 'r', 'r', 'CW', 'hd'], 'T284': ['r', 'r', 'r', 'r', '180', 'hd'], 'T384': ['r', 'r', 'r', 'r', 'r', 'CCW', 'hd'], 'T394': ['r', 'r', 'r', 'r', 'r', 'CCW', 'hd']}
+# {'T104': ['l', 'l', 'CW', 'hd'], 'T114': ['l', 'l', 'CW', 'hd'], 'T214': ['l', 'l', 'l', '180', 'hd'], 'T314': ['l', 'l', 'CCW', 'hd'], 'T124': ['l', 'CW', 'hd'], 'T224': ['l', 'l', '180', 'hd'], 'T324': ['l', 'CCW', 'hd'], 'T134': ['CW', 'hd'], 'T243': ['180', 'hd'], 'T234': ['l', '180', 'hd'], 'T343': ['r', 'CCW', 'hd'], 'T334': ['CCW', 'hd'], 'T040': ['r', 'hd'], 'T140': ['r', 'CW', 'hd'], 'T350': ['r', 'r', 'CCW', 'hd'], 'T151': ['r', 'r', 'CW', 'hd'], 'T162': ['r', 'r', 'r', 'CW', 'hd'], 'T251': ['r', '180', 'hd'], 'T262': ['r', 'r', '180', 'hd'], 'T362': ['r', 'r', 'r', 'CCW', 'hd'], 'T173': ['r', 'r', 'r', 'r', 'CW', 'hd'], 'T273': ['r', 'r', 'r', '180', 'hd'], 'T373': ['r', 'r', 'r', 'r', 'CCW', 'hd'], 'T184': ['r', 'r', 'r', 'r', 'r', 'CW', 'hd'], 'T284': ['r', 'r', 'r', 'r', '180', 'hd'], 'T384': ['r', 'r', 'r', 'r', 'r', 'CCW', 'hd'], 'T394': ['r', 'r', 'r', 'r', 'r', 'CCW', 'hd']}
+faildict = {}
 
 
 def test_moves(board, dict):
     for piece, actions in dict.items():
-        b = Board(t, screen, _return_spawn_piece(Piece(piece)), board)
+        b = Board(t, screen, _return_spawn_piece(
+            Piece(piece)), board)
         b.do_actions_from_input("\n".join(actions))
         # draw_grid(update_boardstate(z, Piece(piece)), t, screen)
         # sleep(0.5)
@@ -171,7 +194,7 @@ def test_moves(board, dict):
         else:
             print(f"{piece} fail")
             faildict[piece] = actions
-# def find_possible_moves2(board: str, piece: str):
+# def find_theoretical_moves2(board: str, piece: str):
 #     # worst case fallback: iterating 400 times for all possibilities
 #     return [f"{piece}{orientation}{x}{y}" for x, y, orientation in itertools.product(range(10), range(20), range(4)) if update_boardstate(board, Piece(f"{piece}{orientation}{x}{y}")) not in ["out of bounds", "occupied cell"] and update_boardstate(board, Piece(f"{piece}{orientation}{x}{y-1}")) in ["out of bounds", "occupied cell"]]
 
@@ -181,7 +204,7 @@ if __name__ == "__main__":
     z = "*JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS/"
     # a = board_to_bw(z)
     # print(find_theoretical_moves(z, "T"))
-    d = find_possible_moves(z, "T", "O")
+    d = find_possible_moves(z, "J", "O")
     test_moves(z, d)
+    print(d)
     print(faildict)
-    # b = Board(t, screen, "T0322")

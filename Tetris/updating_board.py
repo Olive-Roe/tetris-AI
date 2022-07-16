@@ -187,7 +187,19 @@ def _find_rotation_factor(rotation_direction):
     elif rotation_direction == "180":
         return 2
     else:
-        raise ValueError(f"Bad rotation_direction: '{rotation_direction}")
+        raise ValueError(f"Bad rotation_direction: '{rotation_direction}'")
+
+
+def _find_rotation_direction(rotation_factor: int):
+    'Given a rotation factor, returns the rotation direction (text) associated with that.'
+    if rotation_factor == 1:
+        return "CW"
+    elif rotation_factor == 3:
+        return "CCW"
+    elif rotation_factor == 2:
+        return "180"
+    else:
+        raise ValueError(f"Bad rotation_factor: '{rotation_factor}'")
 
 
 def _find_piece_message(piece: Piece, new_direction: int):
