@@ -22,7 +22,7 @@ class Game:
         # modes = "vs ai", "sprint", "ultra", "cheese"
         self.players = players
         # T is unused
-        t, self.screen = init_screen()
+        t, self.screen = init_screen(600 if players == 1 else 1200)
         self.t_list = [Turtle() for _ in range(self.players)]
         for t in self.t_list:
             t.hideturtle()
