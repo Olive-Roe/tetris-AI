@@ -1,6 +1,18 @@
 from game import *
+from time import sleep
 t, screen = init_screen()
 
+'test function for s BLC'
+
+# FIXME: S3 and S1 bottom left corners are out of shape
+# S3 cannot go to rightmost because BLC > 9
+
+# actions = ["CCW\nR\nhd", "CW\nR\nl\nhd", "R\nCCW\nhd"]
+# for action in actions:
+#     b = Board(t, screen, "S0322")
+#     b.do_actions_from_input(action)
+#     print(b.piece.value)
+#     sleep(1)
 
 'test function for playing a game'
 g = Game(players=1)
