@@ -5,10 +5,10 @@ from random import choice, randint
 from turtle import Screen, Turtle
 
 
-def init_screen():
+def init_screen(width=1200):
     screen = Screen()
     screen.bgcolor("black")
-    screen.setup(width=1200, height=600)
+    screen.setup(width, height=600)
     screen.title("Tetris")
     t = Turtle()
     t.hideturtle()

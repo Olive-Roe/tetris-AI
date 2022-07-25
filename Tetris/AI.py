@@ -369,7 +369,7 @@ def test_moves(board, dict):
 
 
 if __name__ == "__main__":
-    t, screen = init_screen()
+    t, screen = init_screen(600)
     z = "*JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS/"
     # a = board_to_bw(z)
     # print(find_theoretical_moves(z, "T"))
