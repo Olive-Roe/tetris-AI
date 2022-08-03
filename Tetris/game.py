@@ -2,6 +2,7 @@ from atk_table import attack_table
 from board import Board
 
 from random import choice, randint
+from time import time
 from turtle import Screen, Turtle
 
 
@@ -21,12 +22,14 @@ class Game:
         self.mode = mode
         # modes = "vs ai", "sprint", "ultra", "cheese"
         self.players = players
+        self.seed = time()
         # T is unused
         t, self.screen = init_screen(600 if players == 1 else 1200)
         self.t_list = [Turtle() for _ in range(self.players)]
         for t in self.t_list:
             t.hideturtle()
-        self.board_list = [Board(t, self.screen) for t in self.t_list]
+        self.board_list = [Board(t, self.screen, bag_seed=self.seed)
+                           for t in self.t_list]
         if players == 1:
             self.positions = [(0, 0)]
         if players == 2:

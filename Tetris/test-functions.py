@@ -15,7 +15,7 @@ t, screen = init_screen()
 #     sleep(1)
 
 'test function for playing a game'
-g = Game(players=1)
+g = Game(players=2)
 g.mainloop()
 
 'test function for b2b bonus'
