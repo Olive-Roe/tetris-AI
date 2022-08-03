@@ -1,4 +1,5 @@
 from time import sleep
+from copy import copy
 from board_processing import separate_piece_board_notation
 from updating_board import rotate_and_update
 from game import init_screen
@@ -67,14 +68,14 @@ def find_theoretical_moves(board: str, piecetype: str):
 
 def _up_drop(board: str, piece: Piece):
     """Takes a board and a piece, and tries to move the piece upwards as much as possible.
-    If it can move all the way to y=22, this function will return True"""
+    Returns the final Piece (stops at 22)"""
     # iterate from current y to 22
     for y in range(piece.y, 23):
         test = update_boardstate(board, Piece(
             f"{piece.type}{piece.orientation}{piece.x}{y}"))
         if test in ["out of bounds", "occupied cell"]:
-            return f"{piece.type}{piece.orientation}{piece.x}{y-1}"
-    return True
+            return Piece(f"{piece.type}{piece.orientation}{piece.x}{y-1}")
+    return Piece(f"{piece.type}{piece.orientation}{piece.x}22")
 
 
 def _find_rotate(piece: Piece):
@@ -90,7 +91,8 @@ def _find_rotate(piece: Piece):
         return "CCW"
 
 
-_REVERSE_TABLE = {"CW": "CCW", "CCW": "CW", "180": "180", "l": "r", "r": "l"}
+_REVERSE_TABLE = {"CW": "CCW", "CCW": "CW",
+                  "180": "180", "l": "r", "r": "l", "hd": "hd"}
 
 
 def _get_reverse_action(action: str):
@@ -99,22 +101,56 @@ def _get_reverse_action(action: str):
     return _REVERSE_TABLE[action]
 
 
-def kick_pathfinding(board: str, piece: Piece, seq=None):
-    assert not _up_drop(board, piece)
+def do_action(board: str, piece: str, action):
+    "Takes a board, piece string, and action, and returns the updated piece"
+    temp_b = Board("", "", piece, board)
+    if action == "ud":
+        return _up_drop(board, Piece(piece)).value
+    temp_b.do_action(action)
+    return temp_b.piece.value
 
 
-def pathfinding(board: str, piece: Piece, seq=None):
+def kick_pathfinding(board: str, piece: str):
+    """Uses BFS to find the sequence of moves to get to a location in a board
+    Returns the sequence and the final piece"""
+    # TODO: stop trying to find a path if it's impossible (rare)
+    visited = [piece]
+    queue = [[]]
+    while True:
+        item = queue[0]
+        tpiece = piece
+        if item != []:
+            # initialise current piece with actions
+            for action in item:
+                tpiece = do_action(board, tpiece, action)
+        # Check is search is finished (can move up to y=22)
+        test_piece = _up_drop(board, Piece(tpiece))
+        if test_piece.y == 22:
+            # Gets current item (action list)
+            # Reverse all actions and order (this searches from target location, so sequence is reversed)
+            return ["d"] + [_REVERSE_TABLE[i] for i in item][::-1], Piece(tpiece)
+        for action in ["CW", "CCW", "180", "l", "r", "ud"]:
+            # Create temporary piece
+            tpiece = do_action(board, tpiece, action)
+            if tpiece != piece and tpiece not in visited:
+                # Adds action to item and adds to back
+                queue.append(item + [action])
+                visited.append(tpiece)
+        queue.pop(0)
+
+
+def pathfinding(board: str, piece: Piece):
     "Given a board and target piece, return sequence of actions to get the piece to there, or False if it's impossible"
-    if seq is None:
-        seq = []
-    if not _up_drop(board, piece):
-        # TODO: kicks/tucks pathfinding
-        return False
-    seq.insert(0, "hd")
+    # Initialise empty list for possible kick sequence
+    kick_seq = []
+    if _up_drop(board, piece).y != 22:
+        kick_seq, piece = kick_pathfinding(board, piece.value)
     piece.update(f"{piece.type}{piece.orientation}{piece.x}{22}")
-    seq = storage.finesse[piece.value]
+    # Shallowly copied because kicks mess up the original?
+    seq = copy(storage.finesse[piece.value])
     if seq == ['']:
         return False
+    seq += kick_seq
     seq.append("hd")
     return seq
 
@@ -122,6 +158,7 @@ def pathfinding(board: str, piece: Piece, seq=None):
 def find_possible_moves(board: str, piecetype: str, held_piecetype: str):
     oD = {}
     for piece in [piecetype, held_piecetype]:
+        # TODO: Add 'hold' to the start of the held piece's actions
         moves = find_theoretical_moves(board, piece)
         for m in moves:
             seq = pathfinding(board, Piece(m))
@@ -197,13 +234,14 @@ def find_sym(piece):
     return ""
 
 
-def find_kicks(z="*JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS/"):
+def test_kicks(board):
     oL = []
-    for piecetype in list("IJLOSTZ"):
+    for piecetype, held_piecetype in [("I", "O"), ("J", "L"), ("S", "Z"), ("T", "O")]:
         # pathfind
-        d = find_possible_moves(z, piecetype, "Z")
+        d = find_possible_moves(board, piecetype, held_piecetype)
+        test_moves(board, d)
         # find all places piece can land
-        e = find_theoretical_moves(z, piecetype)
+        e = find_theoretical_moves(board, piecetype)
         test = [x for x in e if x not in d and find_sym(x) not in d]
         for x in test:
             if find_sym(x) in test:
@@ -213,12 +251,10 @@ def find_kicks(z="*JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS/"):
 
 
 def main():
-    global t, screen
-    t, screen = init_screen(600)
-    print(find_kicks())
-    # z = "*JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS/"
+    z = "*JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS/"
+    print(test_kicks(z))
     # # a = board_to_bw(z)
-    # d = find_possible_moves(z, "J", "L")
+    # d = find_possible_moves(z, "J", "T")
     # test_moves(z, d)
     # print(d)
     # print(faildict)
@@ -230,4 +266,5 @@ def main():
 
 
 if __name__ == "__main__":
+    t, screen = init_screen(600)
     main()

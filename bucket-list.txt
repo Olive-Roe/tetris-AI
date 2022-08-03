@@ -1,11 +1,10 @@
 Bucket list for priority tasks (ordered)
- Set up finesse for hard drops
- Make find_possible_moves function
-    with all kicks and twists
  Debug first hard drop is a soft drop
+ Make kick pathfinding stop after a certain limit
  Add garbage queue
  Add garbage queue display
  Set up AI structure and formats
+ Make 4-line PC solver
 
 Unordered:
  Make graphical hold display
@@ -26,6 +25,9 @@ Priority list values (triage):
 4. Writing completely new code with large changes
 
 Done:
+Set up finesse for hard drops
+Make find_possible_moves function
+   with all kicks and twists
 Fix S3 and S1 bottom left corners are out of shape
 Make theoretical moves function
 Implement sending lines/combo table
