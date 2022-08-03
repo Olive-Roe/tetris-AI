@@ -45,6 +45,7 @@ def _find_floor(board):
 
 def find_theoretical_moves(board: str, piecetype: str):
     "Find all locations for a piece given a board (that may not be accessible)"
+    # TODO: Prune output of this for obviously covered places (I pieces in garbage lines)
     oL = []
     targets = _find_floor(board)
     # check both current piece and held piece
@@ -117,6 +118,9 @@ def kick_pathfinding(board: str, piece: str):
     visited = [piece]
     queue = [[]]
     while True:
+        # Check whether to give up
+        if not queue:  # if queue is empty list
+            return [], Piece(piece)
         item = queue[0]
         tpiece = piece
         if item != []:
