@@ -1,7 +1,10 @@
 Bucket list for priority tasks (ordered)
+ Set up finesse for hard drops
+ Make find_possible_moves function
+    with all kicks and twists
+ Debug first hard drop is a soft drop
  Add garbage queue
  Add garbage queue display
- Make find_possible_moves function
  Set up AI structure and formats
 
 Unordered:
@@ -23,6 +26,7 @@ Priority list values (triage):
 4. Writing completely new code with large changes
 
 Done:
+Fix S3 and S1 bottom left corners are out of shape
 Make theoretical moves function
 Implement sending lines/combo table
 Make Game class
