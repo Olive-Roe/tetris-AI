@@ -61,7 +61,11 @@ def find_theoretical_moves(board: str, piecetype: str):
                 rx, ry = -off[0], -off[1]
                 # find original blc
                 blcx, blcy = (tx+rx, ty+ry)
+                if blcx < 0 or blcx > 9 or blcy < 0 or blcy > 39:
+                    # hacky out of bounds check
+                    continue
                 message = f"{piecetype}{orientation}{blcx}{blcy}"
+                # FIXME: Piece('T2106') (x=10) is interpreted as Piece('T216')
                 if update_boardstate(board, Piece(message)) not in ["out of bounds", "occupied cell"] and message not in oL:
                     oL.append(message)
     return oL
@@ -115,12 +119,11 @@ def do_action(board: str, piece: str, action):
 def kick_pathfinding(board: str, piece: str):
     """Uses BFS to find the sequence of moves to get to a location in a board
     Returns the sequence and the final piece"""
-    # TODO: stop trying to find a path if it's impossible (rare)
     visited = [piece]
     queue = [[]]
     while True:
         # Check whether to give up
-        if not queue:  # if queue is empty list
+        if not queue:  # if queue is empty list, everything has been checked
             return False, Piece(piece)
         item = queue[0]
         tpiece = piece
@@ -131,10 +134,18 @@ def kick_pathfinding(board: str, piece: str):
         # Check is search is finished (can move up to y=22)
         test_piece = _up_drop(board, Piece(tpiece))
         if test_piece.y == 22:
-            # TODO: before return, assert  the kicks are reversible
-            # Gets current item (action list)
+            #  Gets current item (action list)
             # Reverse all actions and order (this searches from target location, so sequence is reversed)
-            return ["d"] + [_REVERSE_TABLE[i] for i in item][::-1], Piece(tpiece)
+            message = ["d"] + [_REVERSE_TABLE[i] for i in item][::-1]
+            # TODO: clean up temporary piece names
+            # Check that all the actions are reversible
+            # t3piece -> (actions) -> piece
+            t3piece = tpiece
+            for action in message:
+                t3piece = do_action(board, t3piece, action)
+            if t3piece == piece:
+                # checked, ready to send
+                return message, Piece(tpiece)
         for action in ["CW", "CCW", "180", "l", "r", "ud"]:
             # Create temporary piece
             t2piece = do_action(board, tpiece, action)
@@ -259,7 +270,7 @@ def test_kicks(board):
 
 
 def main():
-    b = "*OO1LLLIJJJ/OO1SSLIJZZ/J3SSIZZI/J2TTTIOOI/JJ1LTZZOOI/3LZZZSSI/2LL2ZZSS/7Z2"
+    b = "*g3/g3/g3/g3/g3/OO1LLLIJJJ/OO1SSLIJZZ/J3SSIZZI/J2TTTIOOI/JJ1LTZZOOI/3LZZZSSI/2LL2ZZSS/7Z2"
     d = find_possible_moves(b, "T", "J")
     test_moves(b, d)
     print(faildict)
