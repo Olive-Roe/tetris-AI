@@ -75,6 +75,7 @@ def _up_drop(board: str, piece: Piece):
     """Takes a board and a piece, and tries to move the piece upwards as much as possible.
     Returns the final Piece (stops at 22)"""
     # iterate from current y to 22
+    piece = copy(piece)
     for y in range(piece.y, 23):
         test = update_boardstate(board, Piece(
             f"{piece.type}{piece.orientation}{piece.x}{y}"))
@@ -134,13 +135,19 @@ def kick_pathfinding(board: str, piece: str):
         # Check is search is finished (can move up to y=22)
         test_piece = _up_drop(board, Piece(tpiece))
         if test_piece.y == 22:
+            # TODO: Find exact amount to drop piece by
+            # y_diff = 22 - Piece(tpiece).y
+            # # hacky fix because y_diff is sometimes negative?
+            # if y_diff < 0:
+            #     y_diff = ""
             #  Gets current item (action list)
             # Reverse all actions and order (this searches from target location, so sequence is reversed)
+            # message = [f"d{y_diff}"] + [_REVERSE_TABLE[i] for i in item][::-1]
             message = ["d"] + [_REVERSE_TABLE[i] for i in item][::-1]
             # TODO: clean up temporary piece names
             # Check that all the actions are reversible
             # t3piece -> (actions) -> piece
-            t3piece = tpiece
+            t3piece = copy(tpiece)
             for action in message:
                 t3piece = do_action(board, t3piece, action)
             if t3piece == piece:
