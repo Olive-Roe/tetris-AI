@@ -7,8 +7,12 @@ t, screen = init_screen(600)
 # g = Game(players=1)
 b = "*OO1LLLIJJJ/OO1SSLIJZZ/J3SSIZZI/J2TTTIOOI/JJ1LTZZOOI/3LZZZSSI/2LL2ZZSS/7Z2"
 # print(test_kicks(b))
-b2 = Board(t, screen, boardstate=b)
+b2 = Board(t, screen, "J120", boardstate=b)
+actions = "180"
+b2.do_actions_from_input(actions)
 b2.display_board()
+# this is an irreversible kick
+# FIXME: check for irreversible kicks
 screen.mainloop()
 
 'test function for playing a game'

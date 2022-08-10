@@ -131,6 +131,7 @@ def kick_pathfinding(board: str, piece: str):
         # Check is search is finished (can move up to y=22)
         test_piece = _up_drop(board, Piece(tpiece))
         if test_piece.y == 22:
+            # TODO: before return, assert  the kicks are reversible
             # Gets current item (action list)
             # Reverse all actions and order (this searches from target location, so sequence is reversed)
             return ["d"] + [_REVERSE_TABLE[i] for i in item][::-1], Piece(tpiece)
@@ -262,6 +263,7 @@ def main():
     d = find_possible_moves(b, "T", "J")
     test_moves(b, d)
     print(faildict)
+    # {'T2106': ['180', 'L', 'hd'], 'T3106': ['L', 'CCW', 'hd'], 'J120': ['CW', 'L', 'd', 'CCW', 'CCW', '180', 'hd']}
     # z = "*JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS/"
     # print(test_kicks(z))
     # # a = board_to_bw(z)
