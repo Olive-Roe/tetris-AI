@@ -93,10 +93,11 @@ def _find_rotate(piece: Piece):
 
 
 _REVERSE_TABLE = {"CW": "CCW", "CCW": "CW",
-                  "180": "180", "l": "r", "r": "l", "hd": "hd"}
+                  "180": "180", "l": "r", "r": "l", "hd": "hd", "ud": "d"}
 
 
 def _get_reverse_action(action: str):
+    # TODO: Soft drop the exact amount needed instead of all the way
     if action not in _REVERSE_TABLE:
         raise ValueError(f"Bad argument: {action}")
     return _REVERSE_TABLE[action]
@@ -120,7 +121,7 @@ def kick_pathfinding(board: str, piece: str):
     while True:
         # Check whether to give up
         if not queue:  # if queue is empty list
-            return [], Piece(piece)
+            return False, Piece(piece)
         item = queue[0]
         tpiece = piece
         if item != []:
@@ -135,11 +136,11 @@ def kick_pathfinding(board: str, piece: str):
             return ["d"] + [_REVERSE_TABLE[i] for i in item][::-1], Piece(tpiece)
         for action in ["CW", "CCW", "180", "l", "r", "ud"]:
             # Create temporary piece
-            tpiece = do_action(board, tpiece, action)
-            if tpiece != piece and tpiece not in visited:
+            t2piece = do_action(board, tpiece, action)
+            if t2piece != piece and t2piece not in visited:
                 # Adds action to item and adds to back
                 queue.append(item + [action])
-                visited.append(tpiece)
+                visited.append(t2piece)
         queue.pop(0)
 
 
@@ -149,6 +150,8 @@ def pathfinding(board: str, piece: Piece):
     kick_seq = []
     if _up_drop(board, piece).y != 22:
         kick_seq, piece = kick_pathfinding(board, piece.value)
+    if kick_seq is False:
+        return False
     piece.update(f"{piece.type}{piece.orientation}{piece.x}{22}")
     # Shallowly copied because kicks mess up the original?
     seq = copy(storage.finesse[piece.value])
@@ -255,8 +258,12 @@ def test_kicks(board):
 
 
 def main():
-    z = "*JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS/"
-    print(test_kicks(z))
+    b = "*OO1LLLIJJJ/OO1SSLIJZZ/J3SSIZZI/J2TTTIOOI/JJ1LTZZOOI/3LZZZSSI/2LL2ZZSS/7Z2"
+    d = find_possible_moves(b, "T", "J")
+    test_moves(b, d)
+    print(faildict)
+    # z = "*JJJI3ZZT/OOJI2ZZTT/OOLI3SST/LLLI4SS/"
+    # print(test_kicks(z))
     # # a = board_to_bw(z)
     # d = find_possible_moves(z, "J", "T")
     # test_moves(z, d)

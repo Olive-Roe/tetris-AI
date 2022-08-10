@@ -1,13 +1,15 @@
 from game import *
 from time import sleep
 from AI import *
-t, screen = init_screen()
+t, screen = init_screen(600)
 
 'test function for stoppable pathfinding'
-# FIXME: Tries to kick I when impossible
+# g = Game(players=1)
 b = "*OO1LLLIJJJ/OO1SSLIJZZ/J3SSIZZI/J2TTTIOOI/JJ1LTZZOOI/3LZZZSSI/2LL2ZZSS/7Z2"
-screen.mainloop()
 # print(test_kicks(b))
+b2 = Board(t, screen, boardstate=b)
+b2.display_board()
+screen.mainloop()
 
 'test function for playing a game'
 # g = Game(players=2)
