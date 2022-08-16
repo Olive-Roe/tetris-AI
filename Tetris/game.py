@@ -74,10 +74,8 @@ class Game:
         self.main_board = Board(
             self.main_board.t, self.screen, "", "*", self.main_board.seed)
 
-    def auto_lock_piece(self, board_index: int):
+    def send_garbage(self, board_index: int):
         board = self.board_list[board_index]
-        board.do_action("hd")
-        # check if this will fail for first lock
         clear = board.line_clear_history[-1]
         lines, b2b, combo, tspin, pc = clear.split("/")
         if int(lines) == 0:
@@ -85,7 +83,6 @@ class Game:
         # translate line clear history b2b into attack table b2b
         if int(b2b) > 0:
             b2b = int(b2b) - 1
-        # 0 -> 0, 1 -> 0, 2-> 1
         # {number_of_cleared_lines}/{b2b}/{combo}/{tspin}/{pc_message}
         attack = attack_table(int(lines), int(b2b), int(combo), tspin, pc)
         # find target board
@@ -93,6 +90,12 @@ class Game:
         # receive garbage on target board
         # TODO: garbage queue
         target_board.receive_garbage(randint(0, 9), attack)
+
+    def auto_lock_piece(self, board_index: int):
+        board = self.board_list[board_index]
+        board.do_action("hd")
+        if self.players > 1:
+            self.send_garbage()
 
     def manual_input(self):
         b = self.board_list[0]

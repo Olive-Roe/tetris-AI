@@ -279,11 +279,12 @@ class Board:
         return True
 
     def update_line_clear_history(self):
+        'Updates the line clear history after a lock and returns the new boardstate'
+        b = update_boardstate(self.boardstate, self.piece)
         if self.line_clear_history == []:
             # empty history -> first piece lock, we know the line clear values
             self.line_clear_history.append("0/0/0/False/False")
-            return None
-        b = update_boardstate(self.boardstate, self.piece)
+            return b
         # get number of cleared lines
         b, number_of_cleared_lines, list_of_cleared_lines = check_line_clears(
             b)
@@ -298,21 +299,21 @@ class Board:
         if number_of_cleared_lines == 0:
             # short circuit if previous piece did not clear a line
             self.line_clear_history.append(f"0/{pb2b}/0/{tspin}/False")
-        else:
-            # work out combo
-            combo = 0 if int(plines) == 0 else int(pcombo) + 1
-            # work out back to back
-            b2b = int(pb2b) + 1 if int(
-                number_of_cleared_lines) == 4 or str(tspin) != "False" else 0
-            # add to line clear history
-            self.line_clear_history.append(
-                f"{number_of_cleared_lines}/{b2b}/{combo}/{tspin}/{pc_message}")
+            return b
+        # work out combo
+        combo = 0 if int(plines) == 0 else int(pcombo) + 1
+        # work out back to back
+        b2b = int(pb2b) + 1 if int(
+            number_of_cleared_lines) == 4 or str(tspin) != "False" else 0
+        # add to line clear history
+        self.line_clear_history.append(
+            f"{number_of_cleared_lines}/{b2b}/{combo}/{tspin}/{pc_message}")
+        return b
 
     def lock_piece(self):
-        b = update_boardstate(self.boardstate, self.piece)
         if self.piece.y >= 20:
             # Game is over if piece locks over 21st row (do things and then set game_over to True)
-            self.update_line_clear_history()
+            b = self.update_line_clear_history()
             self.piece_placement_history.append(self.piece.value)
             self.pieces_placed += 1
             # Displays the board
@@ -322,7 +323,7 @@ class Board:
             self.game_over = True
             return False
         # game is still going
-        self.update_line_clear_history()
+        b = self.update_line_clear_history()
         # runs whether first piece or not
         self.piece_placement_history.append(self.piece.value)
         self.pieces_placed += 1
