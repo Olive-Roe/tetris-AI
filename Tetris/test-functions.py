@@ -3,13 +3,17 @@ from time import sleep
 from AI import *
 t, screen = init_screen(600)
 
-'test function for first harddrop = soft drop bug'
 g = Game(players=1)
-g.auto_input("hd", 0)
-g.display_screens()
-sleep(0.5)
-g.auto_input("hd", 0)
 g.mainloop()
+# the garbage queue doesn't get received
+
+'test function for first harddrop = soft drop bug'
+# g = Game(players=1)
+# g.auto_input("hd", 0)
+# g.display_screens()
+# sleep(0.5)
+# g.auto_input("hd", 0)
+# g.mainloop()
 
 'test function for irreversible kicks'
 # b = "*OO1LLLIJJJ/OO1SSLIJZZ/J3SSIZZI/J2TTTIOOI/JJ1LTZZOOI/3LZZZSSI/2LL2ZZSS/7Z2"
