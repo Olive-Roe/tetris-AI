@@ -278,33 +278,41 @@ class Board:
         self.update_pb_notation()
         return True
 
+    def update_line_clear_history(self):
+        if self.line_clear_history == []:
+            # empty history -> first piece lock, we know the line clear values
+            self.line_clear_history.append("0/0/0/False/False")
+            return None
+        b = update_boardstate(self.boardstate, self.piece)
+        # get number of cleared lines
+        b, number_of_cleared_lines, list_of_cleared_lines = check_line_clears(
+            b)
+        # check for perfect clear
+        pc_message = "pc" if b == "*" else "False"
+        # check for tspin
+        tspin = check_t_spin(self.piece_board_notation,
+                             self.replay_notation, self.last_kick_number)
+        # get values of previous piece placed (for combo, b2b)
+        plines, pb2b, pcombo, ptspin, ppc = self.line_clear_history[-1].split(
+            "/")
+        if number_of_cleared_lines == 0:
+            # short circuit if previous piece did not clear a line
+            self.line_clear_history.append(f"0/{pb2b}/0/{tspin}/False")
+        else:
+            # work out combo
+            combo = 0 if int(plines) == 0 else int(pcombo) + 1
+            # work out back to back
+            b2b = int(pb2b) + 1 if int(
+                number_of_cleared_lines) == 4 or str(tspin) != "False" else 0
+            # add to line clear history
+            self.line_clear_history.append(
+                f"{number_of_cleared_lines}/{b2b}/{combo}/{tspin}/{pc_message}")
+
     def lock_piece(self):
         b = update_boardstate(self.boardstate, self.piece)
         if self.piece.y >= 20:
             # Game is over if piece locks over 21st row (do things and then set game_over to True)
-            # TODO: clean up messy code
-            if self.line_clear_history == []:
-                # first piece lock
-                self.line_clear_history.append("0/0/0/False/False")
-            else:
-                b, number_of_cleared_lines, list_of_cleared_lines = check_line_clears(
-                    b)
-                pc_message = "pc" if b == "*" else "False"  # Check for perfect clear
-                tspin = check_t_spin(self.piece_board_notation,
-                                     self.replay_notation, self.last_kick_number)
-                prev_line = self.line_clear_history[-1].split("/")
-                # previous values
-                plines, pb2b, pcombo, ptspin, ppc = prev_line
-                if number_of_cleared_lines == 0:
-                    self.line_clear_history.append(f"0/{pb2b}/0/{tspin}/False")
-                else:
-                    # work out combo
-                    combo = 0 if int(plines) == 0 else int(pcombo) + 1
-                    # work out back to back
-                    b2b = int(pb2b) + 1 if int(
-                        number_of_cleared_lines) == 4 or str(tspin) != "False" else 0
-                    self.line_clear_history.append(
-                        f"{number_of_cleared_lines}/{b2b}/{combo}/{tspin}/{pc_message}")
+            self.update_line_clear_history()
             self.piece_placement_history.append(self.piece.value)
             self.pieces_placed += 1
             # Displays the board
@@ -314,31 +322,7 @@ class Board:
             self.game_over = True
             return False
         # game is still going
-        if self.line_clear_history == []:
-            # first piece lock, we know the line clear history values
-            self.line_clear_history.append("0/0/0/False/False")
-        else:
-            if b in ["out of bounds", "occupied cell"]:
-                raise ValueError(
-                    f"Impossible piece lock, piece: '{self.piece.value}', board: '{self.boardstate}'")
-            b, number_of_cleared_lines, list_of_cleared_lines = check_line_clears(
-                b)
-            pc_message = "pc" if b == "*" else "False"  # Check for perfect clear
-            tspin = check_t_spin(self.piece_board_notation,
-                                 self.replay_notation, self.last_kick_number)
-            prev_line = self.line_clear_history[-1].split("/")
-            # previous values
-            plines, pb2b, pcombo, ptspin, ppc = prev_line
-            if number_of_cleared_lines == 0:
-                self.line_clear_history.append(f"0/{pb2b}/0/{tspin}/False")
-            else:
-                # work out combo
-                combo = 0 if int(plines) == 0 else int(pcombo) + 1
-                # work out back to back
-                b2b = int(pb2b) + 1 if int(
-                    number_of_cleared_lines) == 4 or str(tspin) != "False" else 0
-                self.line_clear_history.append(
-                    f"{number_of_cleared_lines}/{b2b}/{combo}/{tspin}/{pc_message}")
+        self.update_line_clear_history()
         # runs whether first piece or not
         self.piece_placement_history.append(self.piece.value)
         self.pieces_placed += 1
