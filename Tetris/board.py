@@ -315,7 +315,7 @@ class Board:
             return False
         # game is still going
         if self.line_clear_history == []:
-            # first piece lock
+            # first piece lock, we know the line clear history values
             self.line_clear_history.append("0/0/0/False/False")
         else:
             if b in ["out of bounds", "occupied cell"]:
@@ -339,15 +339,16 @@ class Board:
                     number_of_cleared_lines) == 4 or str(tspin) != "False" else 0
                 self.line_clear_history.append(
                     f"{number_of_cleared_lines}/{b2b}/{combo}/{tspin}/{pc_message}")
-            self.piece_placement_history.append(self.piece.value)
-            self.pieces_placed += 1
-            self.boardstate = b
-            # Spawns next piece and updates self.piece
-            self.spawn_next_piece()
-            # Unlocks hold
-            self.hold_locked = False
-            self.update_pb_notation()
-            return True
+        # runs whether first piece or not
+        self.piece_placement_history.append(self.piece.value)
+        self.pieces_placed += 1
+        self.boardstate = b
+        # Spawns next piece and updates self.piece
+        self.spawn_next_piece()
+        # Unlocks hold
+        self.hold_locked = False
+        self.update_pb_notation()
+        return True
 
     def move_down_as_much_as_possible(self):
         # Checks the first down movement

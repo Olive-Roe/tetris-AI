@@ -117,7 +117,7 @@ class Game:
         "Takes an action string and board number (index of board lists), and automatically does that input"
         assert board_index < len(self.board_list)
         b = self.board_list[board_index]
-        if action == "hd" or "lock":
+        if action in {"hd", "lock"}:
             self.auto_lock_piece(board_index)
         else:
             b.do_action(action)

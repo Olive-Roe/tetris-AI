@@ -1,5 +1,4 @@
 Bucket list for priority tasks (ordered)
- Debug first hard drop is a soft drop
  Make kick pathfinding stop after a certain limit
  Add garbage queue
  Add garbage queue display
@@ -25,6 +24,7 @@ Priority list values (triage):
 4. Writing completely new code with large changes
 
 Done:
+Debug first hard drop is a soft drop
 Set up finesse for hard drops
 Make find_possible_moves function
    with all kicks and twists

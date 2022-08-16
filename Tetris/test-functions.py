@@ -3,17 +3,22 @@ from time import sleep
 from AI import *
 t, screen = init_screen(600)
 
-'test function for stoppable pathfinding'
-# g = Game(players=1)
-b = "*OO1LLLIJJJ/OO1SSLIJZZ/J3SSIZZI/J2TTTIOOI/JJ1LTZZOOI/3LZZZSSI/2LL2ZZSS/7Z2"
-# print(test_kicks(b))
-b2 = Board(t, screen, "J120", boardstate=b)
-actions = "180"
-b2.do_actions_from_input(actions)
-b2.display_board()
-# this is an irreversible kick
-# FIXME: check for irreversible kicks
-screen.mainloop()
+'test function for first harddrop = soft drop bug'
+g = Game(players=1)
+g.auto_input("hd", 0)
+g.display_screens()
+sleep(0.5)
+g.auto_input("hd", 0)
+g.mainloop()
+
+'test function for irreversible kicks'
+# b = "*OO1LLLIJJJ/OO1SSLIJZZ/J3SSIZZI/J2TTTIOOI/JJ1LTZZOOI/3LZZZSSI/2LL2ZZSS/7Z2"
+# b2 = Board(t, screen, "J120", boardstate=b)
+# actions = "180"
+# b2.do_actions_from_input(actions)
+# b2.display_board()
+# # this is an irreversible kick
+# screen.mainloop()
 
 'test function for playing a game'
 # g = Game(players=2)
