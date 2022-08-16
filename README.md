@@ -50,7 +50,7 @@ See `bucket-list.txt` for a more in-depth overview of what has been done already
 
 - Finds all locations a piece could rest on
 - Finds all theoretical moves from a position
-- Pathfinding to find actions to a target locaton (incomplete)
+- Pathfinding to find actions to a target location
 
 ## Formats
 
