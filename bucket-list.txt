@@ -1,11 +1,10 @@
 Bucket list for priority tasks (ordered)
- Make kick pathfinding stop after a certain limit
  Add garbage queue
  Add garbage queue display
  Set up AI structure and formats
  Make 4-line PC solver
 
-Unordered:
+Unordered: (maybe never going to happen)
  Make graphical hold display
  Make graphical next queue display
 
@@ -13,9 +12,10 @@ Future plans:
 - Add replay player
 - Implement DAS, ARR, SDF
 - Implement score table
-- Implement garbage multiplier, gravity
+- Implement gravity
 - Write evaluation function for board cleanliness
 - Make basic minimax AI
+- Set up AI to play against player with custom pps or turn-based
 
 Priority list values (triage):
 1. Debugging things
@@ -24,6 +24,8 @@ Priority list values (triage):
 4. Writing completely new code with large changes
 
 Done:
+Make kick pathfinding stop after a certain limit
+Garbage multiplier
 Debug first hard drop is a soft drop
 Set up finesse for hard drops
 Make find_possible_moves function
