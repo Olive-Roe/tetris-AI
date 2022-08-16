@@ -311,11 +311,11 @@ class Board:
         return b
 
     def lock_piece(self):
+        b = self.update_line_clear_history()
+        # runs whether first piece or not
+        self.piece_placement_history.append(self.piece.value)
+        self.pieces_placed += 1
         if self.piece.y >= 20:
-            # Game is over if piece locks over 21st row (do things and then set game_over to True)
-            b = self.update_line_clear_history()
-            self.piece_placement_history.append(self.piece.value)
-            self.pieces_placed += 1
             # Displays the board
             self.display_board()
             self.boardstate = b
@@ -323,10 +323,6 @@ class Board:
             self.game_over = True
             return False
         # game is still going
-        b = self.update_line_clear_history()
-        # runs whether first piece or not
-        self.piece_placement_history.append(self.piece.value)
-        self.pieces_placed += 1
         self.boardstate = b
         # Spawns next piece and updates self.piece
         self.spawn_next_piece()
