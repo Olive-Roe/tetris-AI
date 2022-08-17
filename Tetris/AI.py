@@ -183,13 +183,18 @@ def pathfinding(board: str, piece: Piece):
 
 def find_possible_moves(board: str, piecetype: str, held_piecetype: str):
     oD = {}
-    for piece in [piecetype, held_piecetype]:
-        # TODO: Add 'hold' to the start of the held piece's actions
-        moves = find_theoretical_moves(board, piece)
-        for m in moves:
-            seq = pathfinding(board, Piece(m))
-            if seq != False:  # if there exists a path
-                oD[m] = seq
+    moves = find_theoretical_moves(board, piecetype)
+    for m in moves:
+        seq = pathfinding(board, Piece(m))
+        if seq != False:  # if there exists a path
+            oD[m] = seq
+    moves = find_theoretical_moves(board, held_piecetype)
+    # do the same thing but for the held piecetype
+    # code repeated for performance
+    for m in moves:
+        seq = pathfinding(board, Piece(m))
+        if seq != False:
+            oD[m] = ["hold"] + seq
     return oD
 
 
