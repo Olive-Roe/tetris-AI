@@ -62,12 +62,15 @@ class Game:
     def mainloop(self, func=None):
         'Displays all screens while the main board is still going.\nfunc: An optional function that this function will continously display the output of'
         self.manual_input()
-        while self.main_board.game_over == False:
+        # TODO: supports at most 2 boards
+        # stops loop once at least one board is dead
+        while not any(b.game_over for b in self.board_list):
             if func != None:
                 self.main_board.display_message(func())
             self.display_screens()
             if self.players == 2 and self.mode == "vs ai":
-                self.ai_input("none")
+                self.ai_input("random")
+        # TODO: track who won, make larger class for multiple round matches
 
     def restart_board(self):
         "Restarts main board with the same seed as before"
@@ -88,29 +91,29 @@ class Game:
         # find target board
         target_board = self.board_list[self.target_boards[board_index]]
         # receive garbage on target board
-        # TODO: garbage queue
-        target_board.receive_garbage(randint(0, 9), attack)
+        target_board.garbage_queue.append((randint(0, 9), attack))
 
     def auto_lock_piece(self, board_index: int):
         board = self.board_list[board_index]
         board.do_action("hd")
         if self.players > 1:
-            self.send_garbage()
+            self.send_garbage(board_index)
 
     def manual_input(self):
         b = self.board_list[0]
-        keybinds2 = {
-            "Up": lambda: b.do_action("CW"),
-            "Down": lambda: b.do_action("d"),
-            "Left": lambda: b.do_action("l"),
-            "Right": lambda: b.do_action("r"),
-            "Shift_L": lambda: b.do_action("hold"),
-            "c": lambda: b.do_action("hold"),
-            "z": lambda: b.do_action("CCW"),
-            "a": lambda: b.do_action("180"),
-            "space": lambda: self.auto_lock_piece(0)
+        self.auto_input("CW", 0)
+        keybinds3 = {
+            "Up": lambda: self.auto_input("CW", 0),
+            "Down": lambda: self.auto_input("d", 0),
+            "Left": lambda: self.auto_input("l", 0),
+            "Right": lambda: self.auto_input("r", 0),
+            "Shift_L": lambda: self.auto_input("hold", 0),
+            "c": lambda: self.auto_input("hold", 0),
+            "z": lambda: self.auto_input("CCW", 0),
+            "a": lambda: self.auto_input("180", 0),
+            "space": lambda: self.auto_input("hd", 0)
         }
-        for key, action in keybinds2.items():
+        for key, action in keybinds3.items():
             # should be working keybinds?
             self.screen.onkeypress(action, key)
         self.screen.listen()
@@ -122,5 +125,7 @@ class Game:
         b = self.board_list[board_index]
         if action in {"hd", "lock"}:
             self.auto_lock_piece(board_index)
+            if board_index == 0 and self.players > 1 and self.mode == "vs ai turnbased":
+                self.ai_input("random", 1)
         else:
             b.do_action(action)

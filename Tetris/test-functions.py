@@ -3,7 +3,7 @@ from time import sleep
 from AI import *
 t, screen = init_screen(600)
 
-g = Game(players=1)
+g = Game(mode="vs ai turnbased", players=2)
 g.mainloop()
 
 'test function for first harddrop = soft drop bug'
