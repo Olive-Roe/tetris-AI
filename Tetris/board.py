@@ -2,7 +2,6 @@ from time import time, sleep
 from board_processing import create_grid, board_notation_to_dict, check_type_notation, separate_piece_board_notation, extended_boardstate_to_boardstate, boardstate_to_extended_boardstate, construct_piece_board_notation
 from updating_board import update_boardstate, add_ghost_piece_and_update, rotate_and_update, check_line_clears, check_t_spin
 import storage
-from random import randint
 from bag import Bag
 from piece import Piece
 import display
@@ -107,7 +106,7 @@ class Board:
         # Initializes the number of pieces placed
         self.pieces_placed = 0
         # Initialize garbage queue
-        self.garbage_queue = [(0, 4), (3, 7), (2, 1), (3, 1), (5, 1)]
+        self.garbage_queue = []
         # Starts the clock immediately
         self.start_time = time()
         self.game_over = False

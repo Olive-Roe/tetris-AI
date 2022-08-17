@@ -5,7 +5,6 @@ t, screen = init_screen(600)
 
 g = Game(players=1)
 g.mainloop()
-# the garbage queue doesn't get received
 
 'test function for first harddrop = soft drop bug'
 # g = Game(players=1)
