@@ -1,6 +1,18 @@
 from random import randint
 from turtle import Screen, Turtle
 
+
+def init_screen(width=1200):
+    screen = Screen()
+    screen.bgcolor("black")
+    screen.setup(width, height=600)
+    screen.title("Tetris")
+    t = Turtle()
+    t.hideturtle()
+    screen.tracer(0)
+    return t, screen
+
+
 color_dict = {(0, 0, 0): "black",
               (0, 0, 255): "blue",
               (0, 255, 255): "cyan",
@@ -13,7 +25,7 @@ color_dict = {(0, 0, 0): "black",
               }
 
 
-def draw_square(width, color, t:Turtle):
+def draw_square(width, color, t: Turtle):
     '''Process to draw a square on the upper right of turtle
     of color 'color' and width 'width', provided with the turtle 't'.'''
     global color_dict

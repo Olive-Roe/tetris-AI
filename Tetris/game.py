@@ -1,20 +1,10 @@
 from atk_table import attack_table
+from display import init_screen
 from board import Board
-
-from random import choice, randint
+import AI
+import random
 from time import time
 from turtle import Screen, Turtle
-
-
-def init_screen(width=1200):
-    screen = Screen()
-    screen.bgcolor("black")
-    screen.setup(width, height=600)
-    screen.title("Tetris")
-    t = Turtle()
-    t.hideturtle()
-    screen.tracer(0)
-    return t, screen
 
 
 class Game:
@@ -49,14 +39,16 @@ class Game:
         b_list = self.board_list
         if ai == "random":
             self.random_input(1)
-        elif ai == "none":
-            pass
+        elif ai == "true random":
+            move_dict = AI.find_possible_moves(
+                b.boardstate, b.piece.type, b.hold)
+            movepath = random.choice(list(move_dict.values()))
+            b.do_actions_from_input("\n".join(movepath))
 
     def random_input(self, board):
         actions = ["CW", "CCW", "d", "l", "r", "L", "R", "hold"]
-        self.auto_input(choice(actions), board)
-        self.auto_input(choice(actions), board)
-        self.auto_input(choice(actions), board)
+        for _ in range(3):
+            self.auto_input(random.choice(actions), board)
         self.auto_input("hd", board)
 
     def mainloop(self, func=None):
@@ -126,6 +118,6 @@ class Game:
         if action in {"hd", "lock"}:
             self.auto_lock_piece(board_index)
             if board_index == 0 and self.players > 1 and self.mode == "vs ai turnbased":
-                self.ai_input("random", 1)
+                self.ai_input("true random", 1)
         else:
             b.do_action(action)

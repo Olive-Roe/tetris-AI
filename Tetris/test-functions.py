@@ -1,6 +1,8 @@
 from game import *
 from time import sleep
 from AI import *
+from display import init_screen
+
 t, screen = init_screen(600)
 
 g = Game(mode="vs ai turnbased", players=2)

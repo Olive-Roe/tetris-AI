@@ -2,7 +2,7 @@ from time import sleep
 from copy import copy
 from board_processing import separate_piece_board_notation
 from updating_board import rotate_and_update
-from game import init_screen
+from display import init_screen
 from board_processing import boardstate_to_extended_boardstate, display_as_text
 from updating_board import update_boardstate, _combine_coordlists, construct_piece_board_notation, _find_rotation_direction
 from piece import Piece
@@ -188,13 +188,14 @@ def find_possible_moves(board: str, piecetype: str, held_piecetype: str):
         seq = pathfinding(board, Piece(m))
         if seq != False:  # if there exists a path
             oD[m] = seq
-    moves = find_theoretical_moves(board, held_piecetype)
     # do the same thing but for the held piecetype
     # code repeated for performance
-    for m in moves:
-        seq = pathfinding(board, Piece(m))
-        if seq != False:
-            oD[m] = ["hold"] + seq
+    if held_piecetype != '':  # catches board hold being empty in first round
+        moves = find_theoretical_moves(board, held_piecetype)
+        for m in moves:
+            seq = pathfinding(board, Piece(m))
+            if seq != False:
+                oD[m] = ["hold"] + seq
     return oD
 
 
