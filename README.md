@@ -51,6 +51,9 @@ See `bucket-list.txt` for a more in-depth overview of what has been done already
 - Finds all locations a piece could rest on
 - Finds all theoretical moves from a position
 - Pathfinding to find actions to a target location
+- Finds the number of holes in a board
+- Orders a list of possible moves by the least number of holes and number of lines cleared
+- Chooses the 'best' move and can be played against (very rudimentary AI as of now)
 
 ## Formats
 
