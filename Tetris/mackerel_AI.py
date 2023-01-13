@@ -21,22 +21,30 @@ def bam(b, move):
     return update_boardstate(copy(b), Piece(copy(move)))
 
 
-def best_move(b, piece, hold):
+def cleanliness(b):
+    "Returns a value from 0 to 1 on how clean the board is"
+    return 0 # this ai makes quite dirty stacks
+
+
+def best_move(b, piece, hold, queue):
     if hold == "":
-        tm = find_theoretical_moves(b, piece)
-    else:
-        tm = find_theoretical_moves(b, piece) + find_theoretical_moves(b, hold)
+        hold = queue[0]
+    tm = find_theoretical_moves(b, piece) + find_theoretical_moves(b, hold)
     msort = sorted(tm, key=lambda m: (
         len(half_holes(bam(b, m))), check_line_clears(bam(b, m)[1])))
     best_move = msort[0]
     seq = pathfinding(b, Piece(best_move))
     if seq != False:  # if there exists a path
+        if best_move[0] == hold:
+            return ["hold"] + seq
         return seq
     for i in range(len(msort)-1):
-        seq = pathfinding(b, Piece(msort[i+1]))
+        seq = pathfinding(b, Piece(msort[i]))
         if seq != False:  # if there exists a path
+            if best_move[0] == hold:
+                return ["hold"] + seq
             return seq
-    return "none of the moves worl :("
+    raise ValueError("none of the moves work :(")
 
 
 if __name__ == "__main__":

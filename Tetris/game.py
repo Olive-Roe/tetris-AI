@@ -43,8 +43,9 @@ class Game:
         elif ai == "true random":
             # move_dict = AI.find_possible_moves(b.boardstate, b.piece.type, b.hold)
             # movepath = random.choice(list(move_dict.values()))
+            # sees 21 pieces but that's ok
             movepath = mackerel_AI.best_move(
-                b.boardstate, b.piece.type, b.hold)
+                b.boardstate, b.piece.type, b.hold, b.bag.value)
             b.do_actions_from_input("\n".join(movepath))
 
     def random_input(self, board):
