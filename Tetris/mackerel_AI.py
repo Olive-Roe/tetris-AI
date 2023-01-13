@@ -1,5 +1,6 @@
 from AI import *
 from board_processing import display_as_text  # for debugging, remove later
+from board import check_line_clears
 
 
 def half_holes(boardstate):
@@ -22,17 +23,27 @@ def bam(b, move):
 
 def best_move(b, piece, hold):
     moves = find_possible_moves(b, piece, hold)
-    least_holes = float("inf")
-    best_move = ""
-    for move in moves.keys():
-        holes = len(half_holes(bam(b, move)))
-        if holes < least_holes:
-            best_move = move
-            least_holes = holes
+    msort = sorted(moves.keys(), key=lambda m: (
+        len(half_holes(bam(b, m))), check_line_clears(bam(b, m)[1])))
+    best_move = msort[0]
+    # least_holes = float("inf")
+    # contenders = []
+    # best_move = ""
+    # for move in moves.keys():
+    #     holes = len(half_holes(bam(b, move)))
+    #     if holes < least_holes:
+    #         best_move = move
+    #         least_holes = holes
+    #         contenders = []
+    #     elif holes == least_holes:
+    #         contenders.append(move)
     if best_move == "":
         print("can't find best move")
         return moves[0]
-    print(f"best move is {best_move} with {least_holes} holes")
+    # if contenders != []:
+    #     for m in contenders:
+
+    # print(f"best move is {best_move} with {least_holes} holes")
     return moves[best_move]
 
 
