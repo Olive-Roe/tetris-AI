@@ -2,6 +2,7 @@ from atk_table import attack_table
 from display import init_screen
 from board import Board
 import AI
+import mackerel_AI
 import random
 from time import time
 from turtle import Screen, Turtle
@@ -40,9 +41,10 @@ class Game:
         if ai == "random":
             self.random_input(1)
         elif ai == "true random":
-            move_dict = AI.find_possible_moves(
+            # move_dict = AI.find_possible_moves(b.boardstate, b.piece.type, b.hold)
+            # movepath = random.choice(list(move_dict.values()))
+            movepath = mackerel_AI.best_move(
                 b.boardstate, b.piece.type, b.hold)
-            movepath = random.choice(list(move_dict.values()))
             b.do_actions_from_input("\n".join(movepath))
 
     def random_input(self, board):
@@ -83,7 +85,7 @@ class Game:
         # find target board
         target_board = self.board_list[self.target_boards[board_index]]
         # receive garbage on target board
-        target_board.garbage_queue.append((randint(0, 9), attack))
+        target_board.garbage_queue.append((random.randint(0, 9), attack))
 
     def auto_lock_piece(self, board_index: int):
         board = self.board_list[board_index]

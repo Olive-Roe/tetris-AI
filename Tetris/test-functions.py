@@ -1,12 +1,24 @@
 from game import *
 from time import sleep
-from AI import *
+from mackerel_AI import *
 from display import init_screen
 
 t, screen = init_screen(600)
 
+
 g = Game(mode="vs ai turnbased", players=2)
+
 g.mainloop()
+
+'testing half holes detection live'
+
+# g = Game(mode="vs ai turnbased", players=2)
+
+# def show_half_holes():
+#     print(g.main_board.boardstate)
+#     print(len(half_holes(g.main_board.boardstate)))
+
+# g.mainloop(show_half_holes)
 
 'test function for first harddrop = soft drop bug'
 # g = Game(players=1)
