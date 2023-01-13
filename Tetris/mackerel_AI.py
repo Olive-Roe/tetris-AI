@@ -22,29 +22,21 @@ def bam(b, move):
 
 
 def best_move(b, piece, hold):
-    moves = find_possible_moves(b, piece, hold)
-    msort = sorted(moves.keys(), key=lambda m: (
+    if hold == "":
+        tm = find_theoretical_moves(b, piece)
+    else:
+        tm = find_theoretical_moves(b, piece) + find_theoretical_moves(b, hold)
+    msort = sorted(tm, key=lambda m: (
         len(half_holes(bam(b, m))), check_line_clears(bam(b, m)[1])))
     best_move = msort[0]
-    # least_holes = float("inf")
-    # contenders = []
-    # best_move = ""
-    # for move in moves.keys():
-    #     holes = len(half_holes(bam(b, move)))
-    #     if holes < least_holes:
-    #         best_move = move
-    #         least_holes = holes
-    #         contenders = []
-    #     elif holes == least_holes:
-    #         contenders.append(move)
-    if best_move == "":
-        print("can't find best move")
-        return moves[0]
-    # if contenders != []:
-    #     for m in contenders:
-
-    # print(f"best move is {best_move} with {least_holes} holes")
-    return moves[best_move]
+    seq = pathfinding(b, Piece(best_move))
+    if seq != False:  # if there exists a path
+        return seq
+    for i in range(len(msort)-1):
+        seq = pathfinding(b, Piece(msort[i+1]))
+        if seq != False:  # if there exists a path
+            return seq
+    return "none of the moves worl :("
 
 
 if __name__ == "__main__":
