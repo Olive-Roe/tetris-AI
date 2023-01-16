@@ -41,12 +41,17 @@ class Game:
         if ai == "random":
             self.random_input(1)
         elif ai == "true random":
-            # move_dict = AI.find_possible_moves(b.boardstate, b.piece.type, b.hold)
-            # movepath = random.choice(list(move_dict.values()))
+            move_dict = AI.find_possible_moves(
+                b.boardstate, b.piece.type, b.hold)
+            movepath = random.choice(list(move_dict.values()))
+            b.do_actions_from_input("\n".join(movepath))
+            self.send_garbage(board)
+        elif ai == "mackerel":
             # sees 21 pieces but that's ok
             movepath = mackerel_AI.best_move(
                 b.boardstate, b.piece.type, b.hold, b.bag.value)
             b.do_actions_from_input("\n".join(movepath))
+            self.send_garbage(board)
 
     def random_input(self, board):
         actions = ["CW", "CCW", "d", "l", "r", "L", "R", "hold"]
@@ -121,6 +126,6 @@ class Game:
         if action in {"hd", "lock"}:
             self.auto_lock_piece(board_index)
             if board_index == 0 and self.players > 1 and self.mode == "vs ai turnbased":
-                self.ai_input("true random", 1)
+                self.ai_input("mackerel", 1)
         else:
             b.do_action(action)
