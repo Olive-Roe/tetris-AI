@@ -72,13 +72,17 @@ def sum_shd_exc_well(b, column_no):
     return sum(d)
 
 
+def highest_stack(b):
+    return max(_stack_heights(b))
+
+
 def sum_shd_exc_lowest(b):
     "Return the sum of the stack height differences excluding the lowest column"
     # done in one go for performance
     # TODO: test performance w/ list slicing/numpy
     sh = _stack_heights(b)
-    low = min(sh)
-    return sum_shd_exc_well(b, low)
+    _, idx = min((low, idx) for (idx, low) in enumerate(sh))
+    return sum_shd_exc_well(b, idx)
     # out = []
     # for i in range(9):
     #     if i != low or i+1 != low:
@@ -103,8 +107,8 @@ def parity_diff(b, excl_col=""):
 def pd_exc_lowest(b):
     # min = 0, max = 9, norm = /10
     sh = _stack_heights(b)
-    low = min(sh)
-    return parity_diff(b, low)
+    _, idx = min((low, idx) for (idx, low) in enumerate(sh))
+    return parity_diff(b, idx)
 
 
 def cleanliness(b, weights=""):
@@ -122,7 +126,7 @@ def best_move(b, piece, hold, queue):
 
     def order(m):
         nb = bam(b, m)
-        return (-1*check_line_clears(nb)[1], len(half_holes(nb)), sum(hole_coveredness(nb)), sum_shd_exc_well(nb, 9), pd_exc_lowest(nb))
+        return (-1*check_line_clears(nb)[1], len(half_holes(nb)),  sum(hole_coveredness(nb)), highest_stack(nb), sum_shd_exc_lowest(nb), pd_exc_lowest(nb))
     msort = sorted(tm, key=order)
     best_move = msort[0]
     seq = pathfinding(b, Piece(best_move))
