@@ -119,6 +119,26 @@ def cleanliness(b, weights=""):
     return 0  # this ai makes quite dirty stacks
 
 
+def make_mask(mask_list):
+    # TODO
+    pass
+
+
+def check_mask(mask):
+    # TODO
+    pass
+
+
+def tetris_mask(x, y):
+    # TODO
+    pass
+
+
+def tspin_mask(x, y):
+    # TODO
+    pass
+
+
 def best_move(b, piece, hold, queue):
     if hold == "":
         hold = queue[0]
