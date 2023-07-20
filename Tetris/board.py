@@ -379,14 +379,15 @@ class Board:
             # remove the current tuple from the garbage queue
             self.garbage_queue.pop(0)
 
-    def lock_piece(self):
+    def lock_piece(self, display=True):
         b = self.update_line_clear_history()
         # runs whether first piece or not
         self.piece_placement_history.append(self.piece.value)
         self.pieces_placed += 1
         if self.piece.y >= 20:
-            # Displays the board
-            self.display_board()
+            # Displays the board if display=True
+            if display == True:
+                self.display_board()
             self.boardstate = b
             self.hold_locked = False
             self.game_over = True
@@ -551,14 +552,15 @@ class Board:
         self.update_replay_notation(i)
         return flag
 
-    def do_actions_from_input(self, input: str):
+    def do_actions_from_input(self, input: str, display=True):
         "Given an input of a string separated by newlines, performs actions accordingly"
         input_list = input.split("\n")
         for item in input_list:
             i, delay = _get_data_from_replay_line(item)
             sleep(delay)
             self.do_action(i)
-            self.display_board()
+            if display:
+                self.display_board()
 
     def get_current_delay(self) -> float:
         "Returns the delay from the time of the start time in seconds (float)"
