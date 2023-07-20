@@ -1,6 +1,20 @@
 from time import time, sleep
-from board_processing import create_grid, board_notation_to_dict, check_type_notation, separate_piece_board_notation, extended_boardstate_to_boardstate, boardstate_to_extended_boardstate, construct_piece_board_notation
-from updating_board import update_boardstate, add_ghost_piece_and_update, rotate_and_update, check_line_clears, check_t_spin
+from board_processing import (
+    create_grid,
+    board_notation_to_dict,
+    check_type_notation,
+    separate_piece_board_notation,
+    extended_boardstate_to_boardstate,
+    boardstate_to_extended_boardstate,
+    construct_piece_board_notation,
+)
+from updating_board import (
+    update_boardstate,
+    add_ghost_piece_and_update,
+    rotate_and_update,
+    check_line_clears,
+    check_t_spin,
+)
 import storage
 from bag import Bag
 from piece import Piece
@@ -9,12 +23,13 @@ from typing import Any, Tuple, List
 
 
 def draw_grid(board_notation, t, screen, x=0, y=0):
-    display.draw_grid(create_grid(
-        board_notation_to_dict(board_notation)), t, screen, x, y)
+    display.draw_grid(
+        create_grid(board_notation_to_dict(board_notation)), t, screen, x, y
+    )
 
 
 def _get_data_from_replay_line(item: str):
-    'Given a line from a replay notation, return the action and the delay in a tuple'
+    "Given a line from a replay notation, return the action and the delay in a tuple"
     default_time: float = 0
     i = item.split(" ")[0]
     if len(item.split(" ")) == 1:
@@ -27,7 +42,7 @@ def _get_data_from_replay_line(item: str):
 
 
 def smart_display(notation, t, screen):
-    'Displays a board, piece-board, or extended board notation in the form of a Board'
+    "Displays a board, piece-board, or extended board notation in the form of a Board"
     piece_notation = ""
     boardstate = ""
     type_of_notation = check_type_notation(notation)
@@ -41,7 +56,8 @@ def smart_display(notation, t, screen):
         boardstate = extended_boardstate_to_boardstate(notation)
     else:
         raise ValueError(
-            f"Incorrect notation: '{notation}''. This was interpreted as a '{type_of_notation}'")
+            f"Incorrect notation: '{notation}''. This was interpreted as a '{type_of_notation}'"
+        )
     b = Board(t, screen, piece_notation, boardstate)
     b.display_board()
 
@@ -65,6 +81,7 @@ def slideshow(slides, t, screen):
             current_slide += 1
         else:
             smart_display(slides[current_slide], t, screen)
+
     screen.onkey(go_forward, "Right")
     screen.onkey(go_back, "Left")
     screen.listen()
@@ -72,14 +89,22 @@ def slideshow(slides, t, screen):
 
 
 class Board:
-    'A Tetris board, with a turtle, screen, and data'
+    "A Tetris board, with a turtle, screen, and data"
 
-    def __init__(self, t, screen, piece_notation="", boardstate="*", bag_seed="", hold="", hold_locked=False):
+    def __init__(
+        self,
+        t,
+        screen,
+        piece_notation="",
+        boardstate="*",
+        bag_seed="",
+        hold="",
+        hold_locked=False,
+    ):
         self.t = t
         self.screen = screen
         self.boardstate = boardstate
-        self.extended_boardstate = boardstate_to_extended_boardstate(
-            self.boardstate)
+        self.extended_boardstate = boardstate_to_extended_boardstate(self.boardstate)
         if bag_seed == "":
             self.seed = str(time())
             self.bag = Bag(self.seed)
@@ -94,7 +119,7 @@ class Board:
         else:
             self.piece = Piece(piece_notation)
         # Non-dynamic init piece board notation
-        self.piece_board_notation = f'{self.piece.value}:{self.boardstate}'
+        self.piece_board_notation = f"{self.piece.value}:{self.boardstate}"
         # Initializes an empty replay notation
         self.replay_notation = "start"
         # Initializes the last kick number (for t-spin detection)
@@ -112,8 +137,8 @@ class Board:
         self.game_over = False
 
     def pps(self):
-        'Returns the number of pieces per second (to 3dp) as of this function being called'
-        return round(self.pieces_placed/(time()-self.start_time), 3)
+        "Returns the number of pieces per second (to 3dp) as of this function being called"
+        return round(self.pieces_placed / (time() - self.start_time), 3)
 
     def hold_piece(self):
         if self.hold_locked:
@@ -132,7 +157,7 @@ class Board:
                 x, y = 3, 22
             elif held_piece in ["Z", "O"]:
                 x, y = 4, 22
-            self.piece.update(f'{held_piece}0{x}{y}')
+            self.piece.update(f"{held_piece}0{x}{y}")
             self.hold = current_piece
             self.hold_locked = True
             self.update_pb_notation()
@@ -140,20 +165,22 @@ class Board:
 
     def update_pb_notation(self):
         self.piece_board_notation = construct_piece_board_notation(
-            self.piece.value, self.boardstate)
+            self.piece.value, self.boardstate
+        )
 
     def display_message(self, message):
         display.write_text(self.t, self.screen, message)
 
     def display_board(self, pb="", queue="", hold="", hold_locked="", x=0, y=0):
-        'Displays the current board through Turtle'
+        "Displays the current board through Turtle"
         if pb != "":
             p, b = separate_piece_board_notation(pb)
             boardstate = add_ghost_piece_and_update(p, b), Piece(p)
             if boardstate in ["out of bounds", "occupied cell"]:
                 # Meaning the game is over
                 raise ValueError(
-                    f"Impossible piece lock, piece: '{self.piece.value}', board: '{self.boardstate}'")
+                    f"Impossible piece lock, piece: '{self.piece.value}', board: '{self.boardstate}'"
+                )
             draw_grid(boardstate, self.t, self.screen, x, y)
             # Displays the hold slot and next queue
             # TODO: Change this to non-temporary functions
@@ -166,28 +193,32 @@ class Board:
         if boardstate in ["out of bounds", "occupied cell"]:
             # Meaning the game is over
             raise ValueError(
-                f"Impossible piece lock, piece: '{self.piece.value}', board: '{self.boardstate}'")
+                f"Impossible piece lock, piece: '{self.piece.value}', board: '{self.boardstate}'"
+            )
         draw_grid(boardstate, self.t, self.screen, x, y)
         # Displays the hold slot and next queue
         # TODO: Change this to non-temporary functions
         display.temp_draw_hold_slot(self.hold, self.hold_locked, self.t, x, y)
-        display.temp_draw_next_queue(
-            self.bag.value, self.screen, self.t, x=x, y=y)
+        display.temp_draw_next_queue(self.bag.value, self.screen, self.t, x=x, y=y)
         return True
 
-    def spawn_next_piece(self, init=""):
+    def spawn_next_piece(self, init=False):
+        "Spawns the next piece in the bag.\nInit is used only when the board initializes"
         new_piece_type = self.bag.update()
         # Adjusting spawn coordinates based on piece
         if new_piece_type in ["L", "J", "S", "T", "I"]:
             x, y = 3, 22
         elif new_piece_type in ["Z", "O"]:
             x, y = 4, 22
-        if init != "":
-            return f'{new_piece_type}0{x}{y}'
-        self.piece.update(f'{new_piece_type}0{x}{y}')
+        else:
+            raise ValueError(f"Inappropriate new_piece_type: '{new_piece_type}'")
+        # FIXME: Init system returns str|bool to a str parameter, change system
+        if init == True:
+            return f"{new_piece_type}0{x}{y}"
+        self.piece.update(f"{new_piece_type}0{x}{y}")
         # Checks if the piece can spawn
         b = update_boardstate(self.boardstate, self.piece)
-        if b == 'occupied cell':
+        if b == "occupied cell":
             # Piece spawn overlaps something, game is over
             self.game_over = True
             return False
@@ -198,16 +229,19 @@ class Board:
         if self.piece.y < 1:
             # Piece is too low (touching ground) to be moved down
             return False
-        piece_message = self.piece.type + \
-            str(self.piece.orientation) + \
-            str(self.piece.x) + str(self.piece.y-1)
+        piece_message = (
+            self.piece.type
+            + str(self.piece.orientation)
+            + str(self.piece.x)
+            + str(self.piece.y - 1)
+        )
         # Updates replay notation if this is being called by itself
         return self.check_if_valid(piece_message)
 
     def change_x(self, value: int):
-        '''Moves the piece left or right by a certain amount of cells \n
+        """Moves the piece left or right by a certain amount of cells \n
         Will stop if the piece cannot move \n
-        Does not validate the input of cells needed to move'''
+        Does not validate the input of cells needed to move"""
         if value > 0:
             func = self.move_piece_right
         elif value < 0:
@@ -235,9 +269,12 @@ class Board:
             # Piece cannot be moved left
             # because it will be out of bounds
             return False
-        piece_message = self.piece.type + \
-            str(self.piece.orientation) + \
-            str(self.piece.x-1) + str(self.piece.y)
+        piece_message = (
+            self.piece.type
+            + str(self.piece.orientation)
+            + str(self.piece.x - 1)
+            + str(self.piece.y)
+        )
         return self.check_if_valid(piece_message)
 
     def move_piece_right(self, subfunction=False):
@@ -246,14 +283,17 @@ class Board:
             # Piece cannot be moved right
             # because it will be out of bounds (handled here)
             return False
-        piece_message = self.piece.type + \
-            str(self.piece.orientation) + \
-            str(self.piece.x+1) + str(self.piece.y)
+        piece_message = (
+            self.piece.type
+            + str(self.piece.orientation)
+            + str(self.piece.x + 1)
+            + str(self.piece.y)
+        )
         return self.check_if_valid(piece_message)
 
     def check_if_valid(self, piece_message):
         b = update_boardstate(self.boardstate, Piece(piece_message))
-        if b in ['out of bounds', 'occupied cell']:
+        if b in ["out of bounds", "occupied cell"]:
             return False
         # Piece message is valid
         # Updates piece and board notation
@@ -263,8 +303,7 @@ class Board:
 
     def rotate_piece(self, direction: str):  # sourcery skip: class-extract-method
         # self.piece_board_notation = self.piece.value + ":/" + self.boardstate
-        pb, kick_number = rotate_and_update(
-            self.piece_board_notation, direction)
+        pb, kick_number = rotate_and_update(self.piece_board_notation, direction)
         # Updates last kick number
         self.last_kick_number = kick_number
         p, b = separate_piece_board_notation(pb)
@@ -280,23 +319,22 @@ class Board:
         return True
 
     def update_line_clear_history(self):
-        'Updates the line clear history after a lock and returns the new boardstate'
+        "Updates the line clear history after a lock and returns the new boardstate"
         b = update_boardstate(self.boardstate, self.piece)
         if self.line_clear_history == []:
             # empty history -> first piece lock, we know the line clear values
             self.line_clear_history.append("0/0/0/False/False")
             return b
         # get number of cleared lines
-        b, number_of_cleared_lines, list_of_cleared_lines = check_line_clears(
-            b)
+        b, number_of_cleared_lines, list_of_cleared_lines = check_line_clears(b)
         # check for perfect clear
         pc_message = "pc" if b == "*" else "False"
         # check for tspin
-        tspin = check_t_spin(self.piece_board_notation,
-                             self.replay_notation, self.last_kick_number)
+        tspin = check_t_spin(
+            self.piece_board_notation, self.replay_notation, self.last_kick_number
+        )
         # get values of previous piece placed (for combo, b2b)
-        plines, pb2b, pcombo, ptspin, ppc = self.line_clear_history[-1].split(
-            "/")
+        plines, pb2b, pcombo, ptspin, ppc = self.line_clear_history[-1].split("/")
         if number_of_cleared_lines == 0:
             # short circuit if previous piece did not clear a line
             self.line_clear_history.append(f"0/{pb2b}/0/{tspin}/False")
@@ -304,15 +342,19 @@ class Board:
         # work out combo
         combo = 0 if int(plines) == 0 else int(pcombo) + 1
         # work out back to back
-        b2b = int(pb2b) + 1 if int(
-            number_of_cleared_lines) == 4 or str(tspin) != "False" else 0
+        b2b = (
+            int(pb2b) + 1
+            if int(number_of_cleared_lines) == 4 or str(tspin) != "False"
+            else 0
+        )
         # add to line clear history
         self.line_clear_history.append(
-            f"{number_of_cleared_lines}/{b2b}/{combo}/{tspin}/{pc_message}")
+            f"{number_of_cleared_lines}/{b2b}/{combo}/{tspin}/{pc_message}"
+        )
         return b
 
     def receive_garbage_queue(self, b):
-        'Takes a boardstate after a piece has locked and receives any garbage'
+        "Takes a boardstate after a piece has locked and receives any garbage"
         if self.garbage_queue == []:
             return None  # no garbage to receive
         # self.garbage queue is a list of tuples of each piece of garbage
@@ -329,7 +371,7 @@ class Board:
             if total - amount < 0:
                 self.receive_garbage(column, total)
                 # remove the received garbage from the current tuple
-                self.garbage_queue[0] = (column, amount-total)
+                self.garbage_queue[0] = (column, amount - total)
                 break
             # reduce total by the current amount receiving
             total -= amount
@@ -401,24 +443,27 @@ class Board:
         return True
 
     def receive_garbage(self, column: int, amount: int):
-        'Given a column and an amount of garbage, updates the boardstate'
+        "Given a column and an amount of garbage, updates the boardstate"
         # example: g0x5
-        garbage = "x"*column + "." + "x"*(9-column)
+        garbage = "x" * column + "." + "x" * (9 - column)
         # Removes starting asterisk
         # Multiplies the garbage row with the amount
-        b = "*" + amount * f'{garbage}/' + self.boardstate[1:]
+        b = "*" + amount * f"{garbage}/" + self.boardstate[1:]
         # Check if blocks are pushed over the 40th row
         if len(b[1:].split("/")) > 40:
             self.game_over = True
         self.boardstate = b
         # update piece notation to account for being pushed up
         self.piece.update(
-            f"{self.piece.type}{self.piece.orientation}{self.piece.x}{self.piece.y+amount}")
+            f"{self.piece.type}{self.piece.orientation}{self.piece.x}{self.piece.y+amount}"
+        )
         self.update_pb_notation()
         return True
 
-    def load_replay(self, replay: str, seed) -> Tuple[List[str], List[Any], List[Any], List[Any], List[Any]]:
-        'Given a replay, simulates it and returns a list of piece-board notations, and a list of delays'
+    def load_replay(
+        self, replay: str, seed
+    ) -> Tuple[List[str], List[Any], List[Any], List[Any], List[Any]]:
+        "Given a replay, simulates it and returns a list of piece-board notations, and a list of delays"
         timestamp_list = []
         b1 = Board(self.t, self.screen, "", "*", seed)
         pb_notation_list = [f"{b1.piece_board_notation}"]
@@ -440,11 +485,22 @@ class Board:
             hold_list.append(b1.hold)
             hold_locked_list.append(b1.hold_locked)
             timestamp_list.append(timestamp)
-        return pb_notation_list, timestamp_list, next_queue_list, hold_list, hold_locked_list
+        return (
+            pb_notation_list,
+            timestamp_list,
+            next_queue_list,
+            hold_list,
+            hold_locked_list,
+        )
 
     def play_replay(self, replay: str, seed):
-        pb_list, timestamp_list, next_queue_list, hold_list, hold_locked_list = self.load_replay(
-            replay, seed)
+        (
+            pb_list,
+            timestamp_list,
+            next_queue_list,
+            hold_list,
+            hold_locked_list,
+        ) = self.load_replay(replay, seed)
         t = time()
         for i, timestamp in enumerate(timestamp_list):
             # Sleep until the timestamp is correct
@@ -454,7 +510,8 @@ class Board:
                     break
             # Then display the board
             self.display_board(
-                pb_list[i], next_queue_list[i], hold_list[i], hold_locked_list[i])
+                pb_list[i], next_queue_list[i], hold_list[i], hold_locked_list[i]
+            )
         # When replay is finished
         return True
 
@@ -495,7 +552,7 @@ class Board:
         return flag
 
     def do_actions_from_input(self, input: str):
-        'Given an input of a string separated by newlines, performs actions accordingly'
+        "Given an input of a string separated by newlines, performs actions accordingly"
         input_list = input.split("\n")
         for item in input_list:
             i, delay = _get_data_from_replay_line(item)
@@ -504,7 +561,7 @@ class Board:
             self.display_board()
 
     def get_current_delay(self) -> float:
-        'Returns the delay from the time of the start time in seconds (float)'
+        "Returns the delay from the time of the start time in seconds (float)"
         # Creates a deep copy of the attribute
         t = float(self.start_time)
         c = time()
@@ -518,8 +575,8 @@ class Board:
         delay = self.get_current_delay()
         # Hide delay is delay = 0 (understood)
         if delay == 0:
-            self.replay_notation += f'\n{action_notation}'
+            self.replay_notation += f"\n{action_notation}"
         else:
             # Delay is automatically casted to a string
             # Add the action and the delay to a new line in the replay notation
-            self.replay_notation += f'\n{action_notation} {delay}'
+            self.replay_notation += f"\n{action_notation} {delay}"
