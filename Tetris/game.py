@@ -13,14 +13,15 @@ class Game:
         self.mode = mode
         # modes = "vs ai", "sprint", "ultra", "cheese"
         self.players = players
-        self.seed = time()
+        self.seed = str(time())
         # T is unused
         t, self.screen = init_screen(600 if players == 1 else 1200)
         self.t_list = [Turtle() for _ in range(self.players)]
         for t in self.t_list:
             t.hideturtle()
-        self.board_list = [Board(t, self.screen, bag_seed=self.seed)
-                           for t in self.t_list]
+        self.board_list = [
+            Board(t, self.screen, bag_seed=self.seed) for t in self.t_list
+        ]
         if players == 1:
             self.positions = [(0, 0)]
         if players == 2:
@@ -41,15 +42,15 @@ class Game:
         if ai == "random":
             self.random_input(1)
         elif ai == "true random":
-            move_dict = AI.find_possible_moves(
-                b.boardstate, b.piece.type, b.hold)
+            move_dict = AI.find_possible_moves(b.boardstate, b.piece.type, b.hold)
             movepath = random.choice(list(move_dict.values()))
             b.do_actions_from_input("\n".join(movepath))
             self.send_garbage(board)
         elif ai == "mackerel":
             # sees 21 pieces but that's ok
             movepath = mackerel_AI.best_move(
-                b.boardstate, b.piece.type, b.hold, b.bag.value)
+                b.boardstate, b.piece.type, b.hold, b.bag.value
+            )
             b.do_actions_from_input("\n".join(movepath))
             self.send_garbage(board)
 
@@ -60,7 +61,7 @@ class Game:
         self.auto_input("hd", board)
 
     def mainloop(self, func=None):
-        'Displays all screens while the main board is still going.\nfunc: An optional function that this function will continously display the output of'
+        "Displays all screens while the main board is still going.\nfunc: An optional function that this function will continously display the output of"
         self.manual_input()
         # TODO: supports at most 2 boards
         # stops loop once at least one board is dead
@@ -75,7 +76,8 @@ class Game:
     def restart_board(self):
         "Restarts main board with the same seed as before"
         self.main_board = Board(
-            self.main_board.t, self.screen, "", "*", self.main_board.seed)
+            self.main_board.t, self.screen, "", "*", self.main_board.seed
+        )
 
     def send_garbage(self, board_index: int):
         board = self.board_list[board_index]
@@ -111,7 +113,7 @@ class Game:
             "c": lambda: self.auto_input("hold", 0),
             "z": lambda: self.auto_input("CCW", 0),
             "a": lambda: self.auto_input("180", 0),
-            "space": lambda: self.auto_input("hd", 0)
+            "space": lambda: self.auto_input("hd", 0),
         }
         for key, action in keybinds3.items():
             # should be working keybinds?

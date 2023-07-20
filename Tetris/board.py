@@ -81,7 +81,7 @@ class Board:
         self.extended_boardstate = boardstate_to_extended_boardstate(
             self.boardstate)
         if bag_seed == "":
-            self.seed = time()
+            self.seed = str(time())
             self.bag = Bag(self.seed)
         else:
             self.seed = bag_seed
