@@ -519,6 +519,14 @@ color_dict = {
     "lime": (0, 255, 0),
     "grey": (128, 128, 128),
     "white": (255, 255, 255),
+    # ghost pieces
+    "navy": (0, 0, 255, 128),
+    "teal": (0, 255, 255, 128),
+    "purple": (255, 0, 255, 128),
+    "dark orange": (255, 165, 0, 128),
+    "olive": (255, 255, 0, 128),
+    "maroon": (255, 0, 0, 128),
+    "green": (0, 255, 0, 128),
 }
 
 
@@ -543,7 +551,20 @@ def update_grid(rgb, screen, x=600, y=300):
     # Draw grid
     for i in range(40):
         for j in range(10):
-            pygame.draw.rect(screen, color_dict[rgb[i][j]], (X, Y, 20, 20))
+            s = pygame.Surface((20, 20))
+            if color_dict[rgb[i][j]] in [
+                "navy",
+                "teal",
+                "purple",
+                "dark orange",
+                "maroon",
+                "green",
+                "olive",
+            ]:
+                s.set_alpha(128)  # ghost pieces
+            s.fill(color_dict[rgb[i][j]])
+            screen.blit(s, (X, Y))
+            # pygame.draw.rect(screen, color_dict[rgb[i][j]], (X, Y, 20, 20))
             X += 20
         Y -= 20
         X = x - 100
@@ -564,7 +585,90 @@ def write_text(screen, text, x=0, y=0, fontsize=32):
     screen.blit(msg_surface_obj, msg_rect_obj)
 
 
+def draw_piece(screen, piecetype: str, x, y, locked=False):
+    if piecetype == "J":
+        pygame.draw.rect(screen, color_dict["grey"], (x, y + 10, 20, 20))
+        pygame.draw.rect(screen, color_dict["grey"], (x - 20, y + 10, 20, 20))
+        pygame.draw.rect(screen, color_dict["grey"], (x - 20, y - 10, 20, 20))
+        pygame.draw.rect(screen, color_dict["grey"], (x + 20, y + 10, 20, 20))
+        if locked == False:
+            pygame.draw.rect(screen, color_dict["blue"], (x + 1, y + 11, 18, 18))
+            pygame.draw.rect(screen, color_dict["blue"], (x - 19, y + 11, 18, 18))
+            pygame.draw.rect(screen, color_dict["blue"], (x - 19, y - 9, 18, 18))
+            pygame.draw.rect(screen, color_dict["blue"], (x + 21, y + 11, 18, 18))
+    elif piecetype == "L":
+        pygame.draw.rect(screen, color_dict["grey"], (x, y + 10, 20, 20))
+        pygame.draw.rect(screen, color_dict["grey"], (x - 20, y + 10, 20, 20))
+        pygame.draw.rect(screen, color_dict["grey"], (x + 20, y - 10, 20, 20))
+        pygame.draw.rect(screen, color_dict["grey"], (x + 20, y + 10, 20, 20))
+        if locked == False:
+            pygame.draw.rect(screen, color_dict["orange"], (x + 1, y + 11, 18, 18))
+            pygame.draw.rect(screen, color_dict["orange"], (x - 19, y + 11, 18, 18))
+            pygame.draw.rect(screen, color_dict["orange"], (x + 21, y - 9, 18, 18))
+            pygame.draw.rect(screen, color_dict["orange"], (x + 21, y + 11, 18, 18))
+    elif piecetype == "S":
+        pygame.draw.rect(screen, color_dict["grey"], (x, y + 10, 20, 20))
+        pygame.draw.rect(screen, color_dict["grey"], (x, y - 10, 20, 20))
+        pygame.draw.rect(screen, color_dict["grey"], (x + 20, y - 10, 20, 20))
+        pygame.draw.rect(screen, color_dict["grey"], (x - 20, y + 10, 20, 20))
+        if locked == False:
+            pygame.draw.rect(screen, color_dict["lime"], (x + 1, y + 11, 18, 18))
+            pygame.draw.rect(screen, color_dict["lime"], (x + 1, y - 9, 18, 18))
+            pygame.draw.rect(screen, color_dict["lime"], (x + 21, y - 9, 18, 18))
+            pygame.draw.rect(screen, color_dict["lime"], (x - 19, y + 11, 18, 18))
+    elif piecetype == "Z":
+        pygame.draw.rect(screen, color_dict["grey"], (x, y + 10, 20, 20))
+        pygame.draw.rect(screen, color_dict["grey"], (x, y - 10, 20, 20))
+        pygame.draw.rect(screen, color_dict["grey"], (x - 20, y - 10, 20, 20))
+        pygame.draw.rect(screen, color_dict["grey"], (x + 20, y + 10, 20, 20))
+        if locked == False:
+            pygame.draw.rect(screen, color_dict["red"], (x + 1, y + 11, 18, 18))
+            pygame.draw.rect(screen, color_dict["red"], (x + 1, y - 9, 18, 18))
+            pygame.draw.rect(screen, color_dict["red"], (x - 19, y - 9, 18, 18))
+            pygame.draw.rect(screen, color_dict["red"], (x + 21, y + 11, 18, 18))
+    elif piecetype == "T":
+        pygame.draw.rect(screen, color_dict["grey"], (x, y + 10, 20, 20))
+        pygame.draw.rect(screen, color_dict["grey"], (x - 20, y + 10, 20, 20))
+        pygame.draw.rect(screen, color_dict["grey"], (x, y - 10, 20, 20))
+        pygame.draw.rect(screen, color_dict["grey"], (x + 20, y + 10, 20, 20))
+        if locked == False:
+            pygame.draw.rect(screen, color_dict["magenta"], (x + 1, y + 11, 18, 18))
+            pygame.draw.rect(screen, color_dict["magenta"], (x - 19, y + 11, 18, 18))
+            pygame.draw.rect(screen, color_dict["magenta"], (x + 1, y - 9, 18, 18))
+            pygame.draw.rect(screen, color_dict["magenta"], (x + 21, y + 11, 18, 18))
+    elif piecetype == "O":
+        pygame.draw.rect(screen, color_dict["grey"], (x - 10, y - 10, 20, 20))
+        pygame.draw.rect(screen, color_dict["grey"], (x - 10, y + 10, 20, 20))
+        pygame.draw.rect(screen, color_dict["grey"], (x + 10, y - 10, 20, 20))
+        pygame.draw.rect(screen, color_dict["grey"], (x + 10, y + 10, 20, 20))
+        if locked == False:
+            pygame.draw.rect(screen, color_dict["yellow"], (x - 9, y - 9, 18, 18))
+            pygame.draw.rect(screen, color_dict["yellow"], (x - 9, y + 11, 18, 18))
+            pygame.draw.rect(screen, color_dict["yellow"], (x + 11, y - 9, 18, 18))
+            pygame.draw.rect(screen, color_dict["yellow"], (x + 11, y + 11, 18, 18))
+    elif piecetype == "I":
+        pygame.draw.rect(screen, color_dict["grey"], (x - 10, y, 20, 20))
+        pygame.draw.rect(screen, color_dict["grey"], (x + 10, y, 20, 20))
+        pygame.draw.rect(screen, color_dict["grey"], (x - 30, y, 20, 20))
+        pygame.draw.rect(screen, color_dict["grey"], (x + 30, y, 20, 20))
+        if locked == False:
+            pygame.draw.rect(screen, color_dict["cyan"], (x - 9, y + 1, 18, 18))
+            pygame.draw.rect(screen, color_dict["cyan"], (x + 11, y + 1, 18, 18))
+            pygame.draw.rect(screen, color_dict["cyan"], (x - 29, y + 1, 18, 18))
+            pygame.draw.rect(screen, color_dict["cyan"], (x + 31, y + 1, 18, 18))
+
+
+def update_hold(screen, hold_piece, hold_locked, board_x, board_y):
+    draw_piece(screen, hold_piece, board_x - 155, board_y - 180, hold_locked)
+
+
+def update_next(screen, bag_notation, board_x, board_y, n_of_previews=5):
+    for i in range(n_of_previews):
+        draw_piece(screen, bag_notation[i], board_x + 155, board_y - 180 + 70 * i)
+
+
 from board_processing import create_grid, board_notation_to_dict
+from updating_board import add_ghost_piece_and_update
 from time import time
 from board import Board
 import mackerel_AI
@@ -594,8 +698,17 @@ class Game:
     def display_screens(self):
         for index, board in enumerate(self.board_list):
             xpos, ypos = self.positions[index]
-            rgb = create_grid(board_notation_to_dict(board.boardstate))
+            boardstate = add_ghost_piece_and_update(board.piece, board.boardstate)
+            if boardstate in ["out of bounds", "occupied cell"]:
+                # Meaning the game is over
+                raise ValueError(
+                    f"Impossible piece lock, piece: '{board.piece.value}', board: '{board.boardstate}'"
+                )
+            rgb = create_grid(board_notation_to_dict(boardstate))
+
             update_grid(rgb, self.screen, xpos, ypos)
+            update_hold(self.screen, board.hold, board.hold_locked, xpos, ypos)
+            update_next(self.screen, board.bag.value, xpos, ypos)
 
     def text_next_to_board(self, text, board_index):
         x, y = self.positions[board_index]
@@ -604,7 +717,7 @@ class Game:
     def ai_input(self, ai="random", board=1):  # sourcery skip: remove-pass-elif
         b = self.board_list[board]
         if ai == "random":
-            self.random_input(board) 
+            self.random_input(board)
         elif ai == "mackerel":
             # sees 21 pieces but that's ok
             movepath = mackerel_AI.best_move(
@@ -626,6 +739,7 @@ class Game:
         while True:
             if any(b.game_over for b in self.board_list):
                 break
+            screen.fill(color_dict["black"])
             self.display_screens()
             for event in pygame.event.get():
                 if event.type == QUIT:
@@ -640,6 +754,7 @@ class Game:
             if self.players == 2 and self.mode == "vs ai":
                 self.ai_input("random")
             # Keybinds
+            # TODO: customisable keybinds
             keys = pygame.key.get_pressed()
             if keys[pygame.K_UP]:
                 self.auto_input("CW", 0)
@@ -708,8 +823,6 @@ class Game:
 
 if __name__ == "__main__":
     screen = init_screen()
-    screen.fill(Color.black)
-
     g = Game("vs ai turnbased")
     g.mainloop()
     # while True:
