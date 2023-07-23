@@ -15,6 +15,7 @@ from updating_board import (
     check_line_clears,
     check_t_spin,
 )
+from atk_table import attack_table
 import storage
 from bag import Bag
 from piece import Piece
@@ -319,11 +320,11 @@ class Board:
         return True
 
     def update_line_clear_history(self):
-        "Updates the line clear history after a lock and returns the new boardstate"
+        "Updates the line clear history after a lock and returns the new boardstate\nLines cleared/B2B/Combo/T-spin/PC/Lines blocked"
         b = update_boardstate(self.boardstate, self.piece)
         if self.line_clear_history == []:
             # empty history -> first piece lock, we know the line clear values
-            self.line_clear_history.append("0/0/0/False/False")
+            self.line_clear_history.append("0/0/0/False/False/0")
             return b
         # get number of cleared lines
         b, number_of_cleared_lines, list_of_cleared_lines = check_line_clears(b)
@@ -334,10 +335,12 @@ class Board:
             self.piece_board_notation, self.replay_notation, self.last_kick_number
         )
         # get values of previous piece placed (for combo, b2b)
-        plines, pb2b, pcombo, ptspin, ppc = self.line_clear_history[-1].split("/")
+        plines, pb2b, pcombo, ptspin, ppc, pblocked = self.line_clear_history[-1].split(
+            "/"
+        )
         if number_of_cleared_lines == 0:
             # short circuit if previous piece did not clear a line
-            self.line_clear_history.append(f"0/{pb2b}/0/{tspin}/False")
+            self.line_clear_history.append(f"0/{pb2b}/0/{tspin}/False/0")
             return b
         # work out combo
         combo = 0 if int(plines) == 0 else int(pcombo) + 1
@@ -349,7 +352,7 @@ class Board:
         )
         # add to line clear history
         self.line_clear_history.append(
-            f"{number_of_cleared_lines}/{b2b}/{combo}/{tspin}/{pc_message}"
+            f"{number_of_cleared_lines}/{b2b}/{combo}/{tspin}/{pc_message}/0"
         )
         return b
 
@@ -357,10 +360,41 @@ class Board:
         "Takes a boardstate after a piece has locked and receives any garbage"
         if self.garbage_queue == []:
             return None  # no garbage to receive
+
         # self.garbage queue is a list of tuples of each piece of garbage
         # (column, amount)
         amounts = [i[1] for i in self.garbage_queue]
         total = sum(amounts)
+
+        plines, pb2b, pcombo, ptspin, ppc, pblocked = self.line_clear_history[-1].split(
+            "/"
+        )
+        if int(plines) > 0:
+            # lines are cleared, garbage is temporarily blocked
+            attack = attack_table(
+                int(plines), int(pb2b), int(pcombo), ptspin, ppc, pblocked
+            )
+            if total >= attack:
+                total_blocked = total - attack
+            elif total < attack:
+                total_blocked = attack
+            else:
+                raise ArithmeticError(f"attack: {attack}, incoming: {total}")
+            # remove blocked attacks from the incoming garbage queue
+            while self.garbage_queue != []:
+                column, amount = self.garbage_queue[0]
+                if total_blocked - amount < 0:
+                    self.garbage_queue[0] = (column, amount - total_blocked)
+                    break
+                total_blocked -= amount
+                self.receive_garbage(column, amount)
+                self.garbage_queue.pop(0)
+
+            # Record the lines blocked in this attack (how many attack lines were lost)
+            self.line_clear_history[
+                -1
+            ] = f"{plines}/{pb2b}/{pcombo}/{ptspin}/{ppc}/{total_blocked}"
+            return None
         # account for a garbage cap (default=8)
         if storage.custom["garbage cap"] > 0:
             total = min(total, storage.custom["garbage cap"])

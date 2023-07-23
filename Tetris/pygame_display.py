@@ -546,13 +546,13 @@ def update_grid(rgb, screen, x=600, y=300):
     startX = x - 100
     startY = y + 190
     lineWidth = 2
-    lineColor = (128, 128, 128)  # gray
+    lineColor = (50, 50, 50)  # dark gray
     X, Y = startX, startY
     # Draw grid
     for i in range(40):
         for j in range(10):
             s = pygame.Surface((20, 20))
-            if color_dict[rgb[i][j]] in [
+            if rgb[i][j] in [
                 "navy",
                 "teal",
                 "purple",
@@ -667,6 +667,17 @@ def update_next(screen, bag_notation, board_x, board_y, n_of_previews=5):
         draw_piece(screen, bag_notation[i], board_x + 155, board_y - 180 + 70 * i)
 
 
+def update_garbage_meter(screen, garbage_list: list[tuple], board_x, board_y):
+    y = board_y + 210
+    for column, amount in garbage_list:
+        pygame.draw.rect(
+            screen,
+            Color.red,
+            (board_x + 105, y - 20 * amount + 5, 5, 20 * amount - 5),
+        )
+        y -= 20 * amount
+
+
 from board_processing import create_grid, board_notation_to_dict
 from updating_board import add_ghost_piece_and_update
 from time import time
@@ -691,7 +702,6 @@ class Game:
         if players == 2:
             self.positions = [(300, 300), (900, 300)]
         self.main_board = self.board_list[0]
-        # TODO: targetting system
         self.target_boards = [1, 0]
         # TODO: Write replay notation (gets appended to in input)
 
@@ -709,6 +719,7 @@ class Game:
             update_grid(rgb, self.screen, xpos, ypos)
             update_hold(self.screen, board.hold, board.hold_locked, xpos, ypos)
             update_next(self.screen, board.bag.value, xpos, ypos)
+            update_garbage_meter(self.screen, board.garbage_queue, xpos, ypos)
 
     def text_next_to_board(self, text, board_index):
         x, y = self.positions[board_index]
@@ -787,7 +798,7 @@ class Game:
     def send_garbage(self, board_index: int):
         board = self.board_list[board_index]
         clear = board.line_clear_history[-1]
-        lines, b2b, combo, tspin, pc = clear.split("/")
+        lines, b2b, combo, tspin, pc, pblocked = clear.split("/")
         if int(lines) == 0:
             return False
         # translate line clear history b2b into attack table b2b
@@ -795,6 +806,10 @@ class Game:
             b2b = int(b2b) - 1
         # {number_of_cleared_lines}/{b2b}/{combo}/{tspin}/{pc_message}
         attack = attack_table(int(lines), int(b2b), int(combo), tspin, pc)
+        if attack == 0:
+            return False
+        # Subtract the amount used to block incoming garbage
+        attack -= int(pblocked)
         # find target board
         target_board = self.board_list[self.target_boards[board_index]]
         # receive garbage on target board
